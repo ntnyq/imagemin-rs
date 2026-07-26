@@ -49,6 +49,10 @@ crop/resize 属于上游兼容面，不进入 Rust core 的通用图像变换抽
 - lossy RGBA 在黑/白背景合成后测平均误差，避免透明像素的隐藏 RGB 扭曲指标。
 - metadata `none` 默认不输出扩展 chunks；`icc`/`exif` 通过 RIFF `ICCP`/`EXIF`
   chunk 验证。XMP 仍由同一参数路径支持。
+- Windows vendored cwebp 通过 WIC 解码 JPEG，不提取 EXIF：`metadata:["icc","exif"]`
+  在 Windows 上只保留 `ICCP`，与运行同一二进制的上游 imagemin-webp 一致（CI 以
+  parity 断言固化）。cwebp 也无法从 stdin 流式读取 WIC 输入，因此兼容路径与上游
+  一样使用临时文件。自建发布 cwebp 必须恢复 Windows EXIF 提取并移除该测试分支。
 - 文件 API 根据最终 magic 更新 destination extension；PNG/JPEG/TIFF 转 WebP 会写入
   `.webp`，原格式未变化时保留源扩展名。
 - 当前 darwin arm64 oracle SHA-256 为
