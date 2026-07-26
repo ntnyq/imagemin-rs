@@ -461,8 +461,11 @@ describe("MozJPEG compatibility", () => {
     const input = await readHexFixture(JPEG_URL);
 
     await expect(mozjpeg({ quantBaseline: true })(input)).resolves.toBeInstanceOf(Uint8Array);
+    // Upstream passes `-quant-baseline true`, so cjpeg treats `true` as its
+    // input file. Depending on pipe timing it either reports the bogus path
+    // or exits before stdin is written, surfacing as EPIPE.
     await expect(imageminMozjpeg({ quantBaseline: true })(input)).rejects.toThrow(
-      /can't open true/,
+      /can't open true|EPIPE/,
     );
   });
 
