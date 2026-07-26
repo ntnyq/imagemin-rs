@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer";
+
 import { ImageminError, throwIfAborted, toImageminError, withAbortSignal } from "./errors";
 import { detectImageFormat } from "./format";
 import { runNativePlugins } from "./native";
@@ -94,8 +96,17 @@ async function runJsPlugin(
   signal: AbortSignal | undefined,
 ): Promise<Uint8Array> {
   try {
+    // Upstream imagemin hands plugins Node Buffers, and several official
+    // plugins hard-require that (`Buffer.isBuffer` guards in optipng,
+    // mozjpeg, gifsicle, webp and svgo). A zero-copy Buffer view keeps
+    // third-party plugins behaving exactly as inside upstream imagemin.
+    const pluginInput = Buffer.isBuffer(input)
+      ? input
+      : Buffer.from(input.buffer, input.byteOffset, input.byteLength);
     const output = await withAbortSignal(
-      Promise.resolve().then(() => plugin(input, signal === undefined ? undefined : { signal })),
+      Promise.resolve().then(() =>
+        plugin(pluginInput, signal === undefined ? undefined : { signal }),
+      ),
       signal,
       { plugin: plugin.name || undefined },
     );

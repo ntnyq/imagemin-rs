@@ -29,6 +29,9 @@ allowBuilds:
   # Downloads/builds the separately executed GPL pngquant sidecar. It is
   # never linked into the MIT native addon; see ADR 0004.
   pngquant-bin: true
+  # Downloads/builds the zlib-licensed OptiPNG 0.7.7 executable used only as
+  # the test-time differential oracle for the native optipng() profile.
+  optipng-bin: true
   # Downloads/builds the separately executed MozJPEG and jpegtran sidecars.
   # Both remain outside the native addon; see ADR 0005.
   jpegtran-bin: true

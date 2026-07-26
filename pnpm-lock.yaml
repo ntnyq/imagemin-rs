@@ -182,15 +182,24 @@ importers:
       imagemin-avif:
         specifier: 0.1.6
         version: 0.1.6
+      imagemin-gifsicle:
+        specifier: 7.0.0
+        version: 7.0.0
       imagemin-jpegtran:
         specifier: 8.0.0
         version: 8.0.0
       imagemin-mozjpeg:
         specifier: 10.0.0
         version: 10.0.0
+      imagemin-optipng:
+        specifier: 8.0.0
+        version: 8.0.0
       imagemin-pngquant:
         specifier: 10.0.0
         version: 10.0.0
+      imagemin-svgo:
+        specifier: 12.0.0
+        version: 12.0.0
       imagemin-webp:
         specifier: 8.0.0
         version: 8.0.0
@@ -3006,6 +3015,10 @@ packages:
     resolution: {integrity: sha512-ItteHJ1xhC3QzlabVKmwSLmp2D9OlSaRmeEwmtK3+MPAo0fFsJX0ZzFBgTFAKuZNEqq7TSmgsg8MxxQ1745cuw==}
     engines: {node: '>=10'}
 
+  imagemin-gifsicle@7.0.0:
+    resolution: {integrity: sha512-LaP38xhxAwS3W8PFh4y5iQ6feoTSF+dTAXFRUEYQWYst6Xd+9L/iPk34QGgK/VO/objmIlmq9TStGfVY2IcHIA==}
+    engines: {node: '>=10'}
+
   imagemin-jpegtran@8.0.0:
     resolution: {integrity: sha512-iGaaImltX4oJ1lmS9jb7Qw3NRusQnVBr7hYJuhyL0CHRV42pDMkIGBVCHKA9j9mcWHnO5Ryu3LV7t4fU4sC4xg==}
     engines: {node: '>=18'}
@@ -3014,9 +3027,17 @@ packages:
     resolution: {integrity: sha512-DK85QNOjS3/GzWYfNB3CACMZD10sIQgFDv1+WTOnZljgltQTEyATjdyUVyjKu5q4sCESQdwvwq7WEZzJ5fFjlg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  imagemin-optipng@8.0.0:
+    resolution: {integrity: sha512-CUGfhfwqlPjAC0rm8Fy+R2DJDBGjzy2SkfyT09L8rasnF9jSoHFqJ1xxSZWK6HVPZBMhGPMxCTL70OgTHlLF5A==}
+    engines: {node: '>=10'}
+
   imagemin-pngquant@10.0.0:
     resolution: {integrity: sha512-kt0LFxyv7sBxUbZyvt+JXoU0HvSnmTJkEW32rZPQ9d7AQJPVh0vkz9mGkvbX0yntY2zW/3N20Yw69PBSt1UQzw==}
     engines: {node: '>=18'}
+
+  imagemin-svgo@12.0.0:
+    resolution: {integrity: sha512-6f2bS/QTBsGafHCvG3FPxe3efHWq7EryznpDPg1PnfhnD4JO90sKrzW4W4AcN2HoWBsZl4yqiBWw/qxIWiPHJA==}
+    engines: {node: '>=20'}
 
   imagemin-webp@8.0.0:
     resolution: {integrity: sha512-yN6kNKir6T/U3AtP3uLHrLn9XYafk2m49EbUqLCQ3GPRRLRs+4pUQxxaHz+lnTDM+LQpkSjGQaFVcSgYqvW3dQ==}
@@ -3066,6 +3087,10 @@ packages:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
 
+  is-gif@3.0.0:
+    resolution: {integrity: sha512-IqJ/jlbw5WJSNfwQ/lHEDXF8rxhRgF6ythk2oiEvhpG29F704eX9NO6TvPfMiq9DrbwgcEDnETYNcZDPewQoVw==}
+    engines: {node: '>=6'}
+
   is-glob@4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
     engines: {node: '>=0.10.0'}
@@ -3099,6 +3124,10 @@ packages:
   is-plain-object@2.0.4:
     resolution: {integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==}
     engines: {node: '>=0.10.0'}
+
+  is-png@2.0.0:
+    resolution: {integrity: sha512-4KPGizaVGj2LK7xwJIz8o5B2ubu1D/vcQsgOGFEDlpcvgZHto4gBnyd0ig7Ws+67ixmwKoNmu0hYnpo6AaKb5g==}
+    engines: {node: '>=8'}
 
   is-png@3.0.1:
     resolution: {integrity: sha512-8TqC8+bdsm3YkpI2aECCDycFDl1hTB0HMVRnP3xRRa3Tqx2oVE7sBi1G6CuO9IqEyWSzbBZr1mGqdb3it9h/pg==}
@@ -3413,6 +3442,11 @@ packages:
 
   oniguruma-to-es@3.1.1:
     resolution: {integrity: sha512-bUH8SDvPkH3ho3dvwJwfonjlQ4R80vjyvrU8YpxuROddv55vAEJrTuCuCVUhhsHbtlD9tGGbaNApGQckXhS8iQ==}
+
+  optipng-bin@7.0.1:
+    resolution: {integrity: sha512-W99mpdW7Nt2PpFiaO+74pkht7KEqkXkeRomdWXfEz3SALZ6hns81y/pm1dsGZ6ItUIfchiNIP6ORDr1zETU1jA==}
+    engines: {node: '>=10'}
+    hasBin: true
 
   os-filter-obj@2.0.0:
     resolution: {integrity: sha512-uksVLsqG3pVdzzPvmAHpBK0wKxYItuzZr7SziusRPoz67tGV8rL1szZ6IdeUrbqLjGDwApBtN29eEE3IqGHOjg==}
@@ -6619,6 +6653,12 @@ snapshots:
       plugin-error: 1.0.1
       sharp: 0.33.5
 
+  imagemin-gifsicle@7.0.0:
+    dependencies:
+      execa: 1.0.0
+      gifsicle: 5.3.0
+      is-gif: 3.0.0
+
   imagemin-jpegtran@8.0.0:
     dependencies:
       execa: 9.6.1
@@ -6633,6 +6673,12 @@ snapshots:
       is-jpg: 3.0.0
       mozjpeg: 8.0.0
 
+  imagemin-optipng@8.0.0:
+    dependencies:
+      exec-buffer: 3.2.0
+      is-png: 2.0.0
+      optipng-bin: 7.0.1
+
   imagemin-pngquant@10.0.0:
     dependencies:
       environment: 1.1.0
@@ -6641,6 +6687,11 @@ snapshots:
       ow: 2.0.0
       pngquant-bin: 9.0.0
       uint8array-extras: 1.5.0
+
+  imagemin-svgo@12.0.0:
+    dependencies:
+      is-svg: 6.1.0
+      svgo: 4.0.2
 
   imagemin-webp@8.0.0:
     dependencies:
@@ -6693,6 +6744,10 @@ snapshots:
 
   is-extglob@2.1.1: {}
 
+  is-gif@3.0.0:
+    dependencies:
+      file-type: 10.11.0
+
   is-glob@4.0.3:
     dependencies:
       is-extglob: 2.1.1
@@ -6717,6 +6772,8 @@ snapshots:
   is-plain-object@2.0.4:
     dependencies:
       isobject: 3.0.1
+
+  is-png@2.0.0: {}
 
   is-png@3.0.1: {}
 
@@ -6976,6 +7033,11 @@ snapshots:
       emoji-regex-xs: 1.0.0
       regex: 6.1.0
       regex-recursion: 6.0.2
+
+  optipng-bin@7.0.1:
+    dependencies:
+      bin-build: 3.0.0
+      bin-wrapper: 4.1.0
 
   os-filter-obj@2.0.0:
     dependencies:

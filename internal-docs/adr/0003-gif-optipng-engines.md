@@ -46,4 +46,21 @@ Oxipng 官方明确不是 OptiPNG drop-in replacement，但能提供相同的无
   仍保留 keep-smaller policy。
 - `optipng()` 检测到 `acTL` 时原样返回 APNG，避免 `strip all` 删除动画 chunks。
 
+OptiPNG corpus 差分（2026-07-27，oracle `optipng-bin@7.0.1`）确认并固化了以下事实：
+
+- level 0 与 OptiPNG 逐 chunk 一致（IDAT 原样、metadata 全剥离）；唯一字节级分歧是
+  Oxipng 会无损截断尾部全不透明的 tRNS 条目，OptiPNG 不做该 canonicalization。
+- `-strip all` 剥离集合与 OptiPNG 一致：gAMA、sRGB、cHRM、pHYs、bKGD、tIME、
+  tEXt/zTXt/iTXt 与私有 ancillary chunk 两侧都不保留。
+- Oxipng 会在字节更小时把 palette 展开成 truecolor（OptiPNG 只朝 palette 方向缩减）；
+  表示分歧必须以更小的输出为代价，corpus 测试将其作为硬门槛。
+- 默认 level 3（Oxipng preset 3）在 1 像素宽的退化几何上可比 OptiPNG 大（corpus 中
+  2.5 倍的已知个例）；level 7（preset 6）消除该差距。
+- CRC 损坏输入的 `errorRecovery`/`-fix` 语义一致：开启时两侧都无损修复，关闭时两侧
+  都拒绝。
+- OptiPNG 会把 APNG 静默压平（`-strip all` 删除 acTL/fcTL/fdAT），corpus 测试把
+  pass-through 与该行为的分歧显式固化。
+- `optipng-bin@7.0.1` vendored 源码为 OptiPNG 0.7.7，但 macOS 预编译产物自报
+  0.7.6——与 pngquant-bin 相同类别的上游平台漂移，差分对任一 0.7.x oracle 运行。
+
 完整证据见 [Phase 2 调研](../../docs/research/gif-optipng-codec-selection.md)。

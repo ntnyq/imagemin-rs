@@ -50,6 +50,26 @@ declare module "imagemin-webp" {
   export default factory;
 }
 
+declare module "imagemin-optipng" {
+  const factory: (options?: import("./types").OptipngOptions) => (input: Buffer) => Promise<Buffer>;
+
+  export default factory;
+}
+
+declare module "imagemin-gifsicle" {
+  const factory: (
+    options?: import("./types").GifsicleOptions,
+  ) => (input: Uint8Array) => Promise<Buffer>;
+
+  export default factory;
+}
+
+declare module "imagemin-svgo" {
+  const factory: (options?: import("svgo").Config) => (input: Uint8Array) => Promise<Uint8Array>;
+
+  export default factory;
+}
+
 declare module "imagemin-avif" {
   const factory: (options?: {
     chromaSubsampling?: "4:2:0" | "4:4:4";

@@ -37,6 +37,10 @@ type ImageminPlugin = (
 ) => Uint8Array | PromiseLike<Uint8Array>;
 ```
 
+函数插件收到的 `input` 实际是 Node `Buffer`（`Uint8Array` 的子类），与上游 imagemin 的行为
+一致；官方插件里的 `Buffer.isBuffer` 守卫（optipng、mozjpeg、gifsicle、webp、svgo 等）因此
+无需 Adapter 即可直接工作。
+
 ## `optimize(input, options?)`
 
 返回：

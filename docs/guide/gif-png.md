@@ -64,6 +64,14 @@ OptiPNG `-nx -nz` 语义关闭 reductions/IDAT recoding；level 7 使用 Oxipng 
 集合或输出 bytes。metadata stripping、interlace 转换和 repair 优先于 keep-smaller，
 极小文件可能变大。
 
+对真实 OptiPNG 0.7.x（`optipng-bin@7.0.1`）的 corpus 差分固化了以下可依赖的行为：
+全部 color type 与位深 1..16 的输出经独立 decoder 验证像素无损；`-strip all`
+剥离集合与 OptiPNG 一致；level 0 与 OptiPNG 逐 chunk 一致，唯一分歧是 Oxipng 会
+无损截断尾部全不透明的 tRNS 条目；Oxipng 可能在输出更小时把 palette 展开为
+truecolor（OptiPNG 只朝 palette 方向缩减），差分把「表示分歧必须换来更小输出」
+作为硬门槛；默认 level 3 在 1 像素宽的退化几何上可能大于 OptiPNG，level 7 消除
+该差距；CRC 损坏输入的 `errorRecovery` 开/关行为与 `-fix` 一致。
+
 APNG 是明确的 pass-through：OptiPNG 0.7.7 早于 APNG，而 `strip all` 会删除
 animation chunks。项目在拥有 APNG-aware encoder 和逐帧 oracle 前不会静默把动画
 降级为静态 PNG。
