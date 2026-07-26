@@ -7,7 +7,7 @@ members = ["crates/*", "napi/*"]
 exclude = ["vendor/svgm-core"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.1.0-rc.0"
 edition = "2024"
 rust-version = "1.88.0"
 license = "MIT"
@@ -29,7 +29,7 @@ module_name_repetitions = "allow"
 [workspace.dependencies]
 gif = "=0.13.3"
 gif-dispose = "=5.0.1"
-imagemin = { version = "0.0.0", path = "crates/imagemin" }
+imagemin = { version = "0.1.0-rc.0", path = "crates/imagemin" }
 imagemin-codec-gif = { path = "crates/imagemin-codec-gif" }
 imagemin-codec-png = { path = "crates/imagemin-codec-png" }
 imagemin-codec-svg = { path = "crates/imagemin-codec-svg" }
