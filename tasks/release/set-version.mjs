@@ -2,10 +2,15 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
-const nextVersion = process.argv[2];
+const cliArguments = process.argv.slice(2);
+const rootFlagIndex = cliArguments.indexOf("--root");
+const workspaceRoot =
+  rootFlagIndex === -1
+    ? fileURLToPath(new URL("../../", import.meta.url))
+    : resolve(cliArguments.splice(rootFlagIndex, 2)[1] ?? "");
+const nextVersion = cliArguments[0];
 if (nextVersion === undefined) {
-  throw new TypeError("Usage: node tasks/release/set-version.mjs <semver>");
+  throw new TypeError("Usage: node tasks/release/set-version.mjs <semver> [--root <dir>]");
 }
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/u.test(nextVersion)) {
   throw new TypeError(`Invalid release version: ${nextVersion}`);
@@ -37,6 +42,10 @@ assert(
   `Workspace already uses version ${nextVersion}`,
 );
 
+// Every file is read and validated before anything is written, so a failed
+// precondition leaves the working tree untouched instead of half-bumped.
+const pendingWrites = [];
+
 for (const path of packagePaths) {
   const manifest = await readJson(path);
   assert(
@@ -44,17 +53,22 @@ for (const path of packagePaths) {
     `${path} uses ${manifest.version} instead of ${currentVersion}`,
   );
   manifest.version = nextVersion;
-  await writeFile(resolve(workspaceRoot, path), `${JSON.stringify(manifest, undefined, 2)}\n`);
+  pendingWrites.push([path, `${JSON.stringify(manifest, undefined, 2)}\n`]);
 }
 
-await replaceExactVersions("Cargo.toml", [
-  [`version = "${currentVersion}"`, `version = "${nextVersion}"`, 1],
-  [
-    `imagemin = { version = "${currentVersion}", path = "crates/imagemin" }`,
-    `imagemin = { version = "${nextVersion}", path = "crates/imagemin" }`,
-    1,
-  ],
-]);
+// The imagemin workspace dependency line contains the bare `version = "…"`
+// string as a substring, so it must be rewritten first or the bare rule
+// counts two occurrences and fails.
+pendingWrites.push(
+  await replaceExactVersions("Cargo.toml", [
+    [
+      `imagemin = { version = "${currentVersion}", path = "crates/imagemin" }`,
+      `imagemin = { version = "${nextVersion}", path = "crates/imagemin" }`,
+      1,
+    ],
+    [`version = "${currentVersion}"`, `version = "${nextVersion}"`, 1],
+  ]),
+);
 const rustPackageNames = [
   "imagemin",
   "imagemin-codec-gif",
@@ -63,21 +77,27 @@ const rustPackageNames = [
   "imagemin-core",
   "imagemin_napi",
 ];
-await replaceExactVersions(
-  "Cargo.lock",
-  rustPackageNames.map((packageName) => [
-    `name = "${packageName}"\nversion = "${currentVersion}"`,
-    `name = "${packageName}"\nversion = "${nextVersion}"`,
-    1,
-  ]),
+pendingWrites.push(
+  await replaceExactVersions(
+    "Cargo.lock",
+    rustPackageNames.map((packageName) => [
+      `name = "${packageName}"\nversion = "${currentVersion}"`,
+      `name = "${packageName}"\nversion = "${nextVersion}"`,
+      1,
+    ]),
+  ),
 );
 
 const loaderPath = "napi/imagemin/src-js/index.js";
 const loader = await readText(loaderPath);
-const versionPattern = new RegExp(escapeRegExp(currentVersion), "gu");
+const versionPattern = new RegExp(`(?<![\\d.])${escapeRegExp(currentVersion)}(?!\\d)`, "gu");
 const versionOccurrences = [...loader.matchAll(versionPattern)].length;
 assert(versionOccurrences > 0, `Generated binding loader does not contain ${currentVersion}`);
-await writeFile(resolve(workspaceRoot, loaderPath), loader.replaceAll(currentVersion, nextVersion));
+pendingWrites.push([loaderPath, loader.replaceAll(versionPattern, nextVersion)]);
+
+for (const [path, value] of pendingWrites) {
+  await writeFile(resolve(workspaceRoot, path), value);
+}
 
 console.log(
   JSON.stringify(
@@ -99,7 +119,7 @@ async function replaceExactVersions(path, replacements) {
     assert(count === expectedCount, `${path} expected ${expectedCount} occurrence(s) of ${from}`);
     value = value.replace(from, to);
   }
-  await writeFile(resolve(workspaceRoot, path), value);
+  return [path, value];
 }
 
 async function readJson(path) {

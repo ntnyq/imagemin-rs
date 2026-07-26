@@ -20,7 +20,25 @@ const OPTION_NAMES = new Set([
   "speed",
 ]);
 const CHROMA_SUBSAMPLING_VALUES = new Set<AvifChromaSubsampling>(["4:2:0", "4:4:4"]);
-const sharpEntry = createRequire(import.meta.url).resolve("sharp");
+// Resolved on first avif() invocation so environments where the sharp
+// dependency failed to install can still import the package and run every
+// other plugin.
+let cachedSharpEntry: string | undefined;
+
+function resolveSharpEntry(): string {
+  if (cachedSharpEntry === undefined) {
+    try {
+      cachedSharpEntry = createRequire(import.meta.url).resolve("sharp");
+    } catch (cause) {
+      throw new ImageminError(
+        "ERR_IMAGEMIN_CODEC",
+        "The avif plugin requires the sharp package, which could not be resolved",
+        { cause, plugin: "avif" },
+      );
+    }
+  }
+  return cachedSharpEntry;
+}
 
 const AVIF_WORKER_SOURCE = String.raw`
 import { pathToFileURL } from "node:url";
@@ -86,6 +104,7 @@ export function avif(options: AvifOptions = {}): ImageminPlugin {
     const kind = detectAvifInputKind(input);
     if (kind === undefined) return input;
     if (!validateAvifInput(input, kind)) return input;
+    const sharpEntry = resolveSharpEntry();
 
     try {
       return await runBinary({
