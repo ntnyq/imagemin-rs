@@ -14,9 +14,12 @@ const files = await imagemin(["images/*.png"], {
 ```
 
 `glob: false` 时把 input 当作精确路径；两种模式都会过滤 `.DS_Store` 等 filesystem junk。
-`concurrency` 是 `1..32` 的整数，默认 `min(4, available CPUs)`。并发执行仍按输入顺序返回，
-首个失败会停止调度尚未开始的文件，错误包含 `sourcePath`。写入 destination 时使用源文件
-basename；格式转换会按最终 magic 更新扩展名。
+glob 模式与上游一致地把 pattern 中的反斜杠转换为正斜杠（Windows 路径可直接使用），并按
+路径排序返回——上游依赖 globby 的异步遍历顺序在多目录时不确定，本包保证可复现顺序，
+文件集合与上游一致。`concurrency` 是 `1..32` 的整数，默认 `min(4, available CPUs)`。并发
+执行仍按该顺序返回，首个失败会停止调度尚未开始的文件，错误包含 `sourcePath`。写入
+destination 时使用源文件 basename；格式转换会按最终 magic 更新扩展名（上游只改写
+`.webp`）。
 
 ## `imagemin.buffer(input, options?)`
 

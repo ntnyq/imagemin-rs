@@ -30,8 +30,18 @@ export async function optimizeFiles(
   validateFileOptions(inputs, options);
   const signal = options.signal;
   throwIfAborted(signal);
+  // Upstream converts patterns to forward slashes before globbing (via
+  // `slash`), which is what makes Windows paths like `C:\images\*` work —
+  // globby would otherwise read the backslashes as escapes. globby's async
+  // traversal order is then nondeterministic across directories (upstream
+  // inherits that); sorting keeps result and destination ordering
+  // reproducible while staying set-equivalent with upstream.
   const matchedPaths =
-    options.glob === false ? [...inputs] : await globby(inputs, { onlyFiles: true });
+    options.glob === false
+      ? [...inputs]
+      : (await globby(inputs.map(toGlobPattern), { onlyFiles: true })).sort((left, right) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        );
   throwIfAborted(signal);
   const sourcePaths = matchedPaths.filter((sourcePath) => isNotJunk(basename(sourcePath)));
   const concurrency = options.concurrency ?? DEFAULT_CONCURRENCY;
@@ -157,6 +167,13 @@ async function mapConcurrent<Input, Output>(
     throw failures[0]?.error;
   }
   return outputs;
+}
+
+function toGlobPattern(input: string): string {
+  // Same rules as the `slash` package used by upstream: extended-length
+  // Windows paths (`\\?\…`) cannot use forward slashes and pass through.
+  if (input.startsWith("\\\\?\\")) return input;
+  return input.replaceAll("\\", "/");
 }
 
 function outputBasename(

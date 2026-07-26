@@ -1,3 +1,8 @@
+import { randomBytes } from "node:crypto";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import cwebpBinary from "cwebp-bin";
 
 import { runBinary } from "./binary";
@@ -94,9 +99,6 @@ export function webp(options: WebpOptions = {}): ImageminPlugin {
       Array.isArray(normalized.metadata) ? normalized.metadata.join(",") : normalized.metadata,
     );
   }
-  // cwebp uses `-- -` to disambiguate stdin from another option and `-o -`
-  // for stdout. This is byte-identical to imagemin-webp's temporary files.
-  arguments_.push("-o", "-", "--", "-");
 
   const plugin: ImageminPlugin = async (input, context) => {
     const kind = detectWebpInputKind(input);
@@ -105,18 +107,7 @@ export function webp(options: WebpOptions = {}): ImageminPlugin {
     if (!shouldConvert) return input;
 
     try {
-      return await runBinary({
-        arguments: arguments_,
-        binary: cwebpBinary,
-        displayName: "cwebp",
-        input,
-        signal: context?.signal,
-        limits: {
-          outputBytes: MAX_OUTPUT_BYTES,
-          stderrBytes: MAX_STDERR_BYTES,
-          timeoutMilliseconds: 120_000,
-        },
-      });
+      return await runCwebpThroughFiles(arguments_, input, context?.signal);
     } catch (cause) {
       rethrowIfAborted(cause);
       throw new ImageminError("ERR_IMAGEMIN_CODEC", "WebP conversion failed", {
@@ -128,6 +119,43 @@ export function webp(options: WebpOptions = {}): ImageminPlugin {
 
   Object.defineProperty(plugin, "name", { value: "webp" });
   return plugin;
+}
+
+// imagemin-webp@8 talks to cwebp through temporary files (exec-buffer), and on
+// Windows the vendored cwebp drops metadata chunks when streaming through
+// stdin/stdout. Using the same file-based seam keeps the output byte-identical
+// with upstream on every platform.
+async function runCwebpThroughFiles(
+  arguments_: readonly string[],
+  input: Uint8Array,
+  signal: AbortSignal | undefined,
+): Promise<Uint8Array> {
+  const token = randomBytes(16).toString("hex");
+  const inputPath = join(tmpdir(), `imagemin-rs-cwebp-${token}-in`);
+  const outputPath = join(tmpdir(), `imagemin-rs-cwebp-${token}-out`);
+
+  try {
+    await writeFile(inputPath, input);
+    await runBinary({
+      arguments: [...arguments_, "-o", outputPath, "--", inputPath],
+      binary: cwebpBinary,
+      displayName: "cwebp",
+      input: new Uint8Array(0),
+      signal,
+      limits: {
+        outputBytes: MAX_OUTPUT_BYTES,
+        stderrBytes: MAX_STDERR_BYTES,
+        timeoutMilliseconds: 120_000,
+      },
+    });
+    const output = await readFile(outputPath);
+    if (output.byteLength > MAX_OUTPUT_BYTES) {
+      throw new Error(`cwebp output exceeds the ${MAX_OUTPUT_BYTES} byte limit`);
+    }
+    return new Uint8Array(output);
+  } finally {
+    await Promise.all([rm(inputPath, { force: true }), rm(outputPath, { force: true })]);
+  }
 }
 
 function normalizeWebpOptions(options: WebpOptions): WebpOptions {
