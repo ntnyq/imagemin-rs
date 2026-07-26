@@ -50,27 +50,28 @@ afterEach(() => {
 
 describe("set-version", () => {
   test("bumps every versioned file consistently, including prerelease chains", async () => {
-    const first = await runSetVersion("0.1.0-rc.0");
+    const first = await runSetVersion("7.7.7-sandbox.0");
     expect(JSON.parse(first.stdout)).toMatchObject({
       packages: manifestPaths.length,
-      tag: "v0.1.0-rc.0",
-      to: "0.1.0-rc.0",
+      tag: "v7.7.7-sandbox.0",
+      to: "7.7.7-sandbox.0",
     });
-    await expectSandboxVersion("0.1.0-rc.0");
+    await expectSandboxVersion("7.7.7-sandbox.0");
 
     // A second bump exercises the Cargo.toml substring ordering again with a
     // prerelease current version.
-    await runSetVersion("0.1.0-rc.1");
-    await expectSandboxVersion("0.1.0-rc.1");
+    await runSetVersion("7.7.7-sandbox.1");
+    await expectSandboxVersion("7.7.7-sandbox.1");
   });
 
   test("updates the imagemin workspace dependency alongside the workspace version", async () => {
-    await runSetVersion("0.1.0");
+    const manifest = JSON.parse(await readSandboxFile("package.json")) as { version: string };
+    await runSetVersion("7.7.7");
 
     const cargoToml = await readSandboxFile("Cargo.toml");
-    expect(cargoToml).toContain('version = "0.1.0"');
-    expect(cargoToml).toContain('imagemin = { version = "0.1.0", path = "crates/imagemin" }');
-    expect(cargoToml).not.toContain('version = "0.0.0"');
+    expect(cargoToml).toContain('version = "7.7.7"');
+    expect(cargoToml).toContain('imagemin = { version = "7.7.7", path = "crates/imagemin" }');
+    expect(cargoToml).not.toContain(`version = "${manifest.version}"`);
   });
 
   test("leaves the tree untouched when any precondition fails", async () => {
@@ -80,7 +81,7 @@ describe("set-version", () => {
     await writeFile(driftedPath, `${JSON.stringify(drifted, undefined, 2)}\n`);
     const before = await snapshotSandbox();
 
-    await expect(runSetVersion("0.1.0")).rejects.toThrow(/9\.9\.9/u);
+    await expect(runSetVersion("7.7.7")).rejects.toThrow(/9\.9\.9/u);
     await expect(snapshotSandbox()).resolves.toEqual(before);
   });
 
