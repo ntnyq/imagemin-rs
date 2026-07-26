@@ -1,0 +1,66 @@
+{
+  "name": "@imagemin-rs/binding",
+  "version": "0.0.0",
+  "description": "Private native binding for imagemin-rs.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "src-js",
+    "!src-js/*.node"
+  ],
+  "type": "module",
+  "main": "src-js/index.js",
+  "types": "src-js/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src-js/index.d.ts",
+      "default": "./src-js/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "napi build --esm --platform --js index.js --dts index.d.ts --output-dir src-js --release",
+    "build:debug": "napi build --esm --platform --js index.js --dts index.d.ts --output-dir src-js",
+    "build:npm-dir": "napi create-npm-dirs --npm-dir ../../npm",
+    "test": "vitest --run"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "catalog:",
+    "vitest": "catalog:"
+  },
+  "optionalDependencies": {
+    "@imagemin-rs/binding-darwin-arm64": "workspace:*",
+    "@imagemin-rs/binding-darwin-x64": "workspace:*",
+    "@imagemin-rs/binding-linux-arm64-gnu": "workspace:*",
+    "@imagemin-rs/binding-linux-arm64-musl": "workspace:*",
+    "@imagemin-rs/binding-linux-x64-gnu": "workspace:*",
+    "@imagemin-rs/binding-linux-x64-musl": "workspace:*",
+    "@imagemin-rs/binding-win32-arm64-msvc": "workspace:*",
+    "@imagemin-rs/binding-win32-x64-msvc": "workspace:*"
+  },
+  "napi": {
+    "binaryName": "imagemin_rs",
+    "packageName": "@imagemin-rs/binding",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl"
+    ]
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

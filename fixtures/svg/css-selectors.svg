@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="48" viewBox="0 0 96 48">
+  <style>
+    .mark { fill: #008000; stroke: #000000; stroke-width: 2px; }
+    #accent:hover { opacity: 0.75; }
+  </style>
+  <rect class="mark" x="4" y="4" width="40" height="40" />
+  <circle id="accent" class="mark" cx="72" cy="24" r="20" />
+</svg>

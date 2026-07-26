@@ -1,0 +1,26 @@
+[advisories]
+ignore = []
+
+[licenses]
+allow = ["Apache-2.0", "ISC", "MIT", "Unicode-3.0", "Zlib"]
+confidence-threshold = 0.93
+include-dev = false
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Versionless path dependencies between the private workspace crates are the
+# normal monorepo layout, not a supply-chain wildcard; every crate is
+# publish = false per ADR 0008 so registry wildcards remain denied.
+allow-wildcard-paths = true
+highlight = "all"
+deny = [
+  { crate = "oxvg_ast", reason = "Do not reintroduce the rejected OXVG dependency chain." },
+  { crate = "oxvg_optimiser", reason = "Published 0.0.5 contains GPLv2-derived source despite crate-level MIT metadata." },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

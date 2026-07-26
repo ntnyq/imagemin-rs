@@ -1,0 +1,56 @@
+packages:
+  - docs
+  - napi/*
+  - npm/*
+  - packages/*
+
+catalog:
+  "@napi-rs/cli": ^3.7.3
+  "@ntnyq/tsconfig": ^3.1.0
+  "@types/node": ^24.0.0
+  globby: 14.1.0
+  is-svg: 6.1.0
+  image-dimensions: 2.3.0
+  junk: 4.0.1
+  oxfmt: ^0.59.0
+  oxlint: ^1.74.0
+  svgo: 4.0.2
+  tsdown: 0.22.8
+  typescript: ^7.0.2
+  vitepress: ^1.6.4
+  vitest: ^4.1.10
+
+allowBuilds:
+  "@napi-rs/cli": true
+  esbuild: true
+  # Downloads/builds the separately executed GPL Gifsicle sidecar. It is
+  # never linked into the MIT native addon; see ADR 0003.
+  gifsicle: true
+  # Downloads/builds the separately executed GPL pngquant sidecar. It is
+  # never linked into the MIT native addon; see ADR 0004.
+  pngquant-bin: true
+  # Downloads/builds the separately executed MozJPEG and jpegtran sidecars.
+  # Both remain outside the native addon; see ADR 0005.
+  jpegtran-bin: true
+  mozjpeg: true
+  # Downloads/builds the separately executed BSD-licensed libwebp sidecar.
+  # It remains outside the native addon; see the Phase 5 codec ADR.
+  cwebp-bin: true
+  # Builds the isolated Sharp AVIF runtime and the older test-only oracle.
+  # Neither native addon is loaded into the imagemin-rs host; see ADR 0007.
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - "@napi-rs/*"
+
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Transitive through bin-wrapper. This exact 2019 release is required by
+  # gifsicle@7.0.1 and is reviewed as an old-package provenance exception.
+  - semver@5.7.2
+  - vite@5.4.21
+blockExoticSubdeps: true
+cleanupUnusedCatalogs: true
+linkWorkspacePackages: true
+sharedWorkspaceLockfile: true

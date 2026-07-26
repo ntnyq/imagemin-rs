@@ -1,0 +1,22 @@
+[package]
+name = "imagemin-codec-png"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Native PNG optimizers for imagemin-rs."
+publish = false
+
+[dependencies]
+imagemin-core = { workspace = true }
+oxipng = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+png = { workspace = true }
+
+[lints]
+workspace = true
+

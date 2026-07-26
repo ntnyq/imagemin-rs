@@ -1,0 +1,258 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Validate a release tag or stage its existing npm packages
+        options:
+          - validate
+          - stage
+        default: validate
+        required: true
+        type: choice
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_INCREMENTAL: "0"
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          package-manager-cache: false
+      - run: node tasks/release/verify-release-ref.mjs
+
+  build-native:
+    name: Build ${{ matrix.target }}
+    needs: preflight
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            directory: darwin-arm64
+            extra: ""
+          - runner: macos-latest
+            target: x86_64-apple-darwin
+            directory: darwin-x64
+            extra: ""
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            directory: win32-arm64-msvc
+            extra: ""
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            directory: win32-x64-msvc
+            extra: ""
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            directory: linux-arm64-gnu
+            extra: --use-napi-cross
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            directory: linux-arm64-musl
+            extra: -x
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            directory: linux-x64-gnu
+            extra: --use-napi-cross
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            directory: linux-x64-musl
+            extra: -x
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+          targets: ${{ matrix.target }}
+      - uses: mlugg/setup-zig@v2
+        if: endsWith(matrix.target, '-musl')
+        with:
+          version: 0.14.1
+      - uses: taiki-e/install-action@v2
+        if: endsWith(matrix.target, '-musl')
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tool: cargo-zigbuild
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build release binding
+        run: >-
+          pnpm --filter @imagemin-rs/binding exec napi build
+          --esm --platform --js index.js --dts index.d.ts --output-dir src-js
+          --release --target ${{ matrix.target }} ${{ matrix.extra }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-${{ matrix.target }}
+          path: napi/imagemin/src-js/imagemin_rs.${{ matrix.directory }}.node
+          if-no-files-found: error
+          retention-days: 14
+
+  bundle:
+    needs: build-native
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter imagemin-rs build
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: native-*
+          path: .release/native-artifacts
+          merge-multiple: true
+      - name: Assemble platform packages
+        run: >-
+          pnpm --dir napi/imagemin exec napi artifacts
+          --output-dir ../../.release/native-artifacts --npm-dir ../../npm
+      - run: node tasks/release/verify-packages.mjs --artifacts=all --release
+      - run: node tasks/release/pack-packages.mjs --artifacts=all --output=.release/npm
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-packages
+          path: .release/npm
+          if-no-files-found: error
+          retention-days: 30
+
+  smoke-desktop:
+    name: Smoke ${{ matrix.directory }}
+    needs: bundle
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            architecture: arm64
+            directory: darwin-arm64
+          - runner: macos-latest
+            architecture: x64
+            directory: darwin-x64
+          - runner: windows-11-arm
+            architecture: arm64
+            directory: win32-arm64-msvc
+          - runner: windows-latest
+            architecture: x64
+            directory: win32-x64-msvc
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          architecture: ${{ matrix.architecture }}
+          package-manager-cache: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-packages
+          path: .release/npm
+      - run: node tasks/release/smoke-packages.mjs --bundle=.release/npm
+
+  smoke-linux:
+    name: Smoke ${{ matrix.directory }}
+    needs: bundle
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            directory: linux-arm64-gnu
+            image: node:24.16.0-bookworm-slim
+            platform: linux/arm64
+          - runner: ubuntu-24.04-arm
+            directory: linux-arm64-musl
+            image: node:24.16.0-alpine
+            platform: linux/arm64
+          - runner: ubuntu-latest
+            directory: linux-x64-gnu
+            image: node:24.16.0-bookworm-slim
+            platform: linux/amd64
+          - runner: ubuntu-latest
+            directory: linux-x64-musl
+            image: node:24.16.0-alpine
+            platform: linux/amd64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-packages
+          path: .release/npm
+      - name: Install tarballs and run every codec
+        run: >-
+          docker run --rm --platform ${{ matrix.platform }}
+          --volume "${{ github.workspace }}:${{ github.workspace }}"
+          --workdir "${{ github.workspace }}"
+          ${{ matrix.image }}
+          node tasks/release/smoke-packages.mjs --bundle=.release/npm
+
+  stage-npm:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'stage'
+    needs:
+      - smoke-desktop
+      - smoke-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-packages
+          path: .release/npm
+      - run: npm install --global npm@12.0.1
+      - run: npm --version
+      - run: node tasks/release/verify-release-ref.mjs
+      - run: node tasks/release/publish-packages.mjs --mode=stage --bundle=.release/npm

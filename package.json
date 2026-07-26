@@ -1,0 +1,45 @@
+{
+  "name": "imagemin-rs-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "audit:rust": "cargo deny check bans licenses sources",
+    "bench:phase2": "node tasks/benchmark-phase2.mjs",
+    "bench:phase3": "node tasks/benchmark-phase3.mjs",
+    "bench:phase4": "node tasks/benchmark-phase4.mjs",
+    "bench:phase5": "node tasks/benchmark-phase5.mjs",
+    "bench:phase6": "node tasks/benchmark-phase6.mjs",
+    "bench:svg": "node tasks/benchmark-svg.mjs",
+    "build": "pnpm run build:native && pnpm --filter imagemin-rs build",
+    "build:native": "pnpm --filter @imagemin-rs/binding build:debug",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run docs:build",
+    "docs:build": "pnpm -C docs run build",
+    "docs:dev": "pnpm -C docs run dev",
+    "format": "cargo fmt --all && oxfmt .",
+    "format:check": "cargo fmt --all --check && oxfmt --check .",
+    "lint": "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings && oxlint",
+    "release:verify": "node tasks/release/verify-packages.mjs --artifacts=current",
+    "release:verify:metadata": "node tasks/release/verify-packages.mjs --artifacts=none",
+    "release:bundle:current": "node tasks/release/pack-packages.mjs --artifacts=current",
+    "release:smoke": "node tasks/release/smoke-packages.mjs",
+    "release:publish:dry-run": "node tasks/release/publish-packages.mjs --mode=dry-run",
+    "release:version": "node tasks/release/set-version.mjs",
+    "test": "cargo test --locked --workspace && pnpm run build:native && pnpm --filter @imagemin-rs/binding test && pnpm --filter imagemin-rs test",
+    "typecheck": "pnpm run build:native && pnpm --filter imagemin-rs typecheck"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "catalog:",
+    "@ntnyq/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "packageManager": "pnpm@11.13.1"
+}

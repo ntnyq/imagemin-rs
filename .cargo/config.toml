@@ -1,0 +1,8 @@
+# Keep workspace builds independent from user-level registry replacements.
+# The explicit default port remains the official crates.io sparse endpoint and
+# gives Cargo a distinct replacement source identity.
+[source.crates-io]
+replace-with = "crates-io-sparse"
+
+[source.crates-io-sparse]
+registry = "sparse+https://index.crates.io:443/"

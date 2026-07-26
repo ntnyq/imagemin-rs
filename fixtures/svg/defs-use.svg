@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <linearGradient id="paint" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff0000" />
+      <stop offset="1" stop-color="#0000ff" />
+    </linearGradient>
+    <mask id="cutout">
+      <rect width="80" height="80" fill="white" />
+      <circle cx="40" cy="40" r="12" fill="black" />
+    </mask>
+    <path id="tile" d="M8 8h64v64H8z" />
+  </defs>
+  <use href="#tile" fill="url(#paint)" mask="url(#cutout)" />
+</svg>

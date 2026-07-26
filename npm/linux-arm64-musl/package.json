@@ -1,0 +1,31 @@
+{
+  "name": "@imagemin-rs/binding-linux-arm64-musl",
+  "version": "0.0.0",
+  "description": "Private native binding for imagemin-rs.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "imagemin_rs.linux-arm64-musl.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "libc": [
+    "musl"
+  ],
+  "main": "imagemin_rs.linux-arm64-musl.node",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

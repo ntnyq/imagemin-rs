@@ -1,0 +1,21 @@
+[package]
+name = "imagemin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+publish = false
+
+[dependencies]
+imagemin-codec-gif = { workspace = true }
+imagemin-codec-png = { workspace = true }
+imagemin-codec-svg = { workspace = true }
+imagemin-core = { workspace = true }
+
+[dev-dependencies]
+oxipng = { workspace = true }
+
+[lints]
+workspace = true

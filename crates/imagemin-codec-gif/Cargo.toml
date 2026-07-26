@@ -1,0 +1,21 @@
+[package]
+name = "imagemin-codec-gif"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Native lossless GIF optimizer for imagemin-rs."
+publish = false
+
+[dependencies]
+gif = { workspace = true }
+gif-dispose = { workspace = true }
+imagemin-core = { workspace = true }
+rgb = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true
+

@@ -1,0 +1,42 @@
+[package]
+name = "imagemin-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4.10"
+imagemin = { path = "../crates/imagemin" }
+
+[[bin]]
+name = "png_pipeline"
+path = "fuzz_targets/png_pipeline.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "gif_pipeline"
+path = "fuzz_targets/gif_pipeline.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "svg_pipeline"
+path = "fuzz_targets/svg_pipeline.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]
+
+# Keep the fuzz workspace on the same patched svgm-core as the release
+# workspace. See vendor/svgm-core/VENDORED.md.
+[patch.crates-io]
+svgm-core = { path = "../vendor/svgm-core" }
+

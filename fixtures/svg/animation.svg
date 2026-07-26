@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="24" viewBox="0 0 64 24">
+  <circle id="dot" cx="12" cy="12" r="8" fill="red">
+    <animate attributeName="cx" values="12;52;12" dur="2s" repeatCount="indefinite" />
+  </circle>
+</svg>

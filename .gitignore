@@ -1,0 +1,16 @@
+.DS_Store
+*.log*
+*.node
+*.tsbuildinfo
+
+node_modules
+target
+dist
+coverage
+
+**/.vitepress/cache
+**/.vitepress/dist
+
+.pnpm-store
+.release
+.vitest

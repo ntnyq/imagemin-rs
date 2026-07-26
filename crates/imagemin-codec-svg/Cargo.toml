@@ -1,0 +1,23 @@
+[package]
+name = "imagemin-codec-svg"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Native SVG optimizer for imagemin-rs."
+publish = false
+
+[dependencies]
+imagemin-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+svgm-core = { workspace = true }
+xmlparser = { workspace = true }
+
+[dev-dependencies]
+resvg = { workspace = true }
+
+[lints]
+workspace = true
+

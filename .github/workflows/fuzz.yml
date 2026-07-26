@@ -1,0 +1,84 @@
+name: Fuzz
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/fuzz.yml"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "crates/imagemin/**"
+      - "fixtures/**"
+      - "fuzz/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/fuzz.yml"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "crates/imagemin/**"
+      - "fixtures/**"
+      - "fuzz/**"
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
+jobs:
+  fuzz:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: png_pipeline
+            fixtures: fixtures/png
+          - target: gif_pipeline
+            fixtures: fixtures/gif
+          - target: svg_pipeline
+            fixtures: fixtures/svg
+    env:
+      CARGO_FUZZ_VERSION: 0.13.2
+      FUZZ_TIME: ${{ github.event_name == 'schedule' && '600' || '30' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: actions/cache@v6
+        with:
+          path: ${{ runner.tool_cache }}/cargo-fuzz
+          key: cargo-fuzz-${{ runner.os }}-${{ env.CARGO_FUZZ_VERSION }}
+      - run: echo "${{ runner.tool_cache }}/cargo-fuzz/bin" >> "$GITHUB_PATH"
+      - run: >-
+          cargo install
+          --root "${{ runner.tool_cache }}/cargo-fuzz"
+          --version "${{ env.CARGO_FUZZ_VERSION }}"
+          cargo-fuzz
+          --locked
+      - run: cargo fuzz build ${{ matrix.target }}
+      - run: >-
+          cargo fuzz run ${{ matrix.target }}
+          fuzz/corpus/${{ matrix.target }}
+          ${{ matrix.fixtures }}
+          --
+          -max_total_time=${{ env.FUZZ_TIME }}
+          -max_len=1048576
+          -rss_limit_mb=2048
+          -timeout=10
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}-${{ github.sha }}
+          path: fuzz/artifacts/${{ matrix.target }}
+          if-no-files-found: ignore

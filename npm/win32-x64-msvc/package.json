@@ -1,0 +1,28 @@
+{
+  "name": "@imagemin-rs/binding-win32-x64-msvc",
+  "version": "0.0.0",
+  "description": "Private native binding for imagemin-rs.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "imagemin_rs.win32-x64-msvc.node"
+  ],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "imagemin_rs.win32-x64-msvc.node",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
