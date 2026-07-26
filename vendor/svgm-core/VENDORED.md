@@ -36,9 +36,16 @@ defect under this repository's fuzzing policy.
    million-fold growth per optimize call, found as an svg_pipeline timeout.
    ASCII-only inputs produce byte-identical output.
 
+## Upstream reports
+
+- parse_path hang: <https://github.com/madebyfrmwrk/svgm/issues/22>
+- minifyStyles/convertTransform byte-as-char: <https://github.com/madebyfrmwrk/svgm/issues/23>
+- truncated input serializes to empty (guarded in our adapter, not patched
+  here): <https://github.com/madebyfrmwrk/svgm/issues/24>
+
 ## Removal condition
 
 Drop this directory and both `[patch.crates-io]` entries once an upstream
-release fixes `parse_path` progress on unconsumable characters and the pinned
-`svgm-core` version is bumped accordingly (re-run the SVG conformance and
-benchmark gates when that happens).
+release fixes issues 22 and 23 and the pinned `svgm-core` version is bumped
+accordingly (re-run the SVG conformance and benchmark gates when that
+happens).

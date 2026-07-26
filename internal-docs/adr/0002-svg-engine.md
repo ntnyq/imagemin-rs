@@ -57,4 +57,8 @@
 `M0 0 -` 这类尾部垃圾从"重写时静默丢弃"变为"整条 path 不改写"，与渲染器错误
 恢复语义一致。回归测试在 `crates/imagemin-codec-svg/tests/svgm.rs`，findings log 在
 `internal-docs/fuzzing.md`；来源、补丁与移除条件见 `vendor/svgm-core/VENDORED.md`。
-上游发布修复并通过 conformance/benchmark 门禁后应删除 vendor 与 patch。
+两个缺陷与"截断输入序列化为空文档"（adapter 层已守卫）均已报告上游
+（[#22](https://github.com/madebyfrmwrk/svgm/issues/22)、
+[#23](https://github.com/madebyfrmwrk/svgm/issues/23)、
+[#24](https://github.com/madebyfrmwrk/svgm/issues/24)）；上游发布修复并通过
+conformance/benchmark 门禁后应删除 vendor 与 patch。
