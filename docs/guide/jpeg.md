@@ -1,7 +1,8 @@
-# JPEG 优化
+# JPEG Optimization
 
-Phase 4 提供两个语义不同的兼容入口：`mozjpeg()` 会重新编码并允许有损质量控制；
-`jpegtran()` 只重排 JPEG coefficients，但为兼容上游会删除 marker metadata。
+The two JPEG adapters have different semantics: `mozjpeg()` re-encodes pixels
+and supports lossy quality control, while `jpegtran()` transforms JPEG
+coefficients losslessly but removes marker metadata to match upstream.
 
 ## MozJPEG
 
@@ -19,7 +20,7 @@ const output = await imagemin.buffer(input, {
 });
 ```
 
-`mozjpeg()` 兼容 `imagemin-mozjpeg@10.0.0`，支持以下 options：
+`mozjpeg()` targets `imagemin-mozjpeg@10.0.0`:
 
 ```ts
 interface MozjpegOptions {
@@ -43,13 +44,10 @@ interface MozjpegOptions {
 }
 ```
 
-默认输出 progressive JPEG。固定 fixture 上，默认和高级 option matrix 与
-`imagemin-mozjpeg@10.0.0` 逐字节相同。唯一有意修复是 `quantBaseline:true`：上游
-错误地额外传入字符串 `true`，导致 cjpeg 尝试打开名为 `true` 的文件；本项目发送
-正确的无值 flag。
-
-`targa` 继承上游 option，但兼容插件会先检查 JPEG signature，因此它不接受任意
-TGA 输入。需要格式转换时应使用专门的转换入口。
+Progressive JPEG is the default. Fixed fixtures match
+`imagemin-mozjpeg@10.0.0` byte-for-byte across default and advanced option
+matrices. One upstream bug is intentionally fixed: `quantBaseline: true` emits
+the correct valueless flag instead of an extra `true` filename.
 
 ## jpegtran
 
@@ -68,18 +66,18 @@ interface JpegtranOptions {
 }
 ```
 
-`jpegtran()` 与 `imagemin-jpegtran@8.0.0` 一样固定使用 `-copy none`。像素和 DCT
-coefficients 保持无损，但 EXIF orientation、ICC profile 与 comment 会被删除。
-因此它不等价于“保留显示语义”：依赖 orientation 的图片可能旋转，依赖 ICC 的图片
-可能出现颜色差异。需要保留这些 metadata 时不要使用该兼容入口。
+Like `imagemin-jpegtran@8.0.0`, this adapter always uses `-copy none`.
+Pixels and DCT coefficients remain lossless, but EXIF orientation, ICC
+profiles, and comments are removed. Do not use this compatibility entry point
+when those metadata are required for correct display.
 
-## 安全、确定性与发布边界
+## Isolation and release boundary
 
-两条路径都执行受限的独立 sidecar，不链接进 MIT native addon，并设置输入、输出、
-stderr、执行时间与解码尺寸上限。非 JPEG 原样返回；损坏但具有 JPEG signature 的
-输入返回 codec error。
+Both adapters execute constrained sidecars rather than linking their codec into
+the MIT native addon. Limits cover input, output, stderr, execution time, and
+decoded dimensions. Non-JPEG input passes through; malformed JPEG-signature
+input returns a codec error.
 
-生产路径使用项目从固定源码构建的 MozJPEG 4.1.1 `cjpeg` 与 `jpegtran`。8 个
-`@imagemin-rs/sidecars-*` 平台包携带各二进制的 SHA-256、来源 provenance 和完整许可
-文本，不使用运行时下载或安装期编译。历史 `mozjpeg@8.0.0` 与
-`jpegtran-bin@7.0.0` 仅保留为开发差分 oracle；不同 encoder 版本间不承诺 byte parity。
+Production packages contain project-built MozJPEG 4.1.1 `cjpeg` and
+`jpegtran`, binary hashes, source provenance, and complete licenses. Byte
+parity is promised only within the pinned encoder version.

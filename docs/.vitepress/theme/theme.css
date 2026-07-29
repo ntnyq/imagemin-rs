@@ -1,0 +1,15 @@
+.image-playground-page .VPDoc .container,
+.image-playground-page .VPDoc .content,
+.image-playground-page .VPDoc .content-container {
+  max-width: 1280px;
+}
+
+.image-playground-page .VPDoc {
+  padding-inline: 24px;
+}
+
+@media (max-width: 640px) {
+  .image-playground-page .VPDoc {
+    padding-inline: 16px;
+  }
+}

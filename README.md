@@ -2,119 +2,43 @@
 
 An imagemin-compatible image optimization pipeline powered by Rust and napi-rs.
 
-The repository has completed the Phase 6 codec slice and is not published yet. The implemented vertical slices include:
+[Documentation](https://imagemin-rs.ntnyq.dev/) · [Getting Started](https://imagemin-rs.ntnyq.dev/guide/getting-started) · [API Reference](https://imagemin-rs.ntnyq.dev/api/) · [Playground](https://imagemin-rs.ntnyq.dev/playground) · [简体中文](https://imagemin-rs.ntnyq.dev/zh/)
 
-- an imagemin-compatible JavaScript plugin pipeline;
-- a small `optimize()` interface with per-step statistics;
-- a CPU-safe napi-rs `AsyncTask` binding;
-- a pure Rust pipeline and a lossless Oxipng adapter;
-- an exact SVGO 4 compatibility plugin plus a constrained native SVGM worker-pool plugin;
-- a Gifsicle compatibility sidecar plus a permissive native lossless GIF profile;
-- an `imagemin-optipng@8`-shaped native profile with explicit Oxipng differences;
-- an `imagemin-pngquant@10` compatibility sidecar with alpha-aware visual conformance;
-- `imagemin-mozjpeg@10` and `imagemin-jpegtran@8` compatibility sidecars with
-  progressive, advanced-option, metadata, and independent-decoder conformance;
-- an `imagemin-webp@8` compatibility sidecar with all documented options, format-changing
-  file destinations, alpha/metadata conformance, and animation-safe pass-through;
-- an `imagemin-avif@0.1` compatibility adapter using an isolated, pinned Sharp runtime with
-  alpha/chroma conformance, bounded concurrency, and animation-safe pass-through;
-- native SVG byte, node, nesting, DTD/entity, and UTF-8 safety limits;
-- Rust, binding, TypeScript, and package-level tests;
-- a VitePress documentation site and cargo-deny supply-chain gate.
+[![CI](https://github.com/ntnyq/imagemin-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/ntnyq/imagemin-rs/actions/workflows/ci.yml)
+[![NPM VERSION](https://img.shields.io/npm/v/imagemin-rs.svg)](https://www.npmjs.com/package/imagemin-rs)
+[![NPM DOWNLOADS](https://img.shields.io/npm/dy/imagemin-rs.svg)](https://www.npmjs.com/package/imagemin-rs)
+[![LICENSE](https://img.shields.io/github/license/ntnyq/imagemin-rs.svg)](https://github.com/ntnyq/imagemin-rs/blob/main/LICENSE)
 
-```ts
-import imagemin, {
-  avif,
-  giflossless,
-  gifsicle,
-  jpegtran,
-  mozjpeg,
-  optimize,
-  optipng,
-  oxipng,
-  pngquant,
-  svgm,
-  svgo,
-  webp,
-} from "imagemin-rs";
+## Features
 
-const data = await imagemin.buffer(input, {
-  plugins: [oxipng({ optimizationLevel: 3 })],
-});
+- Familiar `imagemin()` and `imagemin.buffer()` APIs with typed plugin options.
+- Native Rust codecs executed outside the JavaScript event loop with napi-rs.
+- SVG, GIF, PNG, JPEG, WebP, and AVIF optimization and conversion.
+- Observable `optimize()` results with per-step byte statistics.
+- Reproducible native and sidecar packages for macOS, Linux, and Windows.
 
-const result = await optimize(input, {
-  plugins: [oxipng()],
-});
+See the [documentation](https://imagemin-rs.ntnyq.dev/) for codec behavior,
+compatibility boundaries, architecture, and release policy.
 
-const compatibleSvg = await imagemin.buffer(svgInput, {
-  plugins: [svgo({ multipass: true })],
-});
-
-const nativeSvg = await imagemin.buffer(svgInput, {
-  plugins: [svgm({ preset: "safe" })],
-});
-
-const compatibleGif = await imagemin.buffer(gifInput, {
-  plugins: [gifsicle({ optimizationLevel: 3 })],
-});
-
-const nativeGif = await imagemin.buffer(gifInput, {
-  plugins: [giflossless()],
-});
-
-const compatiblePng = await imagemin.buffer(pngInput, {
-  plugins: [optipng({ optimizationLevel: 3 })],
-});
-
-const lossyPng = await imagemin.buffer(pngInput, {
-  plugins: [pngquant({ quality: [0.6, 0.8] })],
-});
-
-const lossyJpeg = await imagemin.buffer(jpegInput, {
-  plugins: [mozjpeg({ quality: 80, progressive: true })],
-});
-
-const coefficientLosslessJpeg = await imagemin.buffer(jpegInput, {
-  plugins: [jpegtran({ progressive: true })],
-});
-
-const convertedWebp = await imagemin.buffer(pngInput, {
-  plugins: [webp({ quality: 80, method: 6 })],
-});
-
-const convertedAvif = await imagemin.buffer(pngInput, {
-  plugins: [avif({ quality: 80, effort: 6 })],
-});
-
-console.log(result.inputBytes, result.outputBytes);
-```
-
-## Development
+## Install
 
 ```sh
-pnpm install
-pnpm run build:native
-pnpm run check
+pnpm add imagemin-rs
 ```
 
-## Project notes
+## Quick Start
 
-- [Architecture](./internal-docs/adr/0001-architecture.md)
-- [SVG engine decision](./internal-docs/adr/0002-svg-engine.md)
-- [GIF/OptiPNG engine decision](./internal-docs/adr/0003-gif-optipng-engines.md)
-- [pngquant engine decision](./internal-docs/adr/0004-pngquant-engine.md)
-- [JPEG engine decision](./internal-docs/adr/0005-jpeg-engines.md)
-- [WebP engine decision](./internal-docs/adr/0006-webp-engine.md)
-- [AVIF engine decision](./internal-docs/adr/0007-avif-engine.md)
-- [Sidecar build & distribution decision](./internal-docs/adr/0009-sidecar-distribution.md)
-- [Phased implementation plan](./internal-docs/implementation-plan.md)
-- [Release runbook](./internal-docs/releasing.md)
-- [Upstream research](./docs/research/upstream-landscape.md)
-- [SVG codec research](./docs/research/svg-codec-selection.md)
-- [GIF/OptiPNG codec research](./docs/research/gif-optipng-codec-selection.md)
-- [pngquant codec research](./docs/research/pngquant-codec-selection.md)
-- [JPEG codec research](./docs/research/jpeg-codec-selection.md)
-- [WebP codec research](./docs/research/webp-codec-selection.md)
-- [AVIF codec research](./docs/research/avif-codec-selection.md)
+```ts
+import imagemin, { oxipng } from "imagemin-rs";
 
-Released under the MIT License.
+const output = await imagemin.buffer(input, {
+  plugins: [oxipng({ optimizationLevel: 3 })],
+});
+```
+
+Continue with the [Getting Started guide](https://imagemin-rs.ntnyq.dev/guide/getting-started)
+or optimize local images in the [browser playground](https://imagemin-rs.ntnyq.dev/playground).
+
+## License
+
+[MIT](./LICENSE) License © 2026-PRESENT [ntnyq](https://github.com/ntnyq)

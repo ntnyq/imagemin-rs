@@ -2,7 +2,7 @@
 
 ## `imagemin(inputs, options?)`
 
-读取、顺序优化并可选写入多个文件。
+Reads, optimizes in plugin order, and optionally writes multiple files.
 
 ```ts
 const files = await imagemin(["images/*.png"], {
@@ -13,22 +13,25 @@ const files = await imagemin(["images/*.png"], {
 });
 ```
 
-`glob: false` 时把 input 当作精确路径；两种模式都会过滤 `.DS_Store` 等 filesystem junk。
-glob 模式与上游一致地把 pattern 中的反斜杠转换为正斜杠（Windows 路径可直接使用），并按
-路径排序返回——上游依赖 globby 的异步遍历顺序在多目录时不确定，本包保证可复现顺序，
-文件集合与上游一致。`concurrency` 是 `1..32` 的整数，默认 `min(4, available CPUs)`。并发
-执行仍按该顺序返回，首个失败会停止调度尚未开始的文件，错误包含 `sourcePath`。写入
-destination 时使用源文件 basename；格式转换会按最终 magic 更新扩展名（上游只改写
-`.webp`）。
+With `glob: false`, inputs are exact paths. Both modes filter filesystem junk
+such as `.DS_Store`. Glob patterns normalize Windows backslashes and results
+are path-sorted for reproducibility. `concurrency` is an integer from 1 to 32
+and defaults to the smaller of 4 and the available CPU count.
+
+Results preserve sorted input order. The first failure stops scheduling files
+that have not started and includes `sourcePath` in the error. Destination files
+use the input basename; format conversion updates the extension from the final
+file magic.
 
 ## `imagemin.buffer(input, options?)`
 
-兼容入口，返回优化后的 `Promise<Uint8Array>`。
+The compatibility entry point returns a `Promise<Uint8Array>`.
 
-文件、buffer 和 `optimize()` 均接受 `signal?: AbortSignal`。内置 sidecar 会在 abort 时终止
-child process；未开始的文件不会再调度。原生 `AsyncTask` 和不知道 signal 的第三方插件无法
-强制停止底层 CPU 工作，但公开 Promise 会立即以 `ERR_IMAGEMIN_ABORTED` 拒绝；支持协作取消
-的第三方插件可从可选第二参数读取 `context.signal`。
+File, buffer, and `optimize()` APIs accept `signal?: AbortSignal`. Built-in
+sidecars terminate their child process when aborted. Native tasks and
+third-party plugins that do not cooperate with the signal cannot stop
+underlying CPU work, but the public Promise rejects immediately with
+`ERR_IMAGEMIN_ABORTED`.
 
 ```ts
 type ImageminPlugin = (
@@ -37,13 +40,13 @@ type ImageminPlugin = (
 ) => Uint8Array | PromiseLike<Uint8Array>;
 ```
 
-函数插件收到的 `input` 实际是 Node `Buffer`（`Uint8Array` 的子类），与上游 imagemin 的行为
-一致；官方插件里的 `Buffer.isBuffer` 守卫（optipng、mozjpeg、gifsicle、webp、svgo 等）因此
-无需 Adapter 即可直接工作。
+Plugin input is a Node.js `Buffer`, which is a `Uint8Array` subclass. Existing
+official plugins that guard with `Buffer.isBuffer()` therefore work without an
+adapter.
 
 ## `optimize(input, options?)`
 
-返回：
+Returns optimized bytes and per-step statistics:
 
 ```ts
 interface OptimizationResult {
@@ -62,8 +65,6 @@ interface OptimizationResult {
 
 ## `oxipng(options?)`
 
-Phase 0 原型插件：
-
 ```ts
 interface OxipngOptions {
   optimizationLevel?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -73,17 +74,21 @@ interface OxipngOptions {
 }
 ```
 
-`optimizeAlpha` 会改变完全透明像素的隐藏 RGB 值，虽然渲染通常不变，仍属于有损变换，因此默认关闭。
-
-未知 options 和越界值会报 `ERR_IMAGEMIN_INVALID_OPTIONS`，不会静默忽略。
+`optimizeAlpha` changes hidden RGB values in fully transparent pixels and is
+therefore disabled by default. Unknown or out-of-range options fail with
+`ERR_IMAGEMIN_INVALID_OPTIONS`.
 
 ## `svgo(options?)`
 
-`imagemin-svgo@12` 兼容工厂，内部固定 `svgo@4.0.2`。`SvgoOptions` 直接采用 SVGO 4 `Config`，包括 custom plugin；默认补入 `multipass: true`。这是 JavaScript 兼容执行器，不进入原生插件融合。
+An `imagemin-svgo@12` compatible factory pinned to `svgo@4.0.2`. `SvgoOptions`
+uses the full SVGO `Config` type, including custom plugins, and defaults
+`multipass` to `true`. It stays on the JavaScript compatibility path and does
+not participate in native plugin fusion.
 
 ## `svgm(options?)`
 
-显式原生 SVG 工厂，通过 napi-rs `AsyncTask` 使用 `svgm-core@0.3.8`：
+A bounded native SVG factory using `svgm-core@0.3.8` in the napi-rs worker
+pool:
 
 ```ts
 interface SvgmOptions {
@@ -93,17 +98,20 @@ interface SvgmOptions {
 }
 ```
 
-`precision` 只能是 `0..15` 的整数。pass 名称是封闭 union；未知字段不会被忽略。安全/兼容边界见 [SVG 优化](../guide/svg.md)。
+`precision` is an integer from 0 to 15 and pass names form a closed union. See
+[SVG Optimization](../guide/svg.md) for the resource and compatibility
+boundary.
 
 ## `gifsicle(options?)`
 
-`imagemin-gifsicle@7` 兼容工厂，支持 `interlaced`、`optimizationLevel: 1..3`
-与 `colors: 2..256`。它执行独立 GPL Gifsicle sidecar，不进入 native plugin
-fusion；完整许可与确定性边界见 [GIF 与无损 PNG](../guide/gif-png.md)。
+An `imagemin-gifsicle@7` compatible factory supporting `interlaced`,
+`optimizationLevel: 1..3`, and `colors: 2..256`. It executes a separate GPL
+Gifsicle sidecar and does not participate in native plugin fusion.
 
 ## `giflossless(options?)`
 
-原生 permissive GIF profile，在 worker pool 中做逐帧等价的 delta 重编码：
+A permissively licensed native GIF profile that performs frame-equivalent
+delta re-encoding:
 
 ```ts
 interface GiflosslessOptions {
@@ -113,25 +121,26 @@ interface GiflosslessOptions {
 
 ## `optipng(options?)`
 
-`imagemin-optipng@8` option shape 的原生语义映射。默认 level 3、三类 reduction
-开启、non-interlaced、error recovery 开启，并始终 strip all。Oxipng 与 OptiPNG
-算法不同，不承诺 byte parity。
+A native semantic mapping of the `imagemin-optipng@8` option shape. It
+defaults to level 3, enables three reduction classes, outputs non-interlaced
+PNG, enables error recovery, and always strips metadata. The engine is Oxipng,
+so byte parity with OptiPNG is not promised.
 
 ## `pngquant(options?)`
 
-`imagemin-pngquant@10` 兼容工厂，支持 `speed`、`strip`、`quality`、`dithering`
-与 `posterize`。它执行独立 GPL pngquant sidecar；quality floor 失败返回原输入，
-APNG 为防止动画丢失而 no-op。完整边界见 [PNG 有损量化](../guide/pngquant.md)。
+An `imagemin-pngquant@10` compatible factory supporting `speed`, `strip`,
+`quality`, `dithering`, and `posterize`. It executes a separate GPL pngquant
+sidecar. A failed quality floor returns the original input and APNG passes
+through to preserve animation. See [Lossy PNG Quantization](../guide/pngquant.md).
 
 ## `mozjpeg(options?)`
 
-`imagemin-mozjpeg@10` 兼容工厂，支持 quality、progressive、trellis、tune、DCT、
-quant table、sampling 等完整公开 option shape。它执行独立 MozJPEG cjpeg sidecar，
-默认生成 progressive JPEG，并修复上游 `quantBaseline:true` 的参数 bug。
+An `imagemin-mozjpeg@10` compatible factory with quality, progressive scan,
+trellis, tuning, DCT, quantization table, sampling, and other public options.
+It executes a separate MozJPEG cjpeg sidecar, defaults to progressive output,
+and fixes the upstream `quantBaseline: true` argument bug.
 
 ## `jpegtran(options?)`
-
-`imagemin-jpegtran@8` 兼容工厂：
 
 ```ts
 interface JpegtranOptions {
@@ -140,45 +149,50 @@ interface JpegtranOptions {
 }
 ```
 
-它在 JPEG coefficients 上无损，但为兼容上游固定删除 EXIF、ICC 与 comment；完整
-metadata 与发布边界见 [JPEG 优化](../guide/jpeg.md)。
+The transformation is lossless in JPEG coefficient space, but the upstream
+compatible behavior removes EXIF, ICC, and comments. See
+[JPEG Optimization](../guide/jpeg.md) before using it on metadata-dependent
+images.
 
 ## `webp(options?)`
 
-`imagemin-webp@8` 兼容工厂，支持 preset、quality/alphaQuality、method、target size、
-SNS/filter、lossless/near-lossless、crop/resize 与 ICC/EXIF/XMP metadata。PNG、JPEG、
-TIFF 和静态 WebP 会转为 WebP；APNG、animated WebP 与 multi-page TIFF 为防止内容
-丢失而 no-op。
+An `imagemin-webp@8` compatible factory supporting preset, quality and alpha
+quality, method, target size, SNS/filter controls, lossless and near-lossless
+modes, crop/resize, and ICC/EXIF/XMP metadata.
 
-文件入口会根据最终 magic 把 destination 扩展名改为 `.webp`。上游会忽略多个合法
-零值，本项目将它们正确传给 cwebp；完整类型与差异见 [WebP 转码](../guide/webp.md)。
+PNG, JPEG, TIFF, and static WebP convert to WebP. APNG, animated WebP, and
+multi-page TIFF pass through. File destinations update to `.webp`.
 
 ## `avif(options?)`
 
-`imagemin-avif@0.1.6` 兼容工厂，通过隔离的 Sharp/libheif worker 把静态 PNG、JPEG、
-GIF、WebP、TIFF 或 AVIF 转为 8-bit AVIF：
+An `imagemin-avif@0.1.6` compatible factory that converts static PNG, JPEG,
+GIF, WebP, TIFF, or AVIF through an isolated Sharp/libheif worker:
 
 ```ts
 interface AvifOptions {
-  quality?: number; // integer 1..100，默认 90
+  quality?: number; // integer 1..100, default 90
   lossless?: boolean;
-  effort?: number; // integer 0..9，0 最快
-  speed?: number; // integer 0..8，端点映射为 effort 9..0
+  effort?: number; // integer 0..9
+  speed?: number; // integer 0..8
   chromaSubsampling?: "4:2:0" | "4:4:4";
   bitdepth?: 8;
 }
 ```
 
-`effort` 与 `speed` 不能同时使用。APNG、animated GIF/WebP/AVIF 与 multi-page TIFF
-原样返回；文件入口会把成功转码的 destination 扩展名改为 `.avif`。完整默认值、
-上游 bug 修复和资源边界见 [AVIF 转码](../guide/avif.md)。
+`effort` and `speed` are mutually exclusive. Animated and multi-page inputs
+pass through; successful file conversion updates the extension to `.avif`.
+See [AVIF Conversion](../guide/avif.md) for defaults and resource limits.
 
-## 稳定错误码
+## Stable errors and limits
 
-公开错误使用 `ImageminError`，当前错误码包括 invalid input/options、plugin output/plugin、
-codec、I/O、native load、unsupported plugin 与 `ERR_IMAGEMIN_ABORTED`。文件批处理失败保留
-具体 `sourcePath`，codec/plugin 错误保留 `plugin`。批处理不是事务：abort 或失败前已经完成的
-独立文件不会回滚。
+Public failures use `ImageminError`. Stable codes cover invalid input/options,
+plugin output and execution, codecs, I/O, native loading, unsupported plugins,
+and `ERR_IMAGEMIN_ABORTED`. Batch failures retain `sourcePath`; codec and
+plugin failures retain `plugin`.
 
-公开 pipeline 的单输入上限为 256 MiB；文件入口在读取前先检查 metadata，读取后仍会再次
-检查实际 `Uint8Array`，各 codec 还会施加更严格的像素、帧数、metadata 和输出上限。
+Batch processing is not transactional: completed independent files are not
+rolled back after an abort or later failure.
+
+The public pipeline limits a single input to 256 MiB. File APIs check metadata
+before reading and actual bytes after reading. Individual codecs impose
+stricter pixel, frame, metadata, and output limits.

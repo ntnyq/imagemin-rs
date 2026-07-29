@@ -1,8 +1,10 @@
-# SVG 优化
+# SVG Optimization
 
-Phase 1 提供两条有意区分的 SVG 路径：`svgo()` 追求 `imagemin-svgo` 配置兼容，`svgm()` 追求受限且非阻塞的原生执行。它们不是同一个引擎的别名。
+imagemin-rs provides two deliberately separate SVG paths: `svgo()` targets
+imagemin-svgo configuration compatibility, while `svgm()` provides bounded
+native execution. They are not aliases for the same engine.
 
-## `svgo()`：兼容优先
+## `svgo()`: compatibility first
 
 ```ts
 import imagemin, { svgo } from "imagemin-rs";
@@ -23,11 +25,16 @@ const output = await imagemin.buffer(input, {
 });
 ```
 
-兼容基准固定为 `imagemin-svgo@12.0.0`、`svgo@4.0.2` 和 `is-svg@6.1.0`。默认 `multipass` 为 `true`；`path`、`floatPrecision`、`plugins`、`js2svg`、`datauri` 和 custom JavaScript plugin 都原样进入 SVGO。非 SVG 输入原样返回。
+The compatibility baseline is `imagemin-svgo@12.0.0`, `svgo@4.0.2`, and
+`is-svg@6.1.0`. `multipass` defaults to `true`; `path`, `floatPrecision`,
+`plugins`, `js2svg`, `datauri`, and custom JavaScript plugins are passed to
+SVGO. Non-SVG input is returned unchanged.
 
-完整 SVGO 在 JavaScript 主线程同步计算，Promise 只表示插件协议；处理超大 SVG 或对事件循环延迟敏感时，应评估 `svgm()`。
+Full SVGO runs synchronously on the JavaScript main thread. Its Promise is only
+the plugin protocol, so evaluate `svgm()` for very large SVGs or
+latency-sensitive applications.
 
-## `svgm()`：原生优先
+## `svgm()`: native first
 
 ```ts
 import imagemin, { svgm } from "imagemin-rs";
@@ -45,7 +52,8 @@ const output = await imagemin.buffer(input, {
 });
 ```
 
-`svgm()` 固定使用 `svgm-core@0.3.8`（附带一个仓库内维护的 path 数据解析终止性修复，防止畸形 `d` 属性挂起 worker 线程；见 [ADR 0002](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0002-svg-engine.md)），在 napi-rs worker pool 中运行。options 是独立、封闭的原生 profile：
+`svgm()` uses `svgm-core@0.3.8` in the napi-rs worker pool. Its options form a
+closed native profile:
 
 ```ts
 interface SvgmOptions {
@@ -55,17 +63,23 @@ interface SvgmOptions {
 }
 ```
 
-默认 safe preset 会保留 title、可访问描述和 viewBox。原生路径要求严格 UTF-8，并拒绝 DTD/实体声明、超过 16 MiB、超过 100,000 个节点或超过 256 层嵌套的输入。未知 option/pass 会报 `ERR_IMAGEMIN_INVALID_OPTIONS`，资源策略拒绝会报 `ERR_IMAGEMIN_INVALID_INPUT`。
+The safe preset preserves titles, accessible descriptions, and `viewBox`.
+Native input must be strict UTF-8 and may not contain DTD or entity
+declarations. Limits include 16 MiB, 100,000 nodes, and 256 nesting levels.
+Unknown options fail with `ERR_IMAGEMIN_INVALID_OPTIONS`; policy rejection uses
+`ERR_IMAGEMIN_INVALID_INPUT`.
 
-## 兼容边界
+## Compatibility boundary
 
-| 能力                               | `svgo()` | `svgm()`             |
-| ---------------------------------- | -------- | -------------------- |
-| `imagemin-svgo` 默认 multipass     | 是       | 固定点收敛，不能关闭 |
-| SVGO 内置插件参数、顺序和重复项    | 是       | 否                   |
-| custom JavaScript plugin `fn`      | 是       | 否                   |
-| `path` / `js2svg` / `datauri`      | 是       | 否                   |
-| napi-rs worker pool                | 否       | 是                   |
-| DTD/实体、深度、节点数和字节硬上限 | 依 SVGO  | 是                   |
+| Capability                                   | `svgo()`    | `svgm()`                |
+| -------------------------------------------- | ----------- | ----------------------- |
+| imagemin-svgo multipass default              | Yes         | Fixed-point convergence |
+| SVGO plugin parameters and ordering          | Yes         | No                      |
+| Custom JavaScript plugin functions           | Yes         | No                      |
+| `path`, `js2svg`, and `datauri`              | Yes         | No                      |
+| napi-rs worker pool                          | No          | Yes                     |
+| Hard limits for DTD, depth, nodes, and bytes | SVGO policy | Yes                     |
 
-两条路径都只是优化器，不是 SVG sanitizer。默认不会承诺删除脚本、事件属性、`javascript:` URL 或外部资源引用；不可信 SVG 应交给专用清洗策略。
+Neither path is an SVG sanitizer. Do not rely on the defaults to remove
+scripts, event attributes, `javascript:` URLs, or external resource references
+from untrusted SVG.

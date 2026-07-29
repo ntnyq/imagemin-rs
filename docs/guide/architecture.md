@@ -1,52 +1,59 @@
-# 项目架构
+# Architecture
 
-## 跨语言三层与 Rust 内部分层
+## Three language layers
 
 ```text
 packages/imagemin
-  imagemin 兼容 Interface、文件 I/O、JS 插件、错误上下文
-          │ 私有 NativePluginDescriptor
+  imagemin-compatible interface, file I/O, JS plugins, error context
+          │ private NativePluginDescriptor
           ▼
 napi/imagemin
-  Buffer 转换、AsyncTask 调度、Rust 错误映射
+  Buffer conversion, AsyncTask scheduling, Rust error mapping
           │ Vec<u8> + typed options
           ▼
 crates/imagemin (facade)
-  descriptor registry 与稳定 re-export
+  descriptor registry and stable re-exports
           │
-          ├─ imagemin-core：asset、格式、错误、开放 plugin trait、pipeline/统计
-          ├─ imagemin-codec-png：Oxipng 与 OptiPNG-compatible path
-          ├─ imagemin-codec-gif：GIF analysis、encode、metadata 与资源策略
-          └─ imagemin-codec-svg：XML policy 与 SVGM
+          ├─ imagemin-core: assets, formats, errors, plugin trait, pipeline/stats
+          ├─ imagemin-codec-png: Oxipng and OptiPNG-compatible paths
+          ├─ imagemin-codec-gif: analysis, encoding, metadata, resource policy
+          └─ imagemin-codec-svg: XML policy and SVGM
 ```
 
-Rust Module 不知道 glob、路径和 Node.js。JS Module 不知道 codec FFI 和线程细节。N-API Adapter 保持薄，只负责语言 seam。
+Rust modules do not know about globs, paths, or Node.js. JavaScript modules do
+not know about codec FFI or thread details. The N-API adapter remains a thin
+language seam.
 
-## 为什么使用 AsyncTask
+## Why AsyncTask
 
-图片压缩是 CPU 密集任务。JavaScript `async` 只能改变返回形式，不能防止同步 native 函数阻塞事件循环。原生插件因此在 `AsyncTask::compute` 中执行，并在 `resolve` 阶段创建 JavaScript 结果。
+Image compression is CPU-intensive. JavaScript `async` changes the return
+shape but cannot stop a synchronous native function from blocking the event
+loop. Native plugins therefore execute in `AsyncTask::compute` and construct
+JavaScript results during `resolve`.
 
-## 插件融合
+## Plugin fusion
 
-原生插件工厂返回普通函数，因此和 imagemin 插件兼容。内部 `WeakMap` 保存 descriptor：
+Native factories still return ordinary imagemin-compatible functions. A
+private `WeakMap` stores their descriptors:
 
 ```text
 [native A, native B, JS C, native D]
         │                    │
         └─ AsyncTask #1      └─ AsyncTask #2
-                  JS C 在中间严格执行
+                  JS C runs strictly between them
 ```
 
-无法识别 descriptor 时只损失融合性能，不影响正确性。
+Failure to recognize a descriptor only loses fusion performance; it does not
+change correctness. Full SVGO configuration can contain JavaScript functions
+and cannot be serialized, so `svgo()` stays at the JavaScript compatibility
+seam while the closed `svgm()` profile participates in native fusion.
 
-完整 SVGO 配置允许 JavaScript 函数，不能序列化成 descriptor，因此 `svgo()` 保持 JS 兼容 seam；边界清楚的 `svgm()` 才进入原生融合。这个区别防止为了 fast-path 静默改变 plugin 顺序或丢弃参数。
+## Crate boundaries
 
-## crate 粒度
+The Rust workspace is divided by dependency, license, resource-policy, and
+build boundaries rather than one crate per function. A thin facade re-exports
+the codec-independent core and grouped PNG, GIF, and SVG codec crates.
 
-Phase 0 先用单一 Rust crate 验证 seam；在 codec 依赖和测试边界稳定后，workspace 已拆为薄
-facade、无 codec 依赖的 `imagemin-core`，以及按 PNG/GIF/SVG 聚合的 codec crates。粒度按依赖、
-许可证、资源策略和构建边界决定，而不是机械地为每个函数建 crate。PNG 的两个入口共享同一
-engine，所以仍在一个深 crate；GIF crate 内再按 analysis/encode/metadata 拆 Module。
-
-完整决策见仓库内的 [ADR 0001](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0001-architecture.md)
-与 [ADR 0008](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0008-rust-crate-boundaries.md)。
+See [ADR 0001](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0001-architecture.md)
+and [ADR 0008](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0008-rust-crate-boundaries.md)
+for the complete decisions.

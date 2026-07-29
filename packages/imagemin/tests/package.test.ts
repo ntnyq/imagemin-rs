@@ -231,6 +231,9 @@ describe("package contract", () => {
     expect(workflow).toContain("environment: npm");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("publish-packages.mjs --mode=stage");
+    expect(workflow).toContain('gh release create "$GITHUB_REF_NAME"');
+    expect(workflow).toContain("--generate-notes");
+    expect(workflow).toContain("contents: write");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-cwebp.sh");
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-cwebp.mjs");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-mozjpeg.sh");

@@ -6,9 +6,18 @@
   "scripts": {
     "build": "vitepress build .",
     "dev": "vitepress dev .",
-    "preview": "vitepress preview ."
+    "preview": "vitepress preview .",
+    "test": "vitest --run"
+  },
+  "dependencies": {
+    "@vueuse/core": "^14.3.0",
+    "fflate": "^0.8.3"
   },
   "devDependencies": {
-    "vitepress": "catalog:"
+    "@vue/test-utils": "^2.4.11",
+    "happy-dom": "^20.11.0",
+    "vitepress": "catalog:",
+    "vitest": "catalog:",
+    "vue": "^3.5.40"
   }
 }
