@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/binding-win32-x64-msvc",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Private native binding for imagemin-rs.",
   "license": "MIT",
   "repository": {

@@ -57,7 +57,10 @@ case "$target" in
     ;;
   win32-*-msvc)
     # Static CRT so the executable does not require a vcruntime redist.
-    common_flags+=(-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded)
+    common_flags+=(
+      -DCMAKE_POLICY_DEFAULT_CMP0091=NEW
+      -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+    )
     exe_suffix=".exe"
     ;;
   *)

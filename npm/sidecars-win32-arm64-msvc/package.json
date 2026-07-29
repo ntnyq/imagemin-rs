@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecars-win32-arm64-msvc",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Prebuilt image codec sidecars for imagemin-rs on Windows ARM64.",
   "license": "(BSD-3-Clause AND IJG AND Zlib AND libpng-2.0 AND libtiff)",
   "repository": {

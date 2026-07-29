@@ -34,3 +34,12 @@ test("requests the static zlib archive in every downstream cwebp dependency", as
 
   assert.equal(buildScript.match(/-DZLIB_USE_STATIC_LIBS=ON/gu)?.length, 3);
 });
+
+test("enables CMake's MSVC runtime abstraction before selecting the static CRT", async () => {
+  const buildScript = await readFile(new URL("./build-cwebp.sh", import.meta.url), "utf8");
+
+  assert.match(
+    buildScript,
+    /-DCMAKE_POLICY_DEFAULT_CMP0091=NEW\s+-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded/u,
+  );
+});

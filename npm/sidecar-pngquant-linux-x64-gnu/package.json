@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecar-pngquant-linux-x64-gnu",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Prebuilt pngquant sidecar for imagemin-rs on Linux x64 with glibc.",
   "license": "GPL-3.0-or-later",
   "repository": {
