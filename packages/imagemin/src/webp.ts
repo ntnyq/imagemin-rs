@@ -3,10 +3,9 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import cwebpBinary from "cwebp-bin";
-
 import { runBinary } from "./binary";
 import { ImageminError, rethrowIfAborted } from "./errors";
+import { resolveSidecarBinary } from "./sidecar";
 import type {
   ImageminPlugin,
   WebpCropOptions,
@@ -138,7 +137,9 @@ async function runCwebpThroughFiles(
     await writeFile(inputPath, input);
     await runBinary({
       arguments: [...arguments_, "-o", outputPath, "--", inputPath],
-      binary: cwebpBinary,
+      binary: resolveSidecarBinary("cwebp", {
+        override: process.env["IMAGEMIN_RS_CWEBP_PATH"],
+      }),
       displayName: "cwebp",
       input: new Uint8Array(0),
       signal,

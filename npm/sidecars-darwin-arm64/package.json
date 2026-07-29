@@ -1,0 +1,31 @@
+{
+  "name": "@imagemin-rs/sidecars-darwin-arm64",
+  "version": "0.1.0-rc.0",
+  "description": "Prebuilt image codec sidecars for imagemin-rs on macOS ARM64.",
+  "license": "(BSD-3-Clause AND IJG AND Zlib AND libpng-2.0 AND libtiff)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "bin": {
+    "cwebp": "cwebp"
+  },
+  "files": [
+    "README.md",
+    "cwebp",
+    "cwebp.manifest.json",
+    "licenses"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

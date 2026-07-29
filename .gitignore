@@ -14,3 +14,8 @@ coverage
 .pnpm-store
 .release
 .vitest
+
+npm/sidecars-*/cwebp
+npm/sidecars-*/cwebp.exe
+npm/sidecars-*/cwebp.manifest.json
+npm/sidecars-*/licenses

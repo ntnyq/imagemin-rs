@@ -12,6 +12,15 @@ const platforms = [
   { cpu: "arm64", directory: "win32-arm64-msvc", os: "win32" },
   { cpu: "x64", directory: "win32-x64-msvc", os: "win32" },
 ];
+const sidecarLicenseFiles = [
+  "libjpeg-turbo-LICENSE.md",
+  "libjpeg-turbo-README.ijg",
+  "libpng-LICENSE.txt",
+  "libtiff-LICENSE.md",
+  "libwebp-COPYING.txt",
+  "libwebp-PATENTS.txt",
+  "zlib-LICENSE.txt",
+];
 
 const artifactMode = readArgument("--artifacts") ?? "current";
 if (!["all", "current", "none"].includes(artifactMode)) {
@@ -20,6 +29,7 @@ if (!["all", "current", "none"].includes(artifactMode)) {
 
 const publicManifest = await readJson("packages/imagemin/package.json");
 const bindingManifest = await readJson("napi/imagemin/package.json");
+const sidecarPins = await readJson("tasks/sidecars/pins.json");
 const rootManifest = await readJson("package.json");
 const cargoManifest = await readText("Cargo.toml");
 const version = publicManifest.version;
@@ -44,9 +54,16 @@ assert(
 );
 assert(rootManifest.version === version, "Root package version does not match the public package");
 assert(bindingManifest.engines?.node === publicManifest.engines?.node, "Node engine ranges differ");
-assert(
-  publicManifest.optionalDependencies?.["@imagemin-rs/binding"] === "workspace:*",
-  "Public package must use the workspace binding",
+const expectedPublicOptionalDependencies = {
+  "@imagemin-rs/binding": "workspace:*",
+  ...Object.fromEntries(
+    platforms.map(({ directory }) => [`@imagemin-rs/sidecars-${directory}`, "workspace:*"]),
+  ),
+};
+assertDeepEqual(
+  publicManifest.optionalDependencies,
+  expectedPublicOptionalDependencies,
+  "Public package optional dependency matrix is incomplete",
 );
 
 const expectedOptionalDependencies = Object.fromEntries(
@@ -123,6 +140,101 @@ for (const platform of platforms) {
       sha256: createHash("sha256").update(binary).digest("hex"),
     });
   }
+
+  const sidecarPackageName = `@imagemin-rs/sidecars-${platform.directory}`;
+  const sidecarBinaryName = platform.os === "win32" ? "cwebp.exe" : "cwebp";
+  const sidecarRoot = `npm/sidecars-${platform.directory}`;
+  const sidecarManifest = await readJson(`${sidecarRoot}/package.json`);
+  assert(
+    sidecarManifest.name === sidecarPackageName,
+    `Unexpected sidecar package name for ${platform.directory}`,
+  );
+  assert(
+    sidecarManifest.version === version,
+    `${sidecarPackageName} version does not match ${version}`,
+  );
+  assert(
+    sidecarManifest.publishConfig?.access === "public",
+    `${sidecarPackageName} is not publicly publishable`,
+  );
+  assertDeepEqual(
+    sidecarManifest.cpu,
+    [platform.cpu],
+    `${sidecarPackageName} CPU constraint is invalid`,
+  );
+  assertDeepEqual(
+    sidecarManifest.os,
+    [platform.os],
+    `${sidecarPackageName} OS constraint is invalid`,
+  );
+  assertDeepEqual(
+    sidecarManifest.libc,
+    platform.libc === undefined ? undefined : [platform.libc],
+    `${sidecarPackageName} libc constraint is invalid`,
+  );
+  assertDeepEqual(
+    sidecarManifest.files,
+    ["README.md", sidecarBinaryName, "cwebp.manifest.json", "licenses"],
+    `${sidecarPackageName} files allowlist is invalid`,
+  );
+  assertDeepEqual(
+    sidecarManifest.bin,
+    { cwebp: sidecarBinaryName },
+    `${sidecarPackageName} bin mapping is invalid`,
+  );
+  assert(
+    sidecarManifest.engines?.node === publicManifest.engines.node,
+    `${sidecarPackageName} Node engine differs`,
+  );
+  assert(
+    (await readText(`${sidecarRoot}/README.md`)).includes(sidecarPackageName),
+    `${sidecarPackageName} has no package README`,
+  );
+
+  if (requiredDirectories.has(platform.directory)) {
+    const binaryUrl = new URL(`${sidecarRoot}/${sidecarBinaryName}`, workspaceRoot);
+    const binary = await readFile(binaryUrl);
+    const metadata = await stat(binaryUrl);
+    assert(metadata.isFile() && binary.byteLength > 0, `${sidecarPackageName} cwebp is empty`);
+    if (platform.os !== "win32") {
+      assert((metadata.mode & 0o111) !== 0, `${sidecarPackageName} cwebp is not marked executable`);
+    }
+    assertBinaryMagic(binary, platform.os, sidecarPackageName);
+
+    const provenance = await readJson(`${sidecarRoot}/cwebp.manifest.json`);
+    const expectedSources = Object.fromEntries(
+      Object.entries(sidecarPins.cwebp.sources).sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+    );
+    assertDeepEqual(
+      provenance,
+      {
+        binary: sidecarBinaryName,
+        bytes: binary.byteLength,
+        schema: 1,
+        sha256: createHash("sha256").update(binary).digest("hex"),
+        sources: expectedSources,
+        target: platform.directory,
+        tool: "cwebp",
+        version: sidecarPins.cwebp.version,
+      },
+      `${sidecarPackageName} provenance manifest is invalid`,
+    );
+    for (const licenseFile of sidecarLicenseFiles) {
+      const license = await stat(new URL(`${sidecarRoot}/licenses/${licenseFile}`, workspaceRoot));
+      assert(
+        license.isFile() && license.size > 0,
+        `${sidecarPackageName} is missing ${licenseFile}`,
+      );
+    }
+    artifacts.push({
+      bytes: binary.byteLength,
+      package: sidecarPackageName,
+      sha256: provenance.sha256,
+      tool: "cwebp",
+    });
+  }
 }
 
 for (const path of [
@@ -145,7 +257,7 @@ console.log(
     {
       artifactMode,
       artifacts,
-      packages: 2 + platforms.length,
+      packages: 2 + platforms.length * 2,
       version,
     },
     undefined,

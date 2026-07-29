@@ -20,8 +20,8 @@ const bundle = JSON.parse(
 if (bundle.version === "0.0.0" && mode !== "dry-run") {
   throw new Error("The 0.0.0 development version cannot be published");
 }
-if (bundle.packages.length !== 10) {
-  throw new Error(`Expected 10 release packages, found ${bundle.packages.length}`);
+if (bundle.packages.length !== 18) {
+  throw new Error(`Expected 18 release packages, found ${bundle.packages.length}`);
 }
 
 const publicPackage = takePackage("imagemin-rs");
@@ -32,9 +32,15 @@ const platformPackages = bundle.packages
 if (platformPackages.length !== 8) {
   throw new Error(`Expected 8 platform packages, found ${platformPackages.length}`);
 }
+const sidecarPackages = bundle.packages
+  .filter(({ name }) => name.startsWith("@imagemin-rs/sidecars-"))
+  .sort((left, right) => left.name.localeCompare(right.name));
+if (sidecarPackages.length !== 8) {
+  throw new Error(`Expected 8 sidecar packages, found ${sidecarPackages.length}`);
+}
 
 const distributionTag = bundle.version.includes("-") ? "next" : "latest";
-const orderedPackages = [...platformPackages, bindingPackage, publicPackage];
+const orderedPackages = [...platformPackages, ...sidecarPackages, bindingPackage, publicPackage];
 for (const descriptor of orderedPackages) {
   const tarballPath = resolve(bundleDirectory, descriptor.tarball);
   const tarball = await readFile(tarballPath);

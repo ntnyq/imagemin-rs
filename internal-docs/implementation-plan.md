@@ -165,10 +165,11 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
 
 1. **P0 基线修复（已完成）**：修复 Windows 版本脚本换行兼容、SVG fuzz finding 与
    独立 fuzz workspace 锁文件版本漂移，恢复本地完整门禁。
-2. **P1 cwebp sidecar 纵切面（进行中）**：固定并校验 libwebp 源码，完成 8 目标构建、
-   manifest、平台 npm 包、运行时解析和真实转码 smoke。
-3. **P2 其余 sidecar 与发布链**：扩展 mozjpeg/jpegtran、pngquant、gifsicle，按许可证
-   拆包，并让 verify/pack/smoke/publish 覆盖 24 个 sidecar 平台包。
+2. **P1 cwebp sidecar 纵切面（实现完成）**：固定并校验 libwebp 源码，完成 8 目标构建、
+   manifest、平台 npm 包、运行时解析和真实转码 smoke；macOS ARM64 tarball 已实测，
+   其余 7 个目标等待 CI 首次实跑证据。
+3. **P2 其余 sidecar 与发布链（进行中）**：扩展 mozjpeg/jpegtran、pngquant、gifsicle，
+   按许可证拆包，并让 verify/pack/smoke/publish 覆盖 24 个 sidecar 平台包。
 4. **P3 RC 演练**：完成 GPL 法律确认、SBOM/provenance、8 平台 tarball 安装与每 codec
    smoke，执行不发布到 registry 的完整 release rehearsal。
 

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
 
 interface PackageManifest {
+  bin?: Record<string, string>;
   cpu?: string[];
   engines?: Record<string, string>;
   exports: Record<string, unknown>;
@@ -46,11 +47,14 @@ describe("package contract", () => {
     });
   });
 
-  test("keeps the native loader optional at the public package boundary", async () => {
+  test("keeps native bindings and sidecars optional at the public package boundary", async () => {
     const manifest = await readManifest();
 
     expect(manifest.optionalDependencies).toEqual({
       "@imagemin-rs/binding": "workspace:*",
+      ...Object.fromEntries(
+        platforms.map(({ directory }) => [`@imagemin-rs/sidecars-${directory}`, "workspace:*"]),
+      ),
     });
   });
 
@@ -96,6 +100,22 @@ describe("package contract", () => {
       await expect(
         readFile(new URL(`npm/${platform.directory}/LICENSE`, workspaceRootUrl), "utf8"),
       ).resolves.toContain("MIT License");
+
+      const sidecarManifest = await readJson(
+        new URL(`npm/sidecars-${platform.directory}/package.json`, workspaceRootUrl),
+      );
+      const sidecarBinary = platform.os === "win32" ? "cwebp.exe" : "cwebp";
+      expect(sidecarManifest).toMatchObject({
+        bin: { cwebp: sidecarBinary },
+        cpu: [platform.cpu],
+        engines: publicManifest.engines,
+        files: ["README.md", sidecarBinary, "cwebp.manifest.json", "licenses"],
+        name: `@imagemin-rs/sidecars-${platform.directory}`,
+        os: [platform.os],
+        version: publicManifest.version,
+      });
+      if ("libc" in platform) expect(sidecarManifest.libc).toEqual([platform.libc]);
+      else expect(sidecarManifest.libc).toBeUndefined();
     }
   });
 
@@ -104,15 +124,24 @@ describe("package contract", () => {
       new URL(".github/workflows/release.yml", workspaceRootUrl),
       "utf8",
     );
+    const sidecarWorkflow = await readFile(
+      new URL(".github/workflows/sidecars.yml", workspaceRootUrl),
+      "utf8",
+    );
 
     for (const platform of platforms) {
       expect(workflow).toContain(`directory: ${platform.directory}`);
+      expect(sidecarWorkflow).toContain(`directory: ${platform.directory}`);
     }
+    expect(workflow).toContain("uses: ./.github/workflows/sidecars.yml");
+    expect(workflow).toContain("node tasks/sidecars/assemble-packages.mjs");
     expect(workflow).toContain("node tasks/release/verify-packages.mjs --artifacts=all --release");
     expect(workflow).toContain("node tasks/release/smoke-packages.mjs --bundle=.release/npm");
     expect(workflow).toContain("environment: npm");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("publish-packages.mjs --mode=stage");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/build-cwebp.sh");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-cwebp.mjs");
   });
 });
 

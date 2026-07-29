@@ -23,10 +23,20 @@ const platformDirectories = [
   "win32-arm64-msvc",
   "win32-x64-msvc",
 ];
+const sidecarLicenseFiles = [
+  "libjpeg-turbo-LICENSE.md",
+  "libjpeg-turbo-README.ijg",
+  "libpng-LICENSE.txt",
+  "libtiff-LICENSE.md",
+  "libwebp-COPYING.txt",
+  "libwebp-PATENTS.txt",
+  "zlib-LICENSE.txt",
+];
 const selectedPlatforms =
   artifactMode === "all" ? platformDirectories : [currentPlatformDirectory()];
 const packageDirectories = [
   ...selectedPlatforms.map((directory) => `npm/${directory}`),
+  ...selectedPlatforms.map((directory) => `npm/sidecars-${directory}`),
   "napi/imagemin",
   "packages/imagemin",
 ];
@@ -45,7 +55,7 @@ const version = JSON.parse(
 const tarballNames = (await readdir(outputDirectory))
   .filter((name) => name.endsWith(".tgz"))
   .sort();
-const expectedTarballCount = selectedPlatforms.length + 2;
+const expectedTarballCount = selectedPlatforms.length * 2 + 2;
 assert(
   tarballNames.length === expectedTarballCount,
   `Expected ${expectedTarballCount} tarballs, found ${tarballNames.length}`,
@@ -90,6 +100,10 @@ for (const directory of selectedPlatforms) {
     packages.some(({ name }) => name === `@imagemin-rs/binding-${directory}`),
     `The ${directory} platform tarball is missing`,
   );
+  assert(
+    packages.some(({ name }) => name === `@imagemin-rs/sidecars-${directory}`),
+    `The ${directory} sidecar tarball is missing`,
+  );
 }
 
 const bundle = {
@@ -105,14 +119,41 @@ console.log(JSON.stringify(bundle, undefined, 2));
 
 function assertTarballContract(manifest, entries) {
   const entryNames = new Set(entries.map(({ name }) => name));
-  for (const path of ["package/LICENSE", "package/README.md", "package/package.json"]) {
+  for (const path of ["package/README.md", "package/package.json"]) {
     assert(entryNames.has(path), `${manifest.name} tarball is missing ${path}`);
   }
 
-  if (manifest.name === "imagemin-rs") {
+  if (manifest.name.startsWith("@imagemin-rs/sidecars-")) {
+    const directory = manifest.name.slice("@imagemin-rs/sidecars-".length);
+    assert(platformDirectories.includes(directory), `Unexpected sidecar package ${manifest.name}`);
+    const binaryName = directory.startsWith("win32-") ? "cwebp.exe" : "cwebp";
+    for (const path of [
+      `package/${binaryName}`,
+      "package/cwebp.manifest.json",
+      ...sidecarLicenseFiles.map((name) => `package/licenses/${name}`),
+    ]) {
+      assert(entryNames.has(path), `${manifest.name} tarball is missing ${path}`);
+    }
     assert(
-      manifest.optionalDependencies?.["@imagemin-rs/binding"] === version,
-      "The public tarball must pin the binding to its exact version",
+      entries.find(({ name }) => name === `package/${binaryName}`)?.data.byteLength > 0,
+      `${manifest.name} cwebp is empty`,
+    );
+    return;
+  }
+
+  assert(entryNames.has("package/LICENSE"), `${manifest.name} tarball is missing package/LICENSE`);
+
+  if (manifest.name === "imagemin-rs") {
+    const expected = {
+      "@imagemin-rs/binding": version,
+      ...Object.fromEntries(
+        platformDirectories.map((directory) => [`@imagemin-rs/sidecars-${directory}`, version]),
+      ),
+    };
+    assertDeepEqual(
+      manifest.optionalDependencies,
+      expected,
+      "The public tarball optional dependency matrix is invalid",
     );
     for (const path of [
       "package/dist/index.d.mts",

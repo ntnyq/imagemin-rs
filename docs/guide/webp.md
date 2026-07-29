@@ -64,7 +64,10 @@ lossless WebP 保持 alpha 和所有可见像素。alpha=0 像素的 RGB 完全�
 
 ## 发布边界
 
-当前开发 artifact 是 cwebp/libwebp 1.2.1。npm wrapper 的 macOS binary 只有 x86_64，
-Apple Silicon 依赖 Rosetta；其 install-time 下载在受限网络中还可能无超时挂起。
-v1 会使用项目自建、带版本/SHA-256/SBOM 的原生平台 sidecar，禁止安装时联网与本机
-编译 fallback。在此之前不承诺跨平台 byte parity。
+生产路径使用项目自建的 cwebp/libwebp 1.6.0，静态包含固定版本的 zlib、libpng、
+libjpeg-turbo 与 libtiff。8 个 `@imagemin-rs/sidecars-*` optional packages 各自携带
+源码摘要、二进制 SHA-256 和完整许可证文本；安装时不联网，也没有本机编译 fallback。
+
+macOS ARM64 已完成真实构建、PNG/JPEG/TIFF 转码和 tarball 安装 smoke。其余 7 个平台
+必须由 release workflow 取得同等证据后才能发布；跨平台 byte parity 只对同一次发布的
+固定 artifact 承诺。`cwebp-bin@8.0.0` 仅保留为开发差分 oracle。

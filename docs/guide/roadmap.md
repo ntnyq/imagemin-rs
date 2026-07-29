@@ -18,8 +18,8 @@
 
 兼容阶段完成后，发布加固按以下顺序推进：
 
-1. 完成 cwebp 自建 sidecar 的源码校验、多平台构建、npm 分发与真实 smoke；
-2. 扩展 mozjpeg/jpegtran、pngquant、gifsicle，并按许可证拆分平台包；
+1. **已实现**：cwebp 自建 sidecar 的源码校验、多平台构建、npm 分发与真实 smoke；
+2. **进行中**：扩展 mozjpeg/jpegtran、pngquant、gifsicle，并按许可证拆分平台包；
 3. 将全部 sidecar 接入 verify、pack、smoke、publish 与 provenance；
 4. 完成 8 平台 RC 演练，再评估首个公开版本。
 

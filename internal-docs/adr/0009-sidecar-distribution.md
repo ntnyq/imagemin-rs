@@ -51,15 +51,17 @@ Sharp 运行时不在本 ADR 范围（其审计见产品完成度审计与 ADR 0
 - musl 目标全静态链接；gnu 目标在受控 glibc 基线容器内构建（下限跟随 Node 22 的
   glibc ≥ 2.28 政策）；macOS 双架构由 clang `-arch` 交叉产出；Windows arm64 使用
   原生 `windows-11-arm` runner；
-- 每个产物记录 `{tool, version, target, sha256, source_sha256}` 到 manifest，作为
-  发布 fingerprint 与 SBOM 的输入；
+- 每个产物记录 `{schema, tool, version, target, binary, bytes, sha256, sources}` 到
+  manifest；`sources` 保存全部直接构建输入的版本、URL 与 SHA-256，作为发布
+  fingerprint 与 SBOM 的输入；
 - 升级任何 pin 必须走 ADR 修订加 conformance 重跑，不允许浮动版本。
 
 ### npm 分发
 
 按许可证族拆包，每平台一个包，版本与发布单元同锁：
 
-- `@imagemin-rs/sidecars-<platform>`：cwebp、cjpeg、jpegtran（BSD/IJG/Zlib 族）；
+- `@imagemin-rs/sidecars-<platform>`：cwebp、cjpeg、jpegtran（BSD/IJG/Zlib/libpng/
+  libtiff 族）；
 - `@imagemin-rs/sidecar-pngquant-<platform>`：GPL-3.0-or-later，含完整许可证文本；
 - `@imagemin-rs/sidecar-gifsicle-<platform>`：GPL-2.0，含完整许可证文本。
 
@@ -100,5 +102,5 @@ encoder 升级（libwebp 1.2.1 → 1.6.0、mozjpeg 3.2 → 4.1.1）后，与历�
 
 - maintainer 对 GPL 再分发模型（聚合判断、随包文本、源码 offer 形式）的法律确认；
 - Windows gifsicle 的构建工具链选择（MSVC 直构 vs llvm-mingw），在 P1.4 落地时定；
-- sidecar 包进入 release workflow 的 smoke 扩展（每平台执行每个 sidecar `--version`
-  与一次真实转码）。
+- cwebp 已进入 release workflow，并覆盖版本、PNG/JPEG/TIFF 构建期 smoke 与完整
+  tarball smoke；其余 sidecar 在 P2 逐个补齐同等门禁。

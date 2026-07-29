@@ -57,24 +57,25 @@ Source and license information:
 - https://github.com/imagemin/jpegtran-bin
 - https://github.com/libjpeg-turbo/libjpeg-turbo
 
-The `webp()` compatibility adapter executes the separately installed
-`cwebp-bin@8.0.0` executable as a child process. The npm wrapper is MIT
-licensed. Its cwebp/libwebp 1.2.1 codec is Copyright (c) 2010 Google Inc. and
-distributed under the BSD 3-Clause license with an additional patent grant in
-the upstream `PATENTS` file. The executable is not linked into the imagemin-rs
-native addon.
+The `webp()` compatibility adapter executes the cwebp 1.6.0 executable from the
+current `@imagemin-rs/sidecars-*` optional package. It is built from pinned
+libwebp, zlib, libpng, libjpeg-turbo, and libtiff sources and is not linked into
+the imagemin-rs native addon. Each platform package carries the complete
+upstream license files, the libwebp patent grant, source archive SHA-256 values,
+and the binary provenance manifest.
 
-The development macOS artifact reports cwebp 1.2.1 and is x86_64. Final
-release artifacts must use project-built, security-reviewed native platform
-binaries and include the exact `COPYING`, `PATENTS`, source archive/commit,
-patches, build provenance, SBOM, and binary/source SHA-256 manifest. Runtime
-downloads and install-time compilation fallback are not an accepted release
-path.
+`cwebp-bin@8.0.0` and its libwebp 1.2.1 executable remain development-only
+compatibility oracles. Production installation does not use their runtime
+download or install-time compilation path.
 
 Source and license information:
 
 - https://github.com/imagemin/cwebp-bin
 - https://github.com/webmproject/libwebp
+- https://github.com/madler/zlib
+- https://github.com/pnggroup/libpng
+- https://github.com/libjpeg-turbo/libjpeg-turbo
+- https://gitlab.com/libtiff/libtiff
 
 The `avif()` compatibility adapter starts a separate Node.js process that loads
 the separately installed `sharp@0.35.3` package. Sharp is distributed under the

@@ -6,9 +6,9 @@
 ## 决策
 
 `webp()` 固定 `imagemin-webp@8.0.0` 的公开 option shape，并通过受限 child process
-执行 `cwebp-bin@8.0.0` 的 cwebp sidecar。当前开发 artifact 报告 libwebp 1.2.1；
-macOS 文件实际为 x86_64 Mach-O，在 Apple Silicon 上依赖 Rosetta。它仅作为开发
-compatibility oracle，v1 发布必须从固定 libwebp source revision 自建原生平台包。
+执行项目自建的 cwebp/libwebp 1.6.0 sidecar。生产运行时只解析当前平台对应的
+`@imagemin-rs/sidecars-*` optional package；`cwebp-bin@8.0.0`/libwebp 1.2.1 仅作为
+开发 compatibility oracle。
 
 支持 preset、quality、alphaQuality、method、size、sns、filter、autoFilter、
 sharpness、lossless、nearLossless、crop、resize 与 metadata。默认及非零 option
@@ -26,17 +26,17 @@ crop/resize 属于上游兼容面，不进入 Rust core 的通用图像变换抽
 ## 原因
 
 固定 cwebp executable 是最小且最精确的兼容 Seam：同一 libwebp build 下，可直接与
-上游临时文件 adapter 做 byte differential。本项目使用 stdin/stdout（`-o - -- -`），
-已证明与临时文件输出相同，避免磁盘竞态和清理失败。
+上游临时文件 adapter 做 byte differential。本项目使用带随机名称并在 finally 中清理的
+临时输入/输出文件，以保持 metadata 与 Windows 文件解码语义。
 
 直接链接 libwebp-sys 可以消除进程启动开销，但会把 C ABI、安全公告、SIMD、构建
 脚本和平台链接风险引入 native addon，且不自动获得 imagemin-webp CLI 参数的精确
 行为。待平台发布链成熟后，可以增加显式 native profile；不能把不同 encoder build
 隐藏在 `webp()` 兼容名下。
 
-`cwebp-bin@8.0.0` 的 source archive 是 libwebp 1.2.1，并包含 BSD-3-Clause `COPYING`
-与 `PATENTS` grant。npm wrapper 本身是 MIT。开发安装已观察到 install-time binary
-下载在代理环境中无超时挂起，因此最终包不得依赖安装时网络下载或本机编译 fallback。
+自建产物固定 libwebp 1.6.0、zlib 1.3.2、libpng 1.6.58、libjpeg-turbo 3.2.0 与
+libtiff 4.7.2。平台包携带各上游许可证、libwebp `PATENTS` grant、源码 archive 摘要和
+产物摘要。`cwebp-bin@8.0.0` 的安装期下载/编译路径不进入生产依赖。
 
 ## 结果
 
@@ -55,8 +55,7 @@ crop/resize 属于上游兼容面，不进入 Rust core 的通用图像变换抽
   一样使用临时文件。自建发布 cwebp 必须恢复 Windows EXIF 提取并移除该测试分支。
 - 文件 API 根据最终 magic 更新 destination extension；PNG/JPEG/TIFF 转 WebP 会写入
   `.webp`，原格式未变化时保留源扩展名。
-- 当前 darwin arm64 oracle SHA-256 为
-  `67f3ea3a6e26072adc2fe032e288aa8c8ce2d2ed2c15f0e17feb4e468038ecc5`，不能冒充
-  native arm64 artifact。
+- macOS ARM64 已完成原生构建、PNG/JPEG/TIFF smoke、provenance 校验与 tarball 安装；
+  其余目标等待 sidecar workflow 的首次实跑证据。
 
 完整证据见 [Phase 5 调研](../../docs/research/webp-codec-selection.md)。

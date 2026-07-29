@@ -130,15 +130,28 @@ importers:
 
   npm/linux-x64-musl: {}
 
+  npm/sidecars-darwin-arm64: {}
+
+  npm/sidecars-darwin-x64: {}
+
+  npm/sidecars-linux-arm64-gnu: {}
+
+  npm/sidecars-linux-arm64-musl: {}
+
+  npm/sidecars-linux-x64-gnu: {}
+
+  npm/sidecars-linux-x64-musl: {}
+
+  npm/sidecars-win32-arm64-msvc: {}
+
+  npm/sidecars-win32-x64-msvc: {}
+
   npm/win32-arm64-msvc: {}
 
   npm/win32-x64-msvc: {}
 
   packages/imagemin:
     dependencies:
-      cwebp-bin:
-        specifier: 8.0.0
-        version: 8.0.0
       gifsicle:
         specifier: 5.3.0
         version: 5.3.0
@@ -176,6 +189,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      cwebp-bin:
+        specifier: 8.0.0
+        version: 8.0.0
       imagemin:
         specifier: 9.0.1
         version: 9.0.1
@@ -219,6 +235,30 @@ importers:
       '@imagemin-rs/binding':
         specifier: workspace:*
         version: link:../../napi/imagemin
+      '@imagemin-rs/sidecars-darwin-arm64':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-darwin-arm64
+      '@imagemin-rs/sidecars-darwin-x64':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-darwin-x64
+      '@imagemin-rs/sidecars-linux-arm64-gnu':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-linux-arm64-gnu
+      '@imagemin-rs/sidecars-linux-arm64-musl':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-linux-arm64-musl
+      '@imagemin-rs/sidecars-linux-x64-gnu':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-linux-x64-gnu
+      '@imagemin-rs/sidecars-linux-x64-musl':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-linux-x64-musl
+      '@imagemin-rs/sidecars-win32-arm64-msvc':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-win32-arm64-msvc
+      '@imagemin-rs/sidecars-win32-x64-msvc':
+        specifier: workspace:*
+        version: link:../../npm/sidecars-win32-x64-msvc
 
 packages:
 

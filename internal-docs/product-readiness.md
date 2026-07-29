@@ -31,7 +31,7 @@
 | `imagemin-pngquant@10` | 部分   | 全 options、逐字节差分、quality floor、alpha/背景合成误差与 APNG no-op 已测；仍需统一各平台 pngquant 3.0.3 sidecar 和 GPL 法律复核。                                                                                                                                                                                                                                                                                                                           |
 | `imagemin-mozjpeg@10`  | 部分   | 全 options、逐字节差分、progressive、灰度、metadata 与独立解码误差已测；仍需统一、自建并 fingerprint 各平台 MozJPEG sidecar。                                                                                                                                                                                                                                                                                                                                  |
 | `imagemin-jpegtran@8`  | 部分   | progressive/arithmetic 逐字节差分、像素无损和 metadata strip 已测；仍需统一平台 binary、provenance 与真实安装 smoke。                                                                                                                                                                                                                                                                                                                                          |
-| `imagemin-webp@8`      | 部分   | 全 options、PNG/JPEG/TIFF/WebP、alpha/metadata、动画 no-op 与扩展名已测；仍需安全修补的自建多平台 cwebp、provenance 和安装 smoke。                                                                                                                                                                                                                                                                                                                             |
+| `imagemin-webp@8`      | 部分   | 全 options、PNG/JPEG/TIFF/WebP、alpha/metadata、动画 no-op 与扩展名已测；自建 cwebp/libwebp 1.6.0 已有固定源码摘要、provenance、8 目标 workflow 和 macOS ARM64 tarball smoke，仍缺其余 7 平台实跑证据。                                                                                                                                                                                                                                                        |
 | `imagemin-avif@0.1`    | 部分   | 固定 Sharp 0.35.3、完整 options、alpha/chroma、动画 no-op、隔离进程与资源限制已测；仍需平台 tarball smoke、10/12-bit 决策和 CVE/SBOM 审计。                                                                                                                                                                                                                                                                                                                    |
 
 ## 质量与安全
@@ -47,13 +47,13 @@
 
 ## 发布与运维
 
-| 要求                          | 状态   | 缺口                                                                                                                                                             |
-| ----------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                   |
-| root + 平台 optional packages | 部分   | 8 个平台包、精确 optional dependency 重写、文件白名单与当前 macOS ARM64 tarball 已验证；尚缺 8 平台真实 artifact。                                               |
-| 多平台二进制 CI               | 部分   | release workflow 已定义 8 target 构建、artifact 汇总及 GNU/musl/双架构 smoke；尚未在 release tag 上取得实跑证据。                                                |
-| 可重复 release                | 部分   | 已有版本一致性（含 CRLF 与独立 fuzz workspace 锁文件）、SHA-512、tarball 安装 smoke、OIDC staged publish 和恢复手册；首次 bootstrap 与真实 provenance 尚未执行。 |
-| 文档站                        | 部分   | VitePress 构建和 Pages workflow 已有；需随每个 codec 增加兼容表、迁移指南和发布安装说明。                                                                        |
+| 要求                          | 状态   | 缺口                                                                                                                                                                    |
+| ----------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                          |
+| root + 平台 optional packages | 部分   | 8 个 binding 包和 8 个 BSD sidecar 包均有精确 optional dependency、文件白名单与版本门禁；当前 macOS ARM64 的 binding + cwebp tarball 已验证，尚缺 8 平台完整 artifact。 |
+| 多平台二进制 CI               | 部分   | release workflow 已定义 8 target binding/cwebp 构建、artifact 汇总及 GNU/musl/双架构 smoke；尚未在 release tag 上取得实跑证据。                                         |
+| 可重复 release                | 部分   | 已有版本一致性（含 CRLF 与独立 fuzz workspace 锁文件）、SHA-512、tarball 安装 smoke、OIDC staged publish 和恢复手册；首次 bootstrap 与真实 provenance 尚未执行。        |
+| 文档站                        | 部分   | VitePress 构建和 Pages workflow 已有；需随每个 codec 增加兼容表、迁移指南和发布安装说明。                                                                               |
 
 ## 完成判定
 

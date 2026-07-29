@@ -40,6 +40,10 @@ jobs:
           package-manager-cache: false
       - run: node tasks/release/verify-release-ref.mjs
 
+  build-sidecars:
+    needs: preflight
+    uses: ./.github/workflows/sidecars.yml
+
   build-native:
     name: Build ${{ matrix.target }}
     needs: preflight
@@ -119,7 +123,9 @@ jobs:
           retention-days: 14
 
   bundle:
-    needs: build-native
+    needs:
+      - build-native
+      - build-sidecars
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -142,6 +148,16 @@ jobs:
         run: >-
           pnpm --dir napi/imagemin exec napi artifacts
           --output-dir ../../.release/native-artifacts --npm-dir ../../npm
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: sidecar-cwebp-*
+          path: .release/sidecar-artifacts
+      - name: Assemble sidecar packages
+        run: >-
+          node tasks/sidecars/assemble-packages.mjs
+          --artifacts .release/sidecar-artifacts
+          --npm-dir npm
+          --targets all
       - run: node tasks/release/verify-packages.mjs --artifacts=all --release
       - run: node tasks/release/pack-packages.mjs --artifacts=all --output=.release/npm
       - uses: actions/upload-artifact@v7

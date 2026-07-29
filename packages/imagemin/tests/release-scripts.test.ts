@@ -20,11 +20,15 @@ const platformDirectories = [
   "win32-arm64-msvc",
   "win32-x64-msvc",
 ];
+const sidecarManifestPaths = platformDirectories.map(
+  (directory) => `npm/sidecars-${directory}/package.json`,
+);
 const manifestPaths = [
   "package.json",
   "napi/imagemin/package.json",
   "packages/imagemin/package.json",
   ...platformDirectories.map((directory) => `npm/${directory}/package.json`),
+  ...sidecarManifestPaths,
 ];
 const versionedPaths = [
   ...manifestPaths,
