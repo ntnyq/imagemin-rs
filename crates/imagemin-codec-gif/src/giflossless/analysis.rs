@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use imagemin_core::Result;
 use rgb::{RGB8, RGBA8};
 
-use super::support::{codec_error, decoder, invalid_input, validate_canvas};
+use super::support::{codec_error, decoder, invalid_input, validate_canvas, validate_frame};
 
 const MAX_COMPOSITED_PIXELS: u64 = 256 * 1024 * 1024;
 const MAX_FRAMES: usize = 10_000;
@@ -33,6 +33,7 @@ pub(super) fn analyze(data: &[u8]) -> Result<Option<Plan>> {
         .read_next_frame()
         .map_err(|error| codec_error(format!("invalid GIF data: {error}")))?
     {
+        validate_frame(frame)?;
         frames += 1;
         if frames > MAX_FRAMES {
             return Err(invalid_input(format!(

@@ -38,6 +38,16 @@ pub(super) fn validate_canvas(width: u16, height: u16) -> Result<()> {
     Ok(())
 }
 
+pub(super) fn validate_frame(frame: &gif::Frame<'_>) -> Result<()> {
+    if frame.width == 0 || frame.height == 0 {
+        return Err(invalid_input(
+            "GIF frame dimensions must be non-zero".to_owned(),
+        ));
+    }
+
+    Ok(())
+}
+
 pub(super) fn invalid_input(message: String) -> ImageminError {
     ImageminError::InvalidInput {
         plugin: "giflossless",

@@ -6,7 +6,7 @@ use super::{
     GiflosslessOptions,
     analysis::Plan,
     metadata::collect_metadata_extensions,
-    support::{codec_error, decoder},
+    support::{codec_error, decoder, validate_frame},
 };
 
 pub(super) fn encode(data: &[u8], plan: &Plan, options: &GiflosslessOptions) -> Result<Vec<u8>> {
@@ -40,6 +40,7 @@ pub(super) fn encode(data: &[u8], plan: &Plan, options: &GiflosslessOptions) -> 
         .read_next_frame()
         .map_err(|error| codec_error(error.to_string()))?
     {
+        validate_frame(source)?;
         screen
             .blit_frame(source)
             .map_err(|error| codec_error(error.to_string()))?;
