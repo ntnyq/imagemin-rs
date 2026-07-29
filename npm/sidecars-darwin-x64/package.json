@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecars-darwin-x64",
-  "version": "0.1.0-rc.8",
+  "version": "0.1.0-rc.9",
   "description": "Prebuilt image codec sidecars for imagemin-rs on macOS x64.",
   "license": "(BSD-3-Clause AND IJG AND Zlib AND libpng-2.0 AND libtiff)",
   "repository": {

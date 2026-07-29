@@ -6,12 +6,13 @@ export function resolveSpawnCommand(
     platform = process.platform,
   } = {},
 ) {
-  if (platform !== "win32") {
+  if (platform !== "win32" || /\.(?:com|exe)$/i.test(command)) {
     return { arguments: arguments_, command };
   }
 
+  const commandShim = /\.(?:bat|cmd)$/i.test(command) ? command : `${command}.cmd`;
   return {
-    arguments: ["/d", "/s", "/c", `${command}.cmd`, ...arguments_],
+    arguments: ["/d", "/s", "/c", commandShim, ...arguments_],
     command: commandInterpreter,
   };
 }

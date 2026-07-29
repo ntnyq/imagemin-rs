@@ -12,7 +12,7 @@ body:
     id: package-version
     attributes:
       label: Exact imagemin-rs version
-      placeholder: 0.1.0-rc.8
+      placeholder: 0.1.0-rc.9
     validations:
       required: true
   - type: input

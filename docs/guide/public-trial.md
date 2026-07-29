@@ -4,7 +4,7 @@ The first stable release is targeted for **August 17, 2026**. That date is
 conditional on one complete 35-package release candidate remaining public for
 14 consecutive days without a release-blocking defect.
 
-The planned trial version is `0.1.0-rc.8`. The trial starts only after that
+The planned trial version is `0.1.0-rc.9`. The trial starts only after that
 exact version is available for the root package, WASM package, bindings, and
 all platform sidecars under the npm `next` tag.
 
