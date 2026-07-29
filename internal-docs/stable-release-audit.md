@@ -3,7 +3,7 @@
 - 审计日期：2026-07-30
 - 证据截止日期：2026-07-30（Asia/Shanghai）
 - 范围：仓库固定的原生 sidecar、`sharp@0.35.3` 在八个平台目标上的预编译运行时、相关许可证与 npm 供应链证明
-- 建议门槛状态：**CONDITIONAL PASS（分发模型与 RC bundle 已验证；registry 证据待完成）**
+- 建议门槛状态：**CONDITIONAL PASS（RC 分发闭环完成；G4 公开试用进行中）**
 
 > 本文是一次发布时点的安全与许可证证据快照，不是“没有漏洞”的保证，也不是法律意见。NVD、上游公告和 npm 证明都可能滞后或不完整。
 
@@ -36,9 +36,10 @@
 [`docs/research/native-distribution-license-model.md`](../docs/research/native-distribution-license-model.md)，
 已选择的交付路径、责任人与技术退出条件见
 [`license-release-signoff.md`](./license-release-signoff.md)。`0.1.0-rc.9` 已完成
-35 包技术 bundle、八平台与两种 Sharp 路径；仍须完成 npm 35 包同版本发布、
-provenance 与公开 registry 回读。在这些证据完成前不得启动公开试用计时或发布
-1.0。本次证据没有显示其他安全阻断项。
+35 包技术 bundle 与 OIDC publish、八平台与两种 Sharp 路径、WASM 浏览器 smoke、
+provenance 和公开 registry 回读。公开试用已从 2026-07-30 06:29 +08:00 开始；
+稳定版仍须通过 G4 的 14 天和消费者证据，以及 G5 最终 preflight。本次证据没有显示
+其他安全阻断项。
 
 ## 证据范围与方法
 
@@ -54,7 +55,8 @@ provenance 与公开 registry 回读。在这些证据完成前不得启动公�
 - `security/imagemin-rs.openvex.json`
 - `.release/npm/release-sbom.cdx.json`
 - `.release/npm/release-dependencies.cdx.json`
-- [`v0.1.0-rc.6` 八平台 Release workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30428078178)
+- [`v0.1.0-rc.9` artifact and smoke workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30487591906)
+- [`v0.1.0-rc.9` 35-package OIDC publish workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30494894639)
 
 外部证据只使用上游仓库、上游发布说明/安全公告、NVD、GNU 官方许可证和 npm registry/文档。核查包括精确版本、非语义版本提交、已知漏洞的版本边界，以及漏洞描述中的功能是否存在于实际构建中。未进行独立渗透测试或代码级全量漏洞审计。
 
@@ -125,6 +127,20 @@ Sharp 的 `imagequant 2.4.1` 是 `lovell/libimagequant` 的 BSD-2-Clause 分支�
 
 ## npm 完整性、签名与 provenance
 
+`0.1.0-rc.9` 的 35 个项目包已从公开 registry 逐包回读。每包都满足：
+
+- `next` 精确指向 `0.1.0-rc.9`；
+- 版本元数据包含 `dist.integrity` 和一条 npm registry signature；
+- attestation endpoint 可读并返回两条证明记录；
+- 发布来源是同一 immutable tag 的受保护 GitHub Actions environment。
+
+公开 root 包的
+[`attestation`](https://registry.npmjs.org/-/npm/v1/attestations/imagemin-rs@0.1.0-rc.9)
+和 35 包
+[OIDC publish workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30494894639)
+提供可复核入口。registry fresh install 还验证了默认无 Sharp、显式
+`sharp@0.35.3` 的 11 codec，以及 `@imagemin-rs/wasm@next` 的 Chromium 路径。
+
 针对项目八个平台目标核查了 15 个 npm 包：`sharp@0.35.3`、Darwin/Linux 的 addon 与 libvips 平台包，以及 Windows arm64/x64 合并包。registry 元数据均包含：
 
 - `dist.integrity`
@@ -158,12 +174,16 @@ GPLv3 [第 1 节](https://www.gnu.org/licenses/gpl-3.0.en.html#section1)把生�
 
 ### 当前证据的边界
 
-现有 npm sidecar notice 带有许可证文本、精确上游 URL、版本/提交和 SHA256。
-`0.1.0-rc.7` 的 Release 已保存三个经 pins 校验的来源归档。当前工作树进一步让 tag
-workflow 保存 pngquant lockfile 中全部 45 个 registry 源码归档，以及实际 build
-scripts、Cargo lockfile、MSVC 配置和 pins；两个附加 tar 及其 manifest 是确定性生成。
-当前工作树已把这些材料同时放入每个对应 GPL npm tarball，并继续在同版本 GitHub
-Release 备份。该机制有助于复现和追踪，却不能从技术证据本身证明：
+`0.1.0-rc.9` npm sidecar notice 带有许可证文本、精确上游 URL、版本/提交和 SHA256。
+同版本 tag workflow 保存了 pngquant lockfile 中全部 45 个 registry 源码归档，以及
+实际 build scripts、Cargo lockfile、MSVC 配置和 pins；两个附加 tar 及其 manifest
+是确定性生成。这些材料同时存在于每个对应 GPL npm tarball，并在同版本 GitHub
+Release 备份。
+
+恢复演练重新下载全部八个公开 Release 资产，逐项核对 GitHub 记录的 SHA-256；又从
+npm 重新取得 darwin-arm64 的 Gifsicle/pngquant 平台包，确认许可证、上游源码、45
+个 Cargo 源码归档、构建脚本、source-to-binary manifest 的入口和摘要与 Release
+备份一致。该机制有助于复现和追踪，却不能从技术证据本身证明：
 
 - 所选方式满足 GPLv2 §3 或 GPLv3 §6；
 - 对应源码包含所有必要的锁文件、补丁与构建/安装脚本；
@@ -171,9 +191,9 @@ Release 备份。该机制有助于复现和追踪，却不能从技术证据本
 - sidecar 作为独立进程和独立可选 npm 包时，主包与原生程序的聚合/派生关系应如何定性。
 
 因此本文不作合规或不合规结论。维护者已选择不作 System Library 主观排除的保守
-工程交付边界；外部法律复核仍建议进行。下一次完整 RC 必须证明 npm tarball 与
-GitHub Release 同时保存固定的 `Cargo.lock`、全部 registry 源码、项目构建脚本、
-pins、许可证与摘要。
+工程交付边界；外部法律复核仍建议进行。`rc.9` 已证明 npm tarball 与 GitHub Release
+同时保存固定的 `Cargo.lock`、全部 registry 源码、项目构建脚本、pins、许可证与
+摘要，后续候选版和稳定版必须继续执行同一契约。
 
 Sharp 运行时还包含 LGPL-3.0-or-later 组件，AOM 包含上游专利许可文本。具体替换/重新链接、源码/notice 和专利文本交付义务，同样应由维护者和律师按最终包装方式确认；证据入口为
 [`sharp-libvips THIRD-PARTY-NOTICES.md`](https://github.com/lovell/sharp-libvips/blob/v1.3.2/THIRD-PARTY-NOTICES.md)。
@@ -188,11 +208,13 @@ Sharp 运行时还包含 LGPL-3.0-or-later 组件，AOM 包含上游专利许可
 4. **构建面断言**：已显式关闭并核对 MozJPEG 12-bit/arithmetic 路径，8 平台 smoke
    会拒绝 `xmlcatalog`。继续把 PixarLog 等配置扩展到 CMake cache、二进制符号和
    运行时 smoke，而不是只依赖脚本文本。
-5. **npm 证明验证**：对八个平台解析到的全部 15 个 Sharp 包执行 `npm audit signatures`；核对 registry `dist.integrity`、attestation subject digest 与下载 tarball，并保存验证结果。
+5. **npm 证明验证**：`rc.9` 的 35 个项目包已核对 registry `dist.integrity`、
+   signature 与 attestation endpoint。稳定版 preflight 还应对八个平台解析到的全部
+   15 个 Sharp 包执行 `npm audit signatures`，并保存 subject digest 验证结果。
 6. **SBOM diff 门槛**：八个平台运行时组件集合应与批准清单一致；任何新增、删除、版本变化或许可证变化都要求人工复核。
 7. **sidecar 可复现证据**：同时校验来源归档 SHA256、每个平台最终二进制 SHA256 和 provenance；从空缓存重建并比较结果。
 8. **GPL 源码 bundle**：已选择每个 GPL npm tarball 随包源码，并在 tag Release
-   同步备份经摘要验证的源码资产；下一次完整 RC 必须证明八平台都执行该契约。
+   同步备份经摘要验证的源码资产；`rc.9` 已证明八平台执行该契约并完成公开恢复演练。
 9. **输入面防护**：保持子进程超时、内存/文件大小限制和临时目录隔离；将上游修复样本及 fuzz crash corpus 纳入回归。
 
 ## 仍需人工确认

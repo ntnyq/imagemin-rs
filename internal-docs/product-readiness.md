@@ -26,9 +26,12 @@ sandbox、跨平台 byte parity 等已明确进入 1.x 路线图，不得因本�
 SBOM、OpenVEX、GPL source assets 和逐包摘要。所有构建、依赖审计、bundle 与 smoke
 job 均成功。
 
-该证据证明 release unit 的技术闭包；npm registry 的 35 包同版本发布、provenance
-回读和 fresh install 尚未完成，因此 G1/G3 仍未关闭，公开试用计时尚未开始。以下
-能力状态不再把“其余 7 平台尚未实跑”或“WASM 未进入 bundle”列为缺口。
+随后同一 tag 的
+[OIDC publish workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30494894639)
+发布了全部 35 包。registry 回读确认每包 `next`、integrity、npm signature 和 SLSA
+attestation；fresh install 又验证默认无 Sharp、显式 Sharp 的 11 codec 以及公开
+WASM 包的 Chromium 路径。G1/G3 已关闭，公开试用从
+2026-07-30 06:29 +08:00 开始。
 
 ## 兼容 Interface
 
@@ -67,13 +70,13 @@ job 均成功。
 
 ## 发布与运维
 
-| 要求                          | 状态   | 缺口                                                                                                                                                                                                                                                        |
-| ----------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                                                                                                              |
-| root + 平台 optional packages | 已证明 | 8 个 binding、8 个 BSD sidecar、8 个 GPL pngquant、8 个 GPL Gifsicle、WASM、binding loader 与 root 包均有精确依赖、文件白名单与版本门禁；完整 35 包 `rc.9` bundle 已通过 WASM 和 8 平台 codec smoke。npm 同版本公开性由 G1/G3 单独跟踪。                    |
-| 多平台二进制 CI               | 已证明 | `v0.1.0-rc.9` release tag 已完成 8 target binding/cwebp/MozJPEG/pngquant/Gifsicle 构建、artifact 汇总，以及 GNU/musl、x64/arm64 的 8 平台 smoke；WASM 浏览器 smoke 同时通过。                                                                               |
-| 可重复 release                | 部分   | `rc.9` 已证明版本一致性、SHA-512、35 包 bundle、确定性 CycloneDX 清单、8 平台/WASM smoke、GPL 随包源码、Release 备份和恢复材料。剩余缺口仅是首次 WASM registry bootstrap、35 包 OIDC publish、provenance/registry 回读和 fresh install，统一由 G1/G3 跟踪。 |
-| 文档站                        | 已证明 | VitePress 构建和 Pages workflow 已有；中英文 codec 兼容说明、迁移指南、RC 安装说明和 native/sidecar 排错页均已纳入站点。                                                                                                                                    |
+| 要求                          | 状态   | 缺口                                                                                                                                                                                                                         |
+| ----------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                                                                               |
+| root + 平台 optional packages | 已证明 | 8 个 binding、8 个 BSD sidecar、8 个 GPL pngquant、8 个 GPL Gifsicle、WASM、binding loader 与 root 包均有精确依赖、文件白名单与版本门禁；完整 35 包 `rc.9` 已公开并通过 WASM、8 平台 codec smoke 与 registry fresh install。 |
+| 多平台二进制 CI               | 已证明 | `v0.1.0-rc.9` release tag 已完成 8 target binding/cwebp/MozJPEG/pngquant/Gifsicle 构建、artifact 汇总，以及 GNU/musl、x64/arm64 的 8 平台 smoke；WASM 浏览器 smoke 同时通过。                                                |
+| 可重复 release                | 已证明 | `rc.9` 已证明版本一致性、SHA-512、35 包 bundle/OIDC publish、确定性 CycloneDX 清单、8 平台/WASM smoke、GPL 随包源码、Release 备份与恢复材料、provenance/registry 回读和 fresh install。                                      |
+| 文档站                        | 已证明 | VitePress 构建和 Pages workflow 已有；中英文 codec 兼容说明、迁移指南、RC 安装说明和 native/sidecar 排错页均已纳入站点。                                                                                                     |
 
 ## 完成判定
 
