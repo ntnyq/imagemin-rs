@@ -27,10 +27,46 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy,rustfmt
+          toolchain: 1.88.0
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - uses: taiki-e/install-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tool: cargo-zigbuild
+      - uses: actions/cache@v5
+        with:
+          path: .release/sidecar-sources
+          key: sidecar-sources-${{ runner.os }}-${{ hashFiles('tasks/sidecars/pins.json') }}
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check
       - run: pnpm run build
+      - name: Fetch benchmark sidecar sources
+        run: |
+          for tool in cwebp mozjpeg pngquant gifsicle; do
+            node tasks/sidecars/fetch-sources.mjs \
+              --tool "$tool" \
+              --output .release/sidecar-sources
+          done
+      - name: Build benchmark sidecars
+        env:
+          SIDECAR_TARGET: linux-x64-gnu
+          SIDECAR_ZIG_TARGET: x86_64-linux-gnu.2.28
+        run: |
+          for tool in cwebp mozjpeg pngquant gifsicle; do
+            tasks/sidecars/build-"$tool".sh \
+              .release/sidecar-sources \
+              .release/benchmark-sidecars/sidecar-"$tool"-linux-x64-gnu
+          done
+      - name: Assemble benchmark sidecars
+        run: >-
+          node tasks/sidecars/assemble-packages.mjs
+          --artifacts .release/benchmark-sidecars
+          --npm-dir npm
+          --targets linux-x64-gnu
       - run: node tasks/benchmark-svg.mjs > svg-benchmark.json
       - run: node tasks/benchmark-phase2.mjs > phase2-benchmark.json
       - run: node tasks/benchmark-phase3.mjs > phase3-benchmark.json
