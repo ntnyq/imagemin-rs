@@ -33,7 +33,7 @@ musl 在 Node.js 中属于 experimental，通常使用
 - musl sidecar executable 静态链接；native binding 通过 musl 专用 optional package
   选择。
 - Windows executable 使用 MSVC runtime，项目自建 sidecar 使用静态 CRT。
-- release tag 在 npm stage 前，会从最终 tarball 在全部 8 个目标安装并运行每个 codec。
+- npm 发布前，release workflow 会从最终 tarball 在全部 8 个目标安装并运行每个 codec。
 
 release workflow 是兼容性依据。在其他本地环境成功编译不会自动扩大支持矩阵。
 

@@ -233,7 +233,9 @@ describe("package contract", () => {
     expect(workflow).toContain("node tasks/release/verify-aom-security.mjs");
     expect(workflow).toContain("environment: npm");
     expect(workflow).toContain("id-token: write");
-    expect(workflow).toContain("publish-packages.mjs --mode=stage");
+    expect(workflow).toContain("inputs.action == 'publish'");
+    expect(workflow).toContain("publish-packages.mjs --mode=publish");
+    expect(workflow).not.toContain("--mode=stage");
     expect(workflow).toContain('gh release create "$GITHUB_REF_NAME"');
     expect(workflow).toContain("prepare-gpl-sources.mjs");
     expect(workflow).toContain('gh release upload "$GITHUB_REF_NAME"');

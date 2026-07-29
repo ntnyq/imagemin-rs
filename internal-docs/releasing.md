@@ -11,17 +11,16 @@
 ## 安全模型
 
 - tag 只触发构建、汇总、tarball 校验和 8 平台安装冒烟，不自动公开包；
-- 后续版本通过 GitHub Actions 的 npm trusted publishing/OIDC 提交 staged package；
-- `npm` GitHub environment 应启用 maintainer 审批；
-- trusted publisher 只允许 `npm stage publish`，不允许直接 `npm publish`；
-- staged package 必须由 maintainer 检查后以 2FA 批准；
+- 后续版本通过 GitHub Actions 的 npm trusted publishing/OIDC 直接发布；
+- `npm` GitHub environment 应启用 maintainer 审批，作为发布前唯一一次人工门禁；
+- trusted publisher 只允许 `npm publish`，不允许 `npm stage publish`；
+- environment 获批后，34 个包按依赖顺序直接公开，不再逐包执行 npm 2FA 审批；
 - release runner 不使用依赖缓存，发布 tarball 带 npm 自动 provenance；
 - release tag 不移动。失败后修复代码并发布新 patch/pre-release，不能覆写已有版本。
 
-npm 的当前要求是 Node.js 22.14+、npm 11.5.1+ 才能使用 trusted publishing；staged
-publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job 固定 npm 12.0.1。
+npm 的当前要求是 Node.js 22.14+、npm 11.5.1+ 才能使用 trusted publishing。工作流
+固定 Node 24.16.0，并在 publish job 固定 npm 12.0.1。
 依据：[trusted publishing](https://docs.npmjs.com/trusted-publishers/)、
-[staged publishing](https://docs.npmjs.com/staged-publishing/)、
 [provenance](https://docs.npmjs.com/generating-provenance-statements/)。
 
 ## 准备一个版本
@@ -129,20 +128,19 @@ sidecar/Sharp 原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法�
 ## 首次发布引导（已完成）
 
 npm 不允许 brand-new package 使用 staged publishing，而且 package 尚不存在时也无法给它
-配置 trusted publisher。34 个包的首次引导已经完成；以下命令只保留为历史和恢复说明，
-后续版本不得再次使用 `--bootstrap`：
+配置 trusted publisher。34 个包的首次引导已经完成。发布脚本现已统一为 direct publish；
+`--bootstrap` 不再需要，日常发布必须从受保护的 GitHub environment 运行：
 
 ```sh
 node tasks/release/publish-packages.mjs \
   --mode=publish \
-  --bootstrap \
   --bundle=/absolute/path/to/release-packages
 ```
 
 脚本先验证 bundle integrity，再按“8 binding 平台包 → 8 BSD sidecar 平台包 →
 8 pngquant sidecar 平台包 → 8 Gifsicle sidecar 平台包 → binding → public
-package”的顺序发布。不要在 CI 中保存 bootstrap token。若中途失败，只继续补齐
-同一已验证 bundle 中缺失的包；不要重新打包或移动 tag。
+package”的顺序发布。不要在 CI 中保存长期 npm token。若中途失败，不要重新打包、
+重用版本或移动 tag；核对 registry 后发布新的 patch/pre-release。
 
 首次版本可见后，已为全部 34 个包配置：
 
@@ -150,31 +148,34 @@ package”的顺序发布。不要在 CI 中保存 bootstrap token。若中途�
 - repository：`imagemin-rs`
 - workflow filename：`release.yml`
 - environment：`npm`
-- allowed action：仅 `npm stage publish`
+- allowed action：仅 `npm publish`
 
-`v0.1.0-rc.6` 已验证一次 staged release 和真实 npm provenance。传统 publishing
-access 与 bootstrap credential 的最终账户侧状态仍需 maintainer 在 npm 设置中确认；
-仓库证据不能替代该账户检查。
+`v0.1.0-rc.6` 已验证一次 staged release 和真实 npm provenance。切换 direct publish
+后，全部 34 个包的 trusted publisher 都必须同步允许 `npm publish`；仓库配置不能替代
+该账户侧检查。
 
-## 后续 staged release
+## 后续 direct release
 
-在 GitHub Actions 手动运行 `Release`，ref 选择已通过的 tag，`action` 选择 `stage`。工作流
-会重新构建和 smoke，而不是信任旧 artifact，然后以 OIDC 把 34 个 tarball 分别送入 npm
-staging area。
+在 GitHub Actions 手动运行 `Release`，ref 选择已通过的 tag，`action` 选择 `publish`。
+工作流会重新构建和 smoke，而不是信任旧 artifact；进入 `publish-npm` job 后先等待
+`npm` environment 的 maintainer 审批，再以 OIDC 直接公开 34 个 tarball。
 
 预发布版本固定使用 `next` dist-tag，稳定版本使用 `latest`。发布候选期的安装文档必须
 显式写成 `pnpm add imagemin-rs@next`，避免无 tag 安装落到旧的 `latest`。
 
-批准前逐个核对：package name/version、SHA-512、文件列表、依赖版本、provenance、tag 和
-workflow run。全部一致后在 npmjs.com 的 Staged Packages 页面以 2FA 批准。多包发布不是
-原子的，因此应先批准 binding/sidecar 平台包，再批准 binding，最后批准 `imagemin-rs`。
+批准 environment 前核对：package name/version、SHA-512、文件列表、依赖版本、tag 和
+workflow run。发布脚本先发 binding/sidecar 平台包，再发 binding，最后发
+`imagemin-rs`，以减少消费者看到依赖尚未可用版本的窗口。
+
+`v0.1.0-rc.7` 在切换前已经进入 npm staging area；该版本仍须按旧流程逐包批准。npm
+已经保留这些版本号，不能改用 direct publish 覆盖。direct publish 从下一个版本生效。
 
 ## 失败与回滚
 
-- 构建、校验或 smoke 失败：不 stage、不发布；修复后发新 tag。
-- stage 内容不符：reject stage，不能批准后再修补同版本。
-- 部分 bootstrap publish：只从原 artifact 补齐缺失包；若内容本身错误，弃用已发布版本并
-  发布新 patch。
+- 构建、校验或 smoke 失败：不发布；修复后发新 tag。
+- environment 批准前发现内容不符：停止 workflow，修复后发布新版本。
+- direct publish 部分成功：弃用已公开的部分版本，并发布新的 patch/pre-release；
+  不重新打包或复用同一版本。
 - 已公开版本有问题：立即移动 `latest`/`next` 到最后一个健康版本并 `npm deprecate` 问题
   版本；除非满足 npm unpublish policy 且确认没有消费者，否则不 unpublish。
 - 任何情况下都不重用 npm version，不移动已推送 release tag。
