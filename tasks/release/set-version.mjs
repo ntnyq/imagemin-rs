@@ -77,16 +77,24 @@ const rustPackageNames = [
   "imagemin-core",
   "imagemin_napi",
 ];
-pendingWrites.push(
-  await replaceExactVersions(
-    "Cargo.lock",
-    rustPackageNames.map((packageName) => [
-      `name = "${packageName}"\nversion = "${currentVersion}"`,
-      `name = "${packageName}"\nversion = "${nextVersion}"`,
-      1,
-    ]),
-  ),
-);
+for (const [path, packageNames] of [
+  ["Cargo.lock", rustPackageNames],
+  ["fuzz/Cargo.lock", rustPackageNames.filter((packageName) => packageName !== "imagemin_napi")],
+]) {
+  const lockfile = await readText(path);
+  const newline = lockfile.includes("\r\n") ? "\r\n" : "\n";
+
+  pendingWrites.push(
+    await replaceExactVersions(
+      path,
+      packageNames.map((packageName) => [
+        `name = "${packageName}"${newline}version = "${currentVersion}"`,
+        `name = "${packageName}"${newline}version = "${nextVersion}"`,
+        1,
+      ]),
+    ),
+  );
+}
 
 const loaderPath = "napi/imagemin/src-js/index.js";
 const loader = await readText(loaderPath);

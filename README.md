@@ -106,6 +106,7 @@ pnpm run check
 - [JPEG engine decision](./internal-docs/adr/0005-jpeg-engines.md)
 - [WebP engine decision](./internal-docs/adr/0006-webp-engine.md)
 - [AVIF engine decision](./internal-docs/adr/0007-avif-engine.md)
+- [Sidecar build & distribution decision](./internal-docs/adr/0009-sidecar-distribution.md)
 - [Phased implementation plan](./internal-docs/implementation-plan.md)
 - [Release runbook](./internal-docs/releasing.md)
 - [Upstream research](./docs/research/upstream-landscape.md)

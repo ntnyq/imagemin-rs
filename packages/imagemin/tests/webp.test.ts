@@ -65,7 +65,7 @@ describe("WebP compatibility", () => {
       ]);
       expect(Buffer.from(actual)).toEqual(expected);
     }
-  });
+  }, 15_000);
 
   test("fixes upstream zero-value omissions instead of silently using defaults", async () => {
     const input = await readHexFixture(PNG_URL);

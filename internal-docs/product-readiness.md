@@ -1,6 +1,6 @@
 # imagemin-rs 产品完成度审计
 
-更新日期：2026-07-27
+更新日期：2026-07-29
 
 本文件把“代码能运行”与“可替代 imagemin、可发布”分开。状态只依据当前仓库中可以复现的代码、测试、构建和发布产物，不依据计划或意图。
 
@@ -36,24 +36,24 @@
 
 ## 质量与安全
 
-| 要求                       | 状态 | 缺口                                                                                                                                                                                                                                                                                                                    |
-| -------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 分层自动化测试             | 部分 | 已有 Rust、真实 `.node`、公开包、类型和 package manifest 测试；codec corpus 尚小。                                                                                                                                                                                                                                      |
-| 渲染/解码等价验证          | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 均有渲染、逐帧或独立 decoder 门禁；corpus 仍需扩展。                                                                                                                                                                                                                                         |
-| 损坏与恶意输入             | 部分 | 所有当前 codec 都有尺寸/结构/帧/metadata 或进程限制，原生 PNG/GIF/SVG pipeline 另有 fuzz 覆盖；仍缺 OS-level RSS sandbox。                                                                                                                                                                                              |
-| fuzz / corpus 回归         | 部分 | PNG/GIF/SVG 原生 pipeline 已有 `cargo-fuzz` target、hex fixture seed、CI 30s/每周 10min 长跑；4 个已修复 finding（含 vendored svgm-core 补丁）见 `fuzzing.md` findings log，均有回归测试。sidecar codec 面（gifsicle/pngquant/mozjpeg/cwebp/sharp 进程输入）不在 in-process fuzz 范围内，依赖各自的进程隔离与资源上限。 |
-| 性能与内存基线             | 部分 | Phase 1..6 有 median/p95/size artifacts，AVIF 含并发/事件循环；仍缺跨平台峰值 RSS hard gate。                                                                                                                                                                                                                           |
-| 输出确定性与 metadata 政策 | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 已固定；跨平台 encoder byte parity 只对统一 artifact 承诺。                                                                                                                                                                                                                                  |
+| 要求                       | 状态 | 缺口                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 分层自动化测试             | 部分 | 已有 Rust、真实 `.node`、公开包、类型和 package manifest 测试；codec corpus 尚小。                                                                                                                                                                                                                                                       |
+| 渲染/解码等价验证          | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 均有渲染、逐帧或独立 decoder 门禁；corpus 仍需扩展。                                                                                                                                                                                                                                                          |
+| 损坏与恶意输入             | 部分 | 所有当前 codec 都有尺寸/结构/帧/metadata 或进程限制，原生 PNG/GIF/SVG pipeline 另有 fuzz 覆盖；仍缺 OS-level RSS sandbox。                                                                                                                                                                                                               |
+| fuzz / corpus 回归         | 部分 | PNG/GIF/SVG 原生 pipeline 已有 `cargo-fuzz` target、hex fixture seed、CI 30s/每周 10min 长跑；5 个已修复 finding（含 vendored svgm-core 补丁与不完整 XML 引用）见 `fuzzing.md` findings log，均有回归测试。sidecar codec 面（gifsicle/pngquant/mozjpeg/cwebp/sharp 进程输入）不在 in-process fuzz 范围内，依赖各自的进程隔离与资源上限。 |
+| 性能与内存基线             | 部分 | Phase 1..6 有 median/p95/size artifacts，AVIF 含并发/事件循环；仍缺跨平台峰值 RSS hard gate。                                                                                                                                                                                                                                            |
+| 输出确定性与 metadata 政策 | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 已固定；跨平台 encoder byte parity 只对统一 artifact 承诺。                                                                                                                                                                                                                                                   |
 
 ## 发布与运维
 
-| 要求                          | 状态   | 缺口                                                                                                                     |
-| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
-| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                           |
-| root + 平台 optional packages | 部分   | 8 个平台包、精确 optional dependency 重写、文件白名单与当前 macOS ARM64 tarball 已验证；尚缺 8 平台真实 artifact。       |
-| 多平台二进制 CI               | 部分   | release workflow 已定义 8 target 构建、artifact 汇总及 GNU/musl/双架构 smoke；尚未在 release tag 上取得实跑证据。        |
-| 可重复 release                | 部分   | 已有版本一致性、SHA-512、tarball 安装 smoke、OIDC staged publish 和恢复手册；首次 bootstrap 与真实 provenance 尚未执行。 |
-| 文档站                        | 部分   | VitePress 构建和 Pages workflow 已有；需随每个 codec 增加兼容表、迁移指南和发布安装说明。                                |
+| 要求                          | 状态   | 缺口                                                                                                                                                             |
+| ----------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                   |
+| root + 平台 optional packages | 部分   | 8 个平台包、精确 optional dependency 重写、文件白名单与当前 macOS ARM64 tarball 已验证；尚缺 8 平台真实 artifact。                                               |
+| 多平台二进制 CI               | 部分   | release workflow 已定义 8 target 构建、artifact 汇总及 GNU/musl/双架构 smoke；尚未在 release tag 上取得实跑证据。                                                |
+| 可重复 release                | 部分   | 已有版本一致性（含 CRLF 与独立 fuzz workspace 锁文件）、SHA-512、tarball 安装 smoke、OIDC staged publish 和恢复手册；首次 bootstrap 与真实 provenance 尚未执行。 |
+| 文档站                        | 部分   | VitePress 构建和 Pages workflow 已有；需随每个 codec 增加兼容表、迁移指南和发布安装说明。                                                                        |
 
 ## 完成判定
 

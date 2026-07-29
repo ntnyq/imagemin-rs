@@ -13,7 +13,7 @@
 
 经典无损插件纳入后，`imagemin-optipng` 位于 GIF 与 pngquant 之间，`imagemin-jpegtran` 位于 mozjpeg 与 WebP 之间。下载量只决定兼容顺序，不代表 codec 技术质量。原始数字、版本和发布时间见 [上游调研](../docs/research/upstream-landscape.md)。
 
-## Phase 0：架构纵切面（当前）
+## Phase 0：架构纵切面（已完成）
 
 目标不是宣称完成 `imagemin-optipng` 兼容，而是用稳定的 Oxipng 验证完整路径。
 
@@ -158,6 +158,22 @@ quality/lossless、4:2:0/4:4:4、直接 effort，并把上游无效的 speed 映
 metadata、stderr、V8 heap、线程和 wall time 均有限制；Phase 6 benchmark 包含 4-job
 并发与事件循环延迟。10/12-bit、公开取消和 OS-level RSS hard limit 留在发布加固，
 不能冒充已支持；详见 ADR 0007。
+
+## 发布加固（当前）
+
+Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛成可重复发布的 RC：
+
+1. **P0 基线修复（已完成）**：修复 Windows 版本脚本换行兼容、SVG fuzz finding 与
+   独立 fuzz workspace 锁文件版本漂移，恢复本地完整门禁。
+2. **P1 cwebp sidecar 纵切面（进行中）**：固定并校验 libwebp 源码，完成 8 目标构建、
+   manifest、平台 npm 包、运行时解析和真实转码 smoke。
+3. **P2 其余 sidecar 与发布链**：扩展 mozjpeg/jpegtran、pngquant、gifsicle，按许可证
+   拆包，并让 verify/pack/smoke/publish 覆盖 24 个 sidecar 平台包。
+4. **P3 RC 演练**：完成 GPL 法律确认、SBOM/provenance、8 平台 tarball 安装与每 codec
+   smoke，执行不发布到 registry 的完整 release rehearsal。
+
+sidecar 的 pin、许可证边界、包结构与运行时失败语义见 ADR 0009。只有各阶段对应的
+自动化验证与文档同步完成后，阶段才可标记完成。
 
 ## 每个 codec 阶段的固定工作包
 

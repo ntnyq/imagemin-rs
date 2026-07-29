@@ -126,16 +126,37 @@ fn terminates_on_unconsumable_path_data_characters() {
 }
 
 #[test]
-fn rejects_documents_that_stop_being_svg_after_optimization() {
-    // A truncated `<svg` serializes to an empty string in svgm-core and a
-    // non-svg root loses the detectable `<svg` prefix; both must be codec
-    // errors instead of silent data loss or a format flip.
+fn rejects_truncated_or_non_svg_documents() {
+    let truncated =
+        optimize_svgm(b"<svg", "{}").expect_err("truncated input must fail before optimization");
+    assert_eq!(truncated.code().as_str(), "ERR_IMAGEMIN_INVALID_INPUT");
+
+    let non_svg = optimize_svgm(br#"<?xml version="1.0"?><html><svg/></html>"#, "{}")
+        .expect_err("a non-SVG root must not change format");
+    assert_eq!(non_svg.code().as_str(), "ERR_IMAGEMIN_CODEC");
+}
+
+#[test]
+fn rejects_the_minimized_optimizer_replay_finding() {
+    // Minimized from the weekly svg_pipeline finding on 2026-07-27. The
+    // tokenizer accepted this truncated character reference and document,
+    // then SVGM emitted output that failed validation on the second pass.
+    for options in ["{}", r#"{"preset":"default","precision":3}"#] {
+        let error =
+            optimize_svgm(b"<svg >t&#0", options).expect_err("malformed XML must be rejected");
+        assert_eq!(error.code().as_str(), "ERR_IMAGEMIN_INVALID_INPUT");
+    }
+}
+
+#[test]
+fn rejects_unbalanced_or_multiple_root_elements() {
     for input in [
-        &b"<svg"[..],
-        &br#"<?xml version="1.0"?><html><svg/></html>"#[..],
+        &b"<svg><g>"[..],
+        &b"<svg><g></svg></g>"[..],
+        &b"<svg/><svg/>"[..],
     ] {
-        let error = optimize_svgm(input, "{}").expect_err("degenerate SVG must fail");
-        assert_eq!(error.code().as_str(), "ERR_IMAGEMIN_CODEC");
+        let error = optimize_svgm(input, "{}").expect_err("malformed XML must be rejected");
+        assert_eq!(error.code().as_str(), "ERR_IMAGEMIN_INVALID_INPUT");
     }
 }
 

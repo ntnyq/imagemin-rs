@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use imagemin_core::{ImageAsset, ImageFormat, ImageminError, PluginOutcome, Result};
 use serde::Deserialize;
 use svgm_core::{Config, Preset};
-use xmlparser::{ElementEnd, Token, Tokenizer};
+use xmlparser::{ElementEnd, Reference, Stream, Token, Tokenizer};
 
 const MAX_INPUT_BYTES: usize = 16 * 1024 * 1024;
 const MAX_NODE_COUNT: usize = 100_000;
@@ -94,11 +94,10 @@ fn validate_input(input: &[u8]) -> Result<&str> {
 
     let source =
         std::str::from_utf8(input).map_err(|_| invalid_input("SVG input must be valid UTF-8"))?;
-    let mut depth = 0_usize;
-    let mut node_count = 0_usize;
+    let mut state = XmlValidationState::default();
 
     for token in Tokenizer::from(source) {
-        let token = token.map_err(codec_error)?;
+        let token = token.map_err(|error| invalid_input(error.to_string()))?;
 
         match token {
             Token::DtdStart { .. }
@@ -109,35 +108,144 @@ fn validate_input(input: &[u8]) -> Result<&str> {
                     "DTD and entity declarations are not accepted by the native SVG optimizer",
                 ));
             }
-            Token::ElementStart { .. }
-            | Token::Text { .. }
-            | Token::Cdata { .. }
-            | Token::Comment { .. }
-            | Token::ProcessingInstruction { .. } => {
-                node_count = node_count.saturating_add(1);
-                if node_count > MAX_NODE_COUNT {
-                    return Err(invalid_input(format!(
-                        "SVG input exceeds the {MAX_NODE_COUNT}-node native limit"
-                    )));
-                }
+            Token::ElementStart { prefix, local, .. } => {
+                state.start_element(prefix.as_str(), local.as_str())?;
+            }
+            Token::Cdata { .. } => {
+                state.require_inside_root("CDATA")?;
+                state.count_node()?;
+            }
+            Token::Comment { .. } | Token::ProcessingInstruction { .. } => {
+                state.count_node()?;
+            }
+            Token::Text { text } => {
+                validate_references(text.as_str())?;
+                state.accept_text(text.as_str())?;
             }
             Token::ElementEnd { end, .. } => match end {
-                ElementEnd::Open => {
-                    depth = depth.saturating_add(1);
-                    if depth > MAX_NESTING_DEPTH {
-                        return Err(invalid_input(format!(
-                            "SVG input exceeds the {MAX_NESTING_DEPTH}-level native nesting limit"
-                        )));
-                    }
+                ElementEnd::Open => state.open_element()?,
+                ElementEnd::Close(prefix, local) => {
+                    state.close_element(prefix.as_str(), local.as_str())?;
                 }
-                ElementEnd::Close(_, _) => depth = depth.saturating_sub(1),
-                ElementEnd::Empty => {}
+                ElementEnd::Empty => state.empty_element()?,
             },
-            Token::Declaration { .. } | Token::Attribute { .. } => {}
+            Token::Attribute { value, .. } => validate_references(value.as_str())?,
+            Token::Declaration { .. } => {}
         }
     }
 
+    state.finish()?;
+
     Ok(source)
+}
+
+#[derive(Default)]
+struct XmlValidationState<'a> {
+    open_elements: Vec<(&'a str, &'a str)>,
+    pending_element: Option<(&'a str, &'a str)>,
+    root_seen: bool,
+    node_count: usize,
+}
+
+impl<'a> XmlValidationState<'a> {
+    fn start_element(&mut self, prefix: &'a str, local: &'a str) -> Result<()> {
+        if self.pending_element.is_some() {
+            return Err(invalid_input("SVG contains an incomplete element start"));
+        }
+        if self.open_elements.is_empty() {
+            if self.root_seen {
+                return Err(invalid_input("SVG must contain exactly one root element"));
+            }
+            self.root_seen = true;
+        }
+        self.pending_element = Some((prefix, local));
+        self.count_node()
+    }
+
+    fn open_element(&mut self) -> Result<()> {
+        let element = self
+            .pending_element
+            .take()
+            .ok_or_else(|| invalid_input("SVG contains an unmatched element open"))?;
+        self.open_elements.push(element);
+        if self.open_elements.len() > MAX_NESTING_DEPTH {
+            return Err(invalid_input(format!(
+                "SVG input exceeds the {MAX_NESTING_DEPTH}-level native nesting limit"
+            )));
+        }
+        Ok(())
+    }
+
+    fn close_element(&mut self, prefix: &str, local: &str) -> Result<()> {
+        if self.pending_element.is_some() {
+            return Err(invalid_input("SVG contains an incomplete element start"));
+        }
+        let Some((open_prefix, open_local)) = self.open_elements.pop() else {
+            return Err(invalid_input("SVG contains an unmatched closing element"));
+        };
+        if open_prefix != prefix || open_local != local {
+            return Err(invalid_input("SVG contains mismatched closing elements"));
+        }
+        Ok(())
+    }
+
+    fn empty_element(&mut self) -> Result<()> {
+        self.pending_element
+            .take()
+            .ok_or_else(|| invalid_input("SVG contains an unmatched empty element"))?;
+        Ok(())
+    }
+
+    fn accept_text(&mut self, text: &str) -> Result<()> {
+        if self.open_elements.is_empty() && !text.trim().is_empty() {
+            return Err(invalid_input("SVG contains text outside its root element"));
+        }
+        self.count_node()
+    }
+
+    fn require_inside_root(&self, kind: &str) -> Result<()> {
+        if self.open_elements.is_empty() {
+            return Err(invalid_input(format!(
+                "SVG contains {kind} outside its root element"
+            )));
+        }
+        Ok(())
+    }
+
+    fn count_node(&mut self) -> Result<()> {
+        self.node_count = self.node_count.saturating_add(1);
+        if self.node_count > MAX_NODE_COUNT {
+            return Err(invalid_input(format!(
+                "SVG input exceeds the {MAX_NODE_COUNT}-node native limit"
+            )));
+        }
+        Ok(())
+    }
+
+    fn finish(self) -> Result<()> {
+        if self.pending_element.is_some() || !self.open_elements.is_empty() || !self.root_seen {
+            return Err(invalid_input("SVG document is incomplete"));
+        }
+        Ok(())
+    }
+}
+
+fn validate_references(text: &str) -> Result<()> {
+    let mut remaining = text;
+    while let Some(index) = remaining.find('&') {
+        let mut stream = Stream::from(&remaining[index..]);
+        let reference = stream
+            .consume_reference()
+            .map_err(|_| invalid_input("SVG contains an invalid XML reference"))?;
+        if matches!(reference, Reference::Entity(_)) {
+            return Err(invalid_input(
+                "SVG contains a named entity without a permitted declaration",
+            ));
+        }
+        remaining = &remaining[index + stream.pos()..];
+    }
+
+    Ok(())
 }
 
 fn invalid_options(message: impl Into<String>) -> ImageminError {

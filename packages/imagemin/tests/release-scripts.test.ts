@@ -30,6 +30,7 @@ const versionedPaths = [
   ...manifestPaths,
   "Cargo.toml",
   "Cargo.lock",
+  "fuzz/Cargo.lock",
   "napi/imagemin/src-js/index.js",
 ];
 
@@ -72,6 +73,27 @@ describe("set-version", () => {
     expect(cargoToml).toContain('version = "7.7.7"');
     expect(cargoToml).toContain('imagemin = { version = "7.7.7", path = "crates/imagemin" }');
     expect(cargoToml).not.toContain(`version = "${manifest.version}"`);
+  });
+
+  test("updates Cargo.lock after a CRLF checkout without changing its line endings", async () => {
+    const cargoLockPath = join(sandboxRoot, "Cargo.lock");
+    const cargoLock = await readSandboxFile("Cargo.lock");
+    await writeFile(cargoLockPath, cargoLock.replaceAll("\n", "\r\n"));
+
+    await runSetVersion("7.7.7");
+
+    const updatedCargoLock = await readSandboxFile("Cargo.lock");
+    expect(updatedCargoLock).toContain('name = "imagemin"\r\nversion = "7.7.7"');
+    expect(updatedCargoLock).not.toMatch(/(?<!\r)\n/u);
+  });
+
+  test("updates the independent fuzz workspace lockfile", async () => {
+    await runSetVersion("7.7.7");
+
+    const cargoLock = await readSandboxFile("fuzz/Cargo.lock");
+    for (const packageName of rustPackageNames.filter((name) => name !== "imagemin_napi")) {
+      expect(cargoLock).toContain(`name = "${packageName}"\nversion = "7.7.7"`);
+    }
   });
 
   test("leaves the tree untouched when any precondition fails", async () => {
@@ -117,16 +139,14 @@ async function expectSandboxVersion(version: string): Promise<void> {
   expect(cargoToml).toContain(`version = "${version}"`);
   expect(cargoToml).toContain(`imagemin = { version = "${version}", path = "crates/imagemin" }`);
 
-  const cargoLock = await readSandboxFile("Cargo.lock");
-  for (const packageName of [
-    "imagemin",
-    "imagemin-codec-gif",
-    "imagemin-codec-png",
-    "imagemin-codec-svg",
-    "imagemin-core",
-    "imagemin_napi",
-  ]) {
-    expect(cargoLock).toContain(`name = "${packageName}"\nversion = "${version}"`);
+  for (const [path, packageNames] of [
+    ["Cargo.lock", rustPackageNames],
+    ["fuzz/Cargo.lock", rustPackageNames.filter((name) => name !== "imagemin_napi")],
+  ] as const) {
+    const cargoLock = await readSandboxFile(path);
+    for (const packageName of packageNames) {
+      expect(cargoLock).toContain(`name = "${packageName}"\nversion = "${version}"`);
+    }
   }
 
   const loader = await readSandboxFile("napi/imagemin/src-js/index.js");
@@ -135,3 +155,12 @@ async function expectSandboxVersion(version: string): Promise<void> {
   );
   expect([...loaderVersions]).toEqual([version]);
 }
+
+const rustPackageNames = [
+  "imagemin",
+  "imagemin-codec-gif",
+  "imagemin-codec-png",
+  "imagemin-codec-svg",
+  "imagemin-core",
+  "imagemin_napi",
+] as const;
