@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecar-gifsicle-win32-arm64-msvc",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "description": "Prebuilt Gifsicle sidecar for imagemin-rs on Windows ARM64.",
   "license": "GPL-2.0-only",
   "repository": {
@@ -14,7 +14,8 @@
     "README.md",
     "gifsicle.exe",
     "gifsicle.manifest.json",
-    "licenses"
+    "licenses",
+    "sources"
   ],
   "os": [
     "win32"

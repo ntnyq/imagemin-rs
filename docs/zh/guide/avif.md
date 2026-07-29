@@ -4,6 +4,15 @@ Phase 6 的 `avif()` 以 `imagemin-avif@0.1.6` 的公开调用形状和默认值
 使用固定 `sharp@0.35.3` / libvips / libheif / libaom runtime。Sharp 只在独立 Node
 子进程中加载，不会把 native addon 或其 codec 版本装入调用者进程。
 
+Sharp 是可选 peer，不属于 imagemin-rs 的默认安装闭包。需要 AVIF 转码时显式安装：
+
+```sh
+pnpm add sharp@0.35.3
+```
+
+没有 Sharp 时，非可转换输入仍保持 identity no-op；可转换输入以
+`ERR_IMAGEMIN_CODEC`、`plugin: "avif"` 和明确安装命令拒绝。
+
 ## 使用
 
 ```ts
@@ -87,7 +96,9 @@ Sharp 0.35.3 的预构建 AVIF runtime 只接受 8-bit output；`bitdepth:10` �
 可重复的 libheif/libaom 平台构建、独立解码 corpus 和 HDR/color-management 契约完成
 后另行增加。
 
-现代 Sharp 通过平台 optional packages 提供预构建 libvips stack，不要求最终用户
-本机编译。release smoke 已接入逐平台 AVIF 实跑、`sharp.versions` 内嵌库清单及原生
+显式安装 Sharp 后，其平台 optional packages 提供预构建 libvips stack，不要求最终
+用户本机编译。release smoke 已接入逐平台 AVIF 实跑、`sharp.versions` 内嵌库清单及原生
 文件 SHA-256；`v0.1.0-rc.6` 已完成全部 8 个目标的实跑验证。稳定版仍需完成
-Sharp 内嵌原生依赖的发布日漏洞审计；完整选择依据见 Phase 6 codec ADR 和调研文档。
+默认无 Sharp 与显式 Sharp 两条安装路径的完整 RC 验证。首个 1.0 固定此 opt-in
+边界；未来若恢复默认安装，必须重新打开 LGPL/AOM 分发审计。完整选择依据见 Phase 6
+codec ADR 和调研文档。

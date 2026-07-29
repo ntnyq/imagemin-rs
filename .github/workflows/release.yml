@@ -185,10 +185,24 @@ jobs:
         with:
           pattern: sidecar-*
           path: .release/sidecar-artifacts
+      - name: Prepare GPL corresponding source materials
+        run: |
+          for tool in gifsicle pngquant; do
+            node tasks/sidecars/fetch-sources.mjs \
+              --tool "$tool" \
+              --output .release/sidecar-sources
+          done
+          node tasks/release/fetch-pngquant-cargo-sources.mjs \
+            --output .release/pngquant-cargo-sources
+          node tasks/release/prepare-gpl-sources.mjs \
+            --sources .release/sidecar-sources \
+            --cargo-sources .release/pngquant-cargo-sources \
+            --output .release/gpl-sources
       - name: Assemble sidecar packages
         run: >-
           node tasks/sidecars/assemble-packages.mjs
           --artifacts .release/sidecar-artifacts
+          --gpl-sources .release/gpl-sources
           --npm-dir npm
           --targets all
       - run: node tasks/release/verify-packages.mjs --artifacts=all --release
@@ -379,8 +393,11 @@ jobs:
               --tool "$tool" \
               --output .release/sidecar-sources
           done
+          node tasks/release/fetch-pngquant-cargo-sources.mjs \
+            --output .release/pngquant-cargo-sources
           node tasks/release/prepare-gpl-sources.mjs \
             --sources .release/sidecar-sources \
+            --cargo-sources .release/pngquant-cargo-sources \
             --output .release/gpl-sources
       - name: Create GitHub release
         env:

@@ -25,5 +25,9 @@ Requires Node.js 22.13 or newer. Native packages and codec dependencies are
 selected automatically for supported platforms; installation must retain
 optional dependencies.
 
+AVIF is the exception: `sharp` is not installed by default. Projects using
+`avif()` must opt in with `pnpm add sharp@0.35.3`. Every other plugin works
+without Sharp.
+
 See the [full documentation](https://imagemin-rs.ntnyq.dev/) and
 [third-party notices](./THIRD_PARTY_NOTICES.md). Released under the MIT License.

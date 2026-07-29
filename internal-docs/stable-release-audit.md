@@ -1,9 +1,9 @@
 # Stable Release Native Dependency Audit
 
-- 审计日期：2026-07-29
-- 证据截止日期：2026-07-29（Asia/Shanghai）
+- 审计日期：2026-07-30
+- 证据截止日期：2026-07-30（Asia/Shanghai）
 - 范围：仓库固定的原生 sidecar、`sharp@0.35.3` 在八个平台目标上的预编译运行时、相关许可证与 npm 供应链证明
-- 建议门槛状态：**HOLD（仅剩许可证人工确认）**
+- 建议门槛状态：**CONDITIONAL PASS（分发模型已选；完整 RC 证据待完成）**
 
 > 本文是一次发布时点的安全与许可证证据快照，不是“没有漏洞”的保证，也不是法律意见。NVD、上游公告和 npm 证明都可能滞后或不完整。
 
@@ -26,10 +26,17 @@
 4. tag workflow 会发布经 pins 校验的 Gifsicle、pngquant 与 libimagequant
    源码归档、SHA-256 manifest、构建指引和 OpenVEX。
 
-稳定版仍建议 HOLD，直到维护者与律师确认 Gifsicle GPL-2.0-only、
-pngquant/libimagequant GPL-3.0-or-later 的“对应源码”边界、交付方式、可用期限和聚合
-定性，并确认 Sharp 内 LGPL 组件与 AOM 专利文本的最终包装方式。仓库自动化提供事实
-证据，但不能替代法律判断。本次证据没有显示其他安全阻断项。
+2026-07-30，维护者选择 L2（Sharp 不进入默认安装闭包）及 GPL 随每个平台 npm 包
+交付源码/构建材料。原来的“分发模型未决”人工 HOLD 已关闭；该决定不构成法律意见。
+工作树已通过当前平台真实 tarball smoke，证明默认无 Sharp 会返回可操作错误，显式
+安装 `sharp@0.35.3` 后全部 codec 可运行，并验证 GPL 包内源码摘要。
+
+稳定版现在为 conditional pass。完整事实模型见
+[`docs/research/native-distribution-license-model.md`](../docs/research/native-distribution-license-model.md)，
+已选择的交付路径、责任人与技术退出条件见
+[`license-release-signoff.md`](./license-release-signoff.md)。`0.1.0-rc.8` 仍须完成
+35 包、八平台、两种 Sharp 路径与公开 registry 回读；在这些证据完成前不得发布
+1.0。本次证据没有显示其他安全阻断项。
 
 ## 证据范围与方法
 
@@ -149,21 +156,22 @@ GPLv3 [第 1 节](https://www.gnu.org/licenses/gpl-3.0.en.html#section1)把生�
 
 ### 当前证据的边界
 
-现有 npm sidecar notice 带有许可证文本、精确上游 URL、版本/提交和 SHA256。自
-`0.1.0-rc.7` 起，tag workflow 还会把三个经 pins 校验的来源归档、
-`gpl-source-manifest.json` 和 tagged build instructions 附加到对应 GitHub Release。
-来源归档没有塞入每个 npm tarball，而是和同版本二进制一同保存在项目控制的 release
-下载面。该机制有助于复现和追踪，却不能从技术证据本身证明：
+现有 npm sidecar notice 带有许可证文本、精确上游 URL、版本/提交和 SHA256。
+`0.1.0-rc.7` 的 Release 已保存三个经 pins 校验的来源归档。当前工作树进一步让 tag
+workflow 保存 pngquant lockfile 中全部 45 个 registry 源码归档，以及实际 build
+scripts、Cargo lockfile、MSVC 配置和 pins；两个附加 tar 及其 manifest 是确定性生成。
+当前工作树已把这些材料同时放入每个对应 GPL npm tarball，并继续在同版本 GitHub
+Release 备份。该机制有助于复现和追踪，却不能从技术证据本身证明：
 
 - 所选方式满足 GPLv2 §3 或 GPLv3 §6；
 - 对应源码包含所有必要的锁文件、补丁与构建/安装脚本；
 - 源码会在要求的期限内持续可用；
 - sidecar 作为独立进程和独立可选 npm 包时，主包与原生程序的聚合/派生关系应如何定性。
 
-因此本文不作合规或不合规结论。上述问题应由维护者记录事实、由律师确认。当前
-GitHub Release 资产已经避免只依赖上游 URL，并链接固定的 `Cargo.lock`、项目构建
-脚本、pins、许可证与摘要；是否构成完整对应源码、应保持多久，以及是否还需把其他
-材料打进单一归档，仍需法律确认。
+因此本文不作合规或不合规结论。维护者已选择不作 System Library 主观排除的保守
+工程交付边界；外部法律复核仍建议进行。下一次完整 RC 必须证明 npm tarball 与
+GitHub Release 同时保存固定的 `Cargo.lock`、全部 registry 源码、项目构建脚本、
+pins、许可证与摘要。
 
 Sharp 运行时还包含 LGPL-3.0-or-later 组件，AOM 包含上游专利许可文本。具体替换/重新链接、源码/notice 和专利文本交付义务，同样应由维护者和律师按最终包装方式确认；证据入口为
 [`sharp-libvips THIRD-PARTY-NOTICES.md`](https://github.com/lovell/sharp-libvips/blob/v1.3.2/THIRD-PARTY-NOTICES.md)。
@@ -181,15 +189,17 @@ Sharp 运行时还包含 LGPL-3.0-or-later 组件，AOM 包含上游专利许可
 5. **npm 证明验证**：对八个平台解析到的全部 15 个 Sharp 包执行 `npm audit signatures`；核对 registry `dist.integrity`、attestation subject digest 与下载 tarball，并保存验证结果。
 6. **SBOM diff 门槛**：八个平台运行时组件集合应与批准清单一致；任何新增、删除、版本变化或许可证变化都要求人工复核。
 7. **sidecar 可复现证据**：同时校验来源归档 SHA256、每个平台最终二进制 SHA256 和 provenance；从空缓存重建并比较结果。
-8. **GPL 源码 bundle**：已在每次 tag 二进制发布时同步生成并上传经摘要验证的源码
-   资产；律师确认交付模型后，再锁定不可变性、签名、保留期与可用性监控政策。
+8. **GPL 源码 bundle**：已选择每个 GPL npm tarball 随包源码，并在 tag Release
+   同步备份经摘要验证的源码资产；下一次完整 RC 必须证明八平台都执行该契约。
 9. **输入面防护**：保持子进程超时、内存/文件大小限制和临时目录隔离；将上游修复样本及 fuzz crash corpus 纳入回归。
 
 ## 仍需人工确认
 
-- **律师 + 维护者**：Gifsicle GPL-2.0-only 与 pngquant/libimagequant GPL-3.0-or-later 的聚合定性、源码交付选项、对应源码边界和可用期限。
+- **外部法律复核（建议、非当前工程 gate）**：复核 Gifsicle GPL-2.0-only 与
+  pngquant/libimagequant GPL-3.0-or-later 的聚合定性、随包源码边界和可用期限。
 - **安全维护者**：最终签署接受 `MozJPEG 4.1.1 + 明确 8-bit VEX`；自动化已验证构建
   配置，但接受风险仍是发布责任人的决定。
-- **维护者 + 律师**：Sharp 平台包内 LGPL 组件的 notice、源码和替换/重新链接要求，以及 AOM 专利许可文本的交付方式。
+- **维护者**：保持 Sharp 为可选 peer；若恢复默认安装，重新打开 LGPL 组件的
+  notice/源码/替换路径和 AOM 专利文本审计。
 - **发布负责人**：确认八个平台最终 tarball、签名、attestation、SBOM 和 sidecar 二进制摘要与本审计记录完全一致。
 - **安全负责人**：确认接受本次数据库覆盖边界；“上游无 advisory”或“查询未命中”都不等于无漏洞。

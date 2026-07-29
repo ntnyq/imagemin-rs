@@ -168,6 +168,10 @@ multi-page TIFF pass through. File destinations update to `.webp`.
 An `imagemin-avif@0.1.6` compatible factory that converts static PNG, JPEG,
 GIF, WebP, TIFF, or AVIF through an isolated Sharp/libheif worker:
 
+```sh
+pnpm add sharp@0.35.3
+```
+
 ```ts
 interface AvifOptions {
   quality?: number; // integer 1..100, default 90
@@ -181,6 +185,7 @@ interface AvifOptions {
 
 `effort` and `speed` are mutually exclusive. Animated and multi-page inputs
 pass through; successful file conversion updates the extension to `.avif`.
+Sharp is an optional peer and is not installed with the default package.
 See [AVIF Conversion](../guide/avif.md) for defaults and resource limits.
 
 ## Stable errors and limits

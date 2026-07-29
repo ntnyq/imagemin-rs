@@ -20,9 +20,9 @@ const OPTION_NAMES = new Set([
   "speed",
 ]);
 const CHROMA_SUBSAMPLING_VALUES = new Set<AvifChromaSubsampling>(["4:2:0", "4:4:4"]);
-// Resolved on first avif() invocation so environments where the sharp
-// dependency failed to install can still import the package and run every
-// other plugin.
+// Sharp is an optional peer dependency under the L2 distribution model. It is
+// resolved only for convertible AVIF input so importing the package and using
+// every other plugin never installs or loads Sharp/libvips.
 let cachedSharpEntry: string | undefined;
 
 function resolveSharpEntry(): string {
@@ -32,7 +32,7 @@ function resolveSharpEntry(): string {
     } catch (cause) {
       throw new ImageminError(
         "ERR_IMAGEMIN_CODEC",
-        "The avif plugin requires the sharp package, which could not be resolved",
+        "The avif plugin requires the optional peer dependency sharp@0.35.3; install it explicitly with `pnpm add sharp@0.35.3` (or the equivalent command for your package manager)",
         { cause, plugin: "avif" },
       );
     }

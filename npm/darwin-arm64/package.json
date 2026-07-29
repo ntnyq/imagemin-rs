@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/binding-darwin-arm64",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "description": "Private native binding for imagemin-rs.",
   "license": "MIT",
   "repository": {

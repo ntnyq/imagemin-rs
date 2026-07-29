@@ -57,10 +57,13 @@ Third-party function plugins can remain in the same array. They receive a Node
 | `imagemin-mozjpeg`  | `mozjpeg()`         | Compatible MozJPEG sidecar with documented upstream bug fixes     |
 | `imagemin-jpegtran` | `jpegtran()`        | Coefficient-lossless output; strips EXIF, ICC, and comments       |
 | `imagemin-webp`     | `webp()`            | Compatible static conversion with safer zero-value handling       |
-| `imagemin-avif`     | `avif()`            | Compatible 8-bit static conversion in an isolated worker          |
+| `imagemin-avif`     | `avif()`            | Opt-in 8-bit static conversion; install `sharp@0.35.3`            |
 
 Read the individual codec guide before changing between compatibility and
 native profiles.
+
+Unlike `imagemin-avif`, imagemin-rs does not install Sharp transitively. Add
+the exact optional peer explicitly when the migrated pipeline uses `avif()`.
 
 ## Review intentional differences
 

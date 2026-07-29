@@ -15,6 +15,8 @@ interface PackageManifest {
   name: string;
   optionalDependencies: Record<string, string>;
   os?: string[];
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   sideEffects: boolean;
   type: string;
   version: string;
@@ -39,7 +41,13 @@ describe("package contract", () => {
 
     expect(manifest.type).toBe("module");
     expect(manifest.sideEffects).toBe(false);
-    expect(manifest.files).toEqual(["dist", "LICENSE", "README.md", "THIRD_PARTY_NOTICES.md"]);
+    expect(manifest.files).toEqual([
+      "dist",
+      "LICENSE",
+      "licenses",
+      "README.md",
+      "THIRD_PARTY_NOTICES.md",
+    ]);
     expect(manifest.exports).toMatchObject({
       ".": {
         default: "./dist/index.mjs",
@@ -70,6 +78,15 @@ describe("package contract", () => {
         platforms.map(({ directory }) => [`@imagemin-rs/sidecars-${directory}`, "workspace:*"]),
       ),
     });
+  });
+
+  test("keeps Sharp outside the default install closure", async () => {
+    const manifest = await readManifest();
+
+    expect(manifest.dependencies).not.toHaveProperty("sharp");
+    expect(manifest.devDependencies).toHaveProperty("sharp", "0.35.3");
+    expect(manifest.peerDependencies).toEqual({ sharp: "0.35.3" });
+    expect(manifest.peerDependenciesMeta).toEqual({ sharp: { optional: true } });
   });
 
   test("keeps upstream binary download wrappers out of production dependencies", async () => {
@@ -166,7 +183,7 @@ describe("package contract", () => {
         bin: { pngquant: pngquantBinary },
         cpu: [platform.cpu],
         engines: publicManifest.engines,
-        files: ["README.md", pngquantBinary, "pngquant.manifest.json", "licenses"],
+        files: ["README.md", pngquantBinary, "pngquant.manifest.json", "licenses", "sources"],
         license: "GPL-3.0-or-later",
         name: `@imagemin-rs/sidecar-pngquant-${platform.directory}`,
         os: [platform.os],
@@ -183,7 +200,7 @@ describe("package contract", () => {
         bin: { gifsicle: gifsicleBinary },
         cpu: [platform.cpu],
         engines: publicManifest.engines,
-        files: ["README.md", gifsicleBinary, "gifsicle.manifest.json", "licenses"],
+        files: ["README.md", gifsicleBinary, "gifsicle.manifest.json", "licenses", "sources"],
         license: "GPL-2.0-only",
         name: `@imagemin-rs/sidecar-gifsicle-${platform.directory}`,
         os: [platform.os],

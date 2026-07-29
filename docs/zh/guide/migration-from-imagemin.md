@@ -55,9 +55,12 @@ const output = await imagemin.buffer(input, {
 | `imagemin-mozjpeg`  | `mozjpeg()`         | 兼容 MozJPEG sidecar，并包含已记录的上游修复      |
 | `imagemin-jpegtran` | `jpegtran()`        | coefficient 无损，但删除 EXIF、ICC 和 comment     |
 | `imagemin-webp`     | `webp()`            | 静态转码兼容，并修复合法零值处理                  |
-| `imagemin-avif`     | `avif()`            | 隔离 worker 中的 8-bit 静态转码兼容               |
+| `imagemin-avif`     | `avif()`            | opt-in 8-bit 静态转码；安装 `sharp@0.35.3`        |
 
 在 compatibility 与 native profile 之间切换前，应先阅读对应 codec 指南。
+
+与 `imagemin-avif` 不同，imagemin-rs 不会传递安装 Sharp。迁移后的 pipeline 使用
+`avif()` 时，请显式添加这个精确版本的可选 peer。
 
 ## 检查有意差异
 

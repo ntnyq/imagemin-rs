@@ -1,6 +1,6 @@
 {
   "name": "imagemin-rs",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "description": "An imagemin-compatible image optimization pipeline powered by Rust and napi-rs.",
   "keywords": [
     "image",
@@ -24,6 +24,7 @@
   "files": [
     "dist",
     "LICENSE",
+    "licenses",
     "README.md",
     "THIRD_PARTY_NOTICES.md"
   ],
@@ -52,7 +53,6 @@
     "image-dimensions": "catalog:",
     "is-svg": "catalog:",
     "junk": "catalog:",
-    "sharp": "0.35.3",
     "svgo": "catalog:"
   },
   "devDependencies": {
@@ -73,9 +73,18 @@
     "jpegtran-bin": "7.0.0",
     "mozjpeg": "8.0.0",
     "pngquant-bin": "9.0.0",
+    "sharp": "0.35.3",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "sharp": "0.35.3"
+  },
+  "peerDependenciesMeta": {
+    "sharp": {
+      "optional": true
+    }
   },
   "optionalDependencies": {
     "@imagemin-rs/binding": "workspace:*",

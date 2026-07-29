@@ -98,11 +98,27 @@ License 1.0. It also contains decoders and support libraries under their own
 licenses; the complete platform-specific manifest shipped by
 `@img/sharp-libvips-*` is authoritative.
 
-Final release verification must preserve Sharp's Apache license and each
-installed platform package's licensing manifest, record exact native package
-versions and hashes, generate an SBOM, and review the LGPL replacement/source
-requirements and AOM patent terms. The product package must not copy only this
-summary while omitting the dependency's complete notices.
+This package reproduces libaom's exact BSD 2-Clause copyright license and
+Alliance for Open Media Patent License 1.0 in `licenses/aom-LICENSE` and
+`licenses/aom-PATENTS`. The patent license grants rights directly from its
+licensors, requires the license to accompany binary implementations, and
+contains reciprocity and defensive-termination conditions. Receiving this
+package does not create patent rights from imagemin-rs or from an intermediary.
+
+Sharp supports rebuilding against a compatible globally installed libvips.
+The corresponding upstream source, build configuration, and replacement
+instructions for the pinned native dependency are maintained at:
+
+- https://github.com/lovell/sharp-libvips/tree/v1.3.2
+- https://github.com/lovell/sharp-libvips/releases/tag/v1.3.2
+- https://sharp.pixelplumbing.com/install/#custom-libvips
+
+Sharp is an exact optional peer and is not installed by the default
+imagemin-rs dependency closure. Projects that explicitly install it must
+preserve Sharp's Apache license, the AOM license copies above, and each
+installed platform package's licensing manifest; record exact native package
+versions and hashes; and review the LGPL shared-library/source path. Making
+Sharp a default dependency again requires a renewed distribution audit.
 
 Source and license information:
 
@@ -110,3 +126,4 @@ Source and license information:
 - https://github.com/lovell/sharp-libvips
 - https://github.com/strukturag/libheif
 - https://aomedia.googlesource.com/aom/
+- https://aomedia.org/license/patent-license/

@@ -314,7 +314,7 @@ checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
 name = "imagemin"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "imagemin-codec-gif",
  "imagemin-codec-png",
@@ -325,7 +325,7 @@ dependencies = [
 
 [[package]]
 name = "imagemin-codec-gif"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "gif",
  "gif-dispose",
@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "imagemin-codec-png"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "imagemin-core",
  "oxipng",
@@ -348,7 +348,7 @@ dependencies = [
 
 [[package]]
 name = "imagemin-codec-svg"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "imagemin-core",
  "resvg",
@@ -360,14 +360,14 @@ dependencies = [
 
 [[package]]
 name = "imagemin-core"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "imagemin_napi"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "imagemin",
  "napi",
@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "imagemin_wasm_core"
-version = "0.1.0-rc.7"
+version = "0.1.0-rc.8"
 dependencies = [
  "imagemin",
  "serde",

@@ -158,6 +158,10 @@ TIFF 和静态 WebP 会转为 WebP；APNG、animated WebP 与 multi-page TIFF �
 `imagemin-avif@0.1.6` 兼容工厂，通过隔离的 Sharp/libheif worker 把静态 PNG、JPEG、
 GIF、WebP、TIFF 或 AVIF 转为 8-bit AVIF：
 
+```sh
+pnpm add sharp@0.35.3
+```
+
 ```ts
 interface AvifOptions {
   quality?: number; // integer 1..100，默认 90
@@ -170,7 +174,8 @@ interface AvifOptions {
 ```
 
 `effort` 与 `speed` 不能同时使用。APNG、animated GIF/WebP/AVIF 与 multi-page TIFF
-原样返回；文件入口会把成功转码的 destination 扩展名改为 `.avif`。完整默认值、
+原样返回；文件入口会把成功转码的 destination 扩展名改为 `.avif`。Sharp 是可选
+peer，不随默认包安装。完整默认值、
 上游 bug 修复和资源边界见 [AVIF 转码](../guide/avif.md)。
 
 ## 稳定错误码

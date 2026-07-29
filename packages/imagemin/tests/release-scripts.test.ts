@@ -69,6 +69,7 @@ afterEach(() => {
 
 describe("set-version", () => {
   test("bumps every versioned file consistently, including prerelease chains", async () => {
+    const initialVexVersion = await readSandboxVexVersion();
     const first = await runSetVersion("7.7.7-sandbox.0");
     expect(JSON.parse(first.stdout)).toMatchObject({
       packages: manifestPaths.length,
@@ -76,13 +77,13 @@ describe("set-version", () => {
       to: "7.7.7-sandbox.0",
     });
     await expectSandboxVersion("7.7.7-sandbox.0");
-    expect(await readSandboxVexVersion()).toBe(2);
+    expect(await readSandboxVexVersion()).toBe(initialVexVersion + 1);
 
     // A second bump exercises the Cargo.toml substring ordering again with a
     // prerelease current version.
     await runSetVersion("7.7.7-sandbox.1");
     await expectSandboxVersion("7.7.7-sandbox.1");
-    expect(await readSandboxVexVersion()).toBe(3);
+    expect(await readSandboxVexVersion()).toBe(initialVexVersion + 2);
   });
 
   test("accepts the package-manager argument separator", async () => {
@@ -318,20 +319,19 @@ describe("write-dependency-sbom", () => {
       },
       specVersion: "1.6",
     });
-    expect(sbom.components.length).toBeGreaterThan(150);
+    expect(sbom.components.length).toBeGreaterThan(140);
     expect(sbom.components).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "imagemin_napi", version: releaseVersion }),
         expect.objectContaining({ name: "imagemin_wasm_core", version: releaseVersion }),
         expect.objectContaining({ name: "oxipng" }),
-        expect.objectContaining({ name: "sharp", version: "0.35.3" }),
         expect.objectContaining({ name: "wasm-bindgen" }),
-        expect.objectContaining({
-          name: "@img/sharp-libvips-darwin-arm64",
-        }),
       ]),
     );
-    expect(sbom.dependencies.some(({ dependsOn }) => dependsOn.length > 10)).toBe(true);
+    expect(
+      sbom.components.some(({ name }) => name === "sharp" || name.startsWith("@img/sharp")),
+    ).toBe(false);
+    expect(sbom.dependencies.some(({ dependsOn }) => dependsOn.length > 8)).toBe(true);
     expect(first).not.toContain(workspaceRoot);
 
     await execFileAsync(process.execPath, [

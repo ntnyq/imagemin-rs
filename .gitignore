@@ -30,7 +30,9 @@ npm/sidecar-pngquant-*/pngquant
 npm/sidecar-pngquant-*/pngquant.exe
 npm/sidecar-pngquant-*/pngquant.manifest.json
 npm/sidecar-pngquant-*/licenses
+npm/sidecar-pngquant-*/sources
 npm/sidecar-gifsicle-*/gifsicle
 npm/sidecar-gifsicle-*/gifsicle.exe
 npm/sidecar-gifsicle-*/gifsicle.manifest.json
 npm/sidecar-gifsicle-*/licenses
+npm/sidecar-gifsicle-*/sources

@@ -14,6 +14,17 @@ The package uses npm's `next` tag during the release-candidate period. The
 unqualified `pnpm add imagemin-rs` command will become the recommended command
 after the stable release.
 
+AVIF is an explicit opt-in for the initial stable release. Install the pinned
+optional peer only in projects that call `avif()`:
+
+```sh
+pnpm add sharp@0.35.3
+```
+
+Importing imagemin-rs and using every other plugin does not install or load
+Sharp. Convertible AVIF input reports a stable, actionable error if the peer
+is absent.
+
 ## Optimize a buffer
 
 ```ts
@@ -85,9 +96,9 @@ internally, but execution is never reordered across a JavaScript plugin.
 
 Choose `svgo()` for full imagemin-svgo configuration compatibility or `svgm()`
 for bounded worker-pool execution. For PNG and JPEG, choose between lossless
-and lossy adapters according to the codec guides. `webp()` and `avif()` convert
-supported static images and update destination extensions based on output
-magic.
+and lossy adapters according to the codec guides. `webp()` converts supported
+static images by default; the opt-in `avif()` path does the same after Sharp is
+installed. Both update destination extensions based on output magic.
 
 You can also try common browser-supported formats locally in the
 [Playground](/playground). Uploaded files never leave the browser.

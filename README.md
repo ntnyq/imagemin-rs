@@ -13,7 +13,7 @@ An imagemin-compatible image optimization pipeline powered by Rust and napi-rs.
 
 - Familiar `imagemin()` and `imagemin.buffer()` APIs with typed plugin options.
 - Native Rust codecs executed outside the JavaScript event loop with napi-rs.
-- SVG, GIF, PNG, JPEG, WebP, and AVIF optimization and conversion.
+- SVG, GIF, PNG, JPEG, and WebP optimization and conversion, plus opt-in AVIF.
 - Observable `optimize()` results with per-step byte statistics.
 - Browser and Web Worker support through the memory-only `@imagemin-rs/wasm` package.
 - Reproducible native and sidecar packages for macOS, Linux, and Windows.
@@ -31,6 +31,13 @@ The project is currently published under the npm `next` tag while the release
 candidate is validated. See the
 [migration guide](https://imagemin-rs.ntnyq.dev/guide/migration-from-imagemin)
 when replacing an existing imagemin setup.
+
+AVIF is intentionally opt-in for 1.0. Install the pinned optional peer only
+when using `avif()`:
+
+```sh
+pnpm add sharp@0.35.3
+```
 
 ## Quick Start
 

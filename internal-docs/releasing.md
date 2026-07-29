@@ -51,10 +51,16 @@ npm 的当前要求是 Node.js 22.14+、npm 11.5.1+ 才能使用 trusted publish
    `release-manifest.json` 含每个 tarball 的 SHA-512 integrity，
    `release-sbom.cdx.json` 含发布 tarball 和固定 sidecar 源码，
    `release-dependencies.cdx.json` 含 Rust 与生产 npm 依赖闭包。每个 smoke job 另上传
-   `smoke-<platform>` artifact，内含 codec 报告和该平台实际安装后的 Sharp SBOM。
+   `smoke-<platform>` artifact。smoke 先证明默认 closure 未安装 Sharp、非 AVIF codec
+   正常且 AVIF 返回可操作错误，再显式安装 `sharp@0.35.3` 运行全部 codec 并生成该
+   平台 Sharp SBOM。
    tag 对应的 GitHub Release 还必须包含经 pins 的 SHA-256 验证过的 Gifsicle、
-   pngquant 和 libimagequant 源码压缩包、`gpl-source-manifest.json` 以及
-   `GPL-SOURCE-README.md`，并上传与版本同步的 OpenVEX。release audit 还会从 AOM
+   pngquant 和 libimagequant 源码压缩包、覆盖 pngquant lockfile 全部 45 个 registry
+   包的 `pngquant-cargo-sources.tar`、`sidecar-build-scripts.tar`、
+   `gpl-source-manifest.json` 以及 `GPL-SOURCE-README.md`，并上传与版本同步的
+   OpenVEX。两个 tar 由发布脚本按固定路径、mode、uid/gid 和 mtime 确定性生成；
+   同一份 Gifsicle/pngquant 对应源码与构建材料还必须进入每个 GPL 平台 npm tarball，
+   由 source manifest、pack verifier 和安装回读核对。release audit 还会从 AOM
    官方 tag 历史断言批准的修复 commit。
 
 本地 `release:bundle:current` 只证明当前 OS/CPU。不能用它替代 GitHub workflow 的 8
@@ -72,8 +78,8 @@ npm 的当前要求是 Node.js 22.14+、npm 11.5.1+ 才能使用 trusted publish
 
 - 从 `imagemin_napi` 与 `imagemin_wasm_core` 可达的非 dev Cargo graph，含 workspace
   crate、registry checksum、license expression 与依赖边；
-- `imagemin-rs` 的生产 npm graph，含 Sharp 的平台 optional packages、版本、下载地址，
-  以及已安装 package manifest 提供的许可证和仓库；
+- `imagemin-rs` 的默认生产 npm graph；L2 下该 graph 不含 Sharp。显式 AVIF smoke
+  另外记录 Sharp 平台 optional packages、版本、下载地址、许可证和仓库；
 - Rust 与 npm 组件数量由当前锁文件计算；依赖变化时随锁文件更新。
 
 两份文件均为确定性 CycloneDX 1.6 JSON，本地已通过官方 1.6 JSON Schema 和引用闭合
@@ -121,8 +127,8 @@ sidecar/Sharp 原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法�
 
 这次运行关闭了“其余 7 平台、完整 34 包演练、首次公开包和真实 provenance”缺口。
 `0.1.0-rc.7` 起，tag workflow 会把 Gifsicle、pngquant 与 libimagequant 的精确源码
-输入及校验清单附加到对应 GitHub Release。该机制提供可持续的源码交付证据，但仍不能
-替代维护者/律师对 GPL 完整对应源码、保留期限与聚合分发义务的最终确认。最低系统
+输入及校验清单附加到对应 GitHub Release。2026-07-30 的分发决定进一步要求每个 GPL
+平台 npm tarball 随包携带完整固定源码与构建材料，GitHub Release 作为备份。最低系统
 版本已固定为 macOS 11、Linux glibc 2.28/musl 1.1.19 与 Windows 10/Server 2016，
 并由公开平台政策和 package contract 覆盖。
 

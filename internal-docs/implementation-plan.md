@@ -178,10 +178,11 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
    sidecar 源码、Rust 和生产 npm/Sharp 依赖闭包的确定性 CycloneDX 1.6 清单。
 5. **P4 稳定版收口（进行中）**：固定 sidecar/Sharp 内嵌原生依赖的发布日漏洞审计
    已完成，并以 MozJPEG/libxml2 OpenVEX、AOM tag 历史断言和 8 平台 smoke 固化。
-   tag workflow 也会附加经校验的 GPL 源码资产；剩余门槛是维护者/律师确认 GPL、
-   LGPL 与 AOM 专利文本的最终交付模型。AVIF 10/12-bit 在没有兼容契约前明确排除在
-   首个稳定版范围。中英文迁移、RC 安装、native/sidecar 排错和最低系统版本政策已经
-   补齐，package contract 锁定 macOS 11、glibc 2.28 与 Node 22/24/26 矩阵。
+   2026-07-30 已选择 L2 与 GPL 随包源码模型：Sharp 移出默认闭包，每个 GPL 平台包
+   携带上游源码、全部固定 Cargo registry 源码和构建材料。剩余门槛是新完整 RC 的
+   35 包/8 平台验证与 14 天公开试用。AVIF 10/12-bit 明确属于 1.x。中英文迁移、RC
+   安装、native/sidecar 排错和最低系统版本政策已经补齐，package contract 锁定
+   macOS 11、glibc 2.28 与 Node 22/24/26 矩阵。
 
 sidecar 的 pin、许可证边界、包结构与运行时失败语义见 ADR 0009。只有各阶段对应的
 自动化验证与文档同步完成后，阶段才可标记完成。
@@ -200,9 +201,6 @@ sidecar 的 pin、许可证边界、包结构与运行时失败语义见 ADR 000
 
 ## v1.0 门槛
 
-- 指定六类插件均有稳定公开兼容表；
-- 根包和平台 optional packages 可重复发布；
-- 所有支持平台执行真实 codec smoke test；
-- Node 主版本矩阵和最低系统版本有明确政策；
-- fuzz/corpus 回归、资源上限和安全输入政策落地；
-- 文档、迁移指南、benchmark 方法和 release preflight 完整。
+唯一生效的阻断 gate、公开试用协议、目标日期与 1.x 非阻断范围见
+[`1.0-release-plan.md`](./1.0-release-plan.md)。本实现计划中的 phase 完成标准不再
+被单独解释为新增 1.0 gate。
