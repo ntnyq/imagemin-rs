@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { resolveSpawnCommand } from "./spawn-command.mjs";
 import { writePlatformSbom } from "./write-platform-sbom.mjs";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -171,9 +172,9 @@ function isAvif(value) {
 }
 
 function run(command, arguments_, options) {
-  const executable = process.platform === "win32" ? `${command}.cmd` : command;
+  const resolved = resolveSpawnCommand(command, arguments_);
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(executable, arguments_, { ...options, stdio: "inherit" });
+    const child = spawn(resolved.command, resolved.arguments, { ...options, stdio: "inherit" });
     child.once("error", reject);
     child.once("exit", (code, signal) => {
       if (code === 0) resolvePromise();
