@@ -17,8 +17,7 @@ build_root="$work_dir/build"
 mkdir -p "$output_dir" "$source_root" "$build_root"
 output_dir=$(cd "$output_dir" && pwd)
 
-gifsicle_version=$(node -p \
-  "JSON.parse(require('node:fs').readFileSync('$script_dir/pins.json','utf8')).gifsicle.version")
+gifsicle_version=$(node "$script_dir/read-pin.mjs" --tool gifsicle)
 tar -xzf "$sources_dir/gifsicle-$gifsicle_version.tar.gz" \
   -C "$source_root" --strip-components=1
 

@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { runBinary } from "./run-binary.mjs";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const cjpeg = resolve(readFlag("--cjpeg"));
@@ -16,14 +17,14 @@ const fixture = Buffer.from(
 );
 
 for (const binary of [cjpeg, jpegtran]) {
-  const version = await run(binary, ["-version"], Buffer.alloc(0));
+  const version = await runBinary(binary, ["-version"], Buffer.alloc(0));
   assert.match(`${version.stdout}${version.stderr}`, /version 4\.1\.1/u);
 }
 
-const encoded = await run(cjpeg, ["-quality", "75"], fixture);
+const encoded = await runBinary(cjpeg, ["-quality", "75"], fixture);
 assertJpeg(encoded.stdout);
 
-const transformed = await run(jpegtran, ["-copy", "none", "-optimize"], encoded.stdout);
+const transformed = await runBinary(jpegtran, ["-copy", "none", "-optimize"], encoded.stdout);
 assertJpeg(transformed.stdout);
 
 console.log(
@@ -43,32 +44,6 @@ function assertJpeg(output) {
   assert.equal(output[1], 0xd8);
   assert.equal(output.at(-2), 0xff);
   assert.equal(output.at(-1), 0xd9);
-}
-
-function run(binary, arguments_, input) {
-  return new Promise((resolvePromise, reject) => {
-    const child = spawn(binary, arguments_, { stdio: ["pipe", "pipe", "pipe"] });
-    const stdout = [];
-    const stderr = [];
-    child.stdout.on("data", (chunk) => stdout.push(chunk));
-    child.stderr.on("data", (chunk) => stderr.push(chunk));
-    child.once("error", reject);
-    child.once("exit", (code, signal) => {
-      const result = {
-        stderr: Buffer.concat(stderr),
-        stdout: Buffer.concat(stdout),
-      };
-      if (code === 0) resolvePromise(result);
-      else {
-        reject(
-          new Error(
-            `${binary} failed with ${signal ?? `exit code ${code}`}: ${result.stderr.toString()}`,
-          ),
-        );
-      }
-    });
-    child.stdin.end(input);
-  });
 }
 
 function readFlag(flag) {

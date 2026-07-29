@@ -130,6 +130,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Build release binding
+        env:
+          CFLAGS_x86_64_unknown_linux_musl: >-
+            -DLIBDEFLATE_ASSEMBLER_DOES_NOT_SUPPORT_AVX512VNNI
+            -DLIBDEFLATE_ASSEMBLER_DOES_NOT_SUPPORT_VPCLMULQDQ
         run: >-
           pnpm --filter @imagemin-rs/binding exec napi build
           --esm --platform --js index.js --dts index.d.ts --output-dir src-js

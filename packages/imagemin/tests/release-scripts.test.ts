@@ -81,6 +81,15 @@ describe("set-version", () => {
     await expectSandboxVersion("7.7.7-sandbox.1");
   });
 
+  test("accepts the package-manager argument separator", async () => {
+    const result = await runSetVersion("7.7.7", true);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      tag: "v7.7.7",
+      to: "7.7.7",
+    });
+    await expectSandboxVersion("7.7.7");
+  });
+
   test("updates the imagemin workspace dependency alongside the workspace version", async () => {
     const manifest = JSON.parse(await readSandboxFile("package.json")) as { version: string };
     await runSetVersion("7.7.7");
@@ -420,8 +429,17 @@ describe("write-platform-sbom", () => {
   });
 });
 
-async function runSetVersion(version: string): Promise<{ stderr: string; stdout: string }> {
-  return execFileAsync(process.execPath, [setVersionScript, version, "--root", sandboxRoot]);
+async function runSetVersion(
+  version: string,
+  withSeparator = false,
+): Promise<{ stderr: string; stdout: string }> {
+  return execFileAsync(process.execPath, [
+    setVersionScript,
+    ...(withSeparator ? ["--"] : []),
+    version,
+    "--root",
+    sandboxRoot,
+  ]);
 }
 
 async function readSandboxFile(path: string): Promise<string> {

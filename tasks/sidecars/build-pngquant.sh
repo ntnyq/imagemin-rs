@@ -18,8 +18,7 @@ mkdir -p "$output_dir" "$source_root/lib"
 output_dir=$(cd "$output_dir" && pwd)
 
 pin() {
-  node -p \
-    "JSON.parse(require('node:fs').readFileSync('$script_dir/pins.json','utf8')).pngquant.sources['$1'].version"
+  node "$script_dir/read-pin.mjs" --tool pngquant --source "$1"
 }
 
 pngquant_version=$(pin pngquant)

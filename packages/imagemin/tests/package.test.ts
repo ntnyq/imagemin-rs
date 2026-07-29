@@ -219,6 +219,11 @@ describe("package contract", () => {
     expect(workflow).toContain("--bundle=.release/npm");
     expect(workflow).toContain("--expected-platform=${{ matrix.directory }}");
     expect(workflow).toContain("--sbom=.release/smoke/${{ matrix.directory }}.cdx.json");
+    expect(workflow).toContain(
+      "CFLAGS_x86_64_unknown_linux_musl: >-\n" +
+        "            -DLIBDEFLATE_ASSEMBLER_DOES_NOT_SUPPORT_AVX512VNNI\n" +
+        "            -DLIBDEFLATE_ASSEMBLER_DOES_NOT_SUPPORT_VPCLMULQDQ",
+    );
     for (const value of [ciWorkflow, workflow]) {
       expect(value).toContain("pnpm audit --prod --audit-level high");
       expect(value).toContain("command-arguments: advisories bans licenses sources");

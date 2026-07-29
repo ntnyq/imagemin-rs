@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const cliArguments = process.argv.slice(2);
+if (cliArguments[0] === "--") cliArguments.shift();
 const rootFlagIndex = cliArguments.indexOf("--root");
 const workspaceRoot =
   rootFlagIndex === -1

@@ -16,8 +16,7 @@ trap 'rm -rf "$work_dir"' EXIT
 mkdir -p "$output_dir"
 output_dir=$(cd "$output_dir" && pwd)
 
-mozjpeg_version=$(node -p \
-  "JSON.parse(require('node:fs').readFileSync('$script_dir/pins.json','utf8')).mozjpeg.version")
+mozjpeg_version=$(node "$script_dir/read-pin.mjs" --tool mozjpeg)
 source_root="$work_dir/source"
 build_root="$work_dir/build"
 mkdir -p "$source_root"

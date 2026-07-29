@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecar-gifsicle-win32-x64-msvc",
-  "version": "0.1.0-rc.0",
+  "version": "0.1.0-rc.1",
   "description": "Prebuilt Gifsicle sidecar for imagemin-rs on Windows x64.",
   "license": "GPL-2.0-only",
   "repository": {

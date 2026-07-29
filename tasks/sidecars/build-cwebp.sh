@@ -19,7 +19,7 @@ mkdir -p "$output_dir" "$prefix"
 output_dir=$(cd "$output_dir" && pwd)
 
 pin() {
-  node -p "JSON.parse(require('node:fs').readFileSync('$script_dir/pins.json','utf8')).cwebp.sources['$1'].version"
+  node "$script_dir/read-pin.mjs" --tool cwebp --source "$1"
 }
 
 zlib_version=$(pin zlib)

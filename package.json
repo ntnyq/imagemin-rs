@@ -1,6 +1,6 @@
 {
   "name": "imagemin-rs-monorepo",
-  "version": "0.1.0-rc.0",
+  "version": "0.1.0-rc.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,7 +27,8 @@
     "release:smoke": "node tasks/release/smoke-packages.mjs",
     "release:publish:dry-run": "node tasks/release/publish-packages.mjs --mode=dry-run",
     "release:version": "node tasks/release/set-version.mjs",
-    "test": "cargo test --locked --workspace && pnpm run build:native && pnpm --filter @imagemin-rs/binding test && pnpm --filter imagemin-rs test",
+    "test": "cargo test --locked --workspace && pnpm run test:tasks && pnpm run build:native && pnpm --filter @imagemin-rs/binding test && pnpm --filter imagemin-rs test",
+    "test:tasks": "node --test tasks/sidecars/run-binary.test.mjs tasks/sidecars/read-pin.test.mjs",
     "typecheck": "pnpm run build:native && pnpm --filter imagemin-rs typecheck"
   },
   "devDependencies": {
