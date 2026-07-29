@@ -73,9 +73,10 @@
 - 记录 Oxipng 与 OptiPNG 算法差异，不承诺逐字节一致；
 - APNG、ICC、gamma 和 metadata 策略写入 ADR。
 
-已落实的决策（2026-07-17）：`gifsicle()` 固定外部 `gifsicle@5.3.0`
-sidecar，支持 interlace/O1..O3/colors；`giflossless()` 提供 MIT/Apache 原生
-delta path。Rust conformance 覆盖有限/无限 loop、delay、透明、局部帧、
+已落实的决策（2026-07-29）：`gifsicle()` 生产执行固定源码自建的 Gifsicle 1.96，
+8 个 GPL-2.0-only 平台包独立携带 provenance 和许可证；`gifsicle@5.3.0` 仅作开发
+oracle。兼容入口支持 interlace/O1..O3/colors；`giflossless()` 提供 MIT/Apache
+原生 delta path。Rust conformance 覆盖有限/无限 loop、delay、透明、局部帧、
 Background/Previous disposal 与逐帧合成像素。`optipng()` 已修正 strip all、
 level 0、grayscale switch、repair/transform output growth，并将 APNG 明确设为
 pass-through。真实 `.node`、公开包语义 canonicalization 和 Phase 2 benchmark
@@ -166,11 +167,11 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
 2. **P1 cwebp sidecar 纵切面（实现完成）**：固定并校验 libwebp 源码，完成 8 目标构建、
    manifest、平台 npm 包、运行时解析和真实转码 smoke；macOS ARM64 tarball 已实测，
    其余 7 个目标等待 CI 首次实跑证据。
-3. **P2 其余 sidecar 与发布链（进行中）**：mozjpeg/jpegtran 与 pngquant 已完成；
-   继续扩展 gifsicle GPL 平台包，并让 verify/pack/smoke/publish 覆盖全部 24 个
-   sidecar 平台包。
-4. **P3 RC 演练**：完成 GPL 法律确认、SBOM/provenance、8 平台 tarball 安装与每 codec
-   smoke，执行不发布到 registry 的完整 release rehearsal。
+3. **P2 其余 sidecar 与发布链（已完成）**：mozjpeg/jpegtran、pngquant 与 Gifsicle
+   已完成，verify/pack/smoke/publish 覆盖全部 24 个 sidecar 平台包。
+4. **P3 RC 演练（进行中）**：2026-07-29 已完成 macOS ARM64 本地 rehearsal；
+   继续完成 GPL 法律确认、SBOM、其余 7 平台 tarball 安装与每 codec smoke，再执行
+   不发布到 registry 的完整 34 包 release rehearsal。
 
 sidecar 的 pin、许可证边界、包结构与运行时失败语义见 ADR 0009。只有各阶段对应的
 自动化验证与文档同步完成后，阶段才可标记完成。

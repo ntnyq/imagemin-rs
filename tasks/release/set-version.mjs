@@ -34,6 +34,7 @@ const packagePaths = [
   "napi/imagemin/package.json",
   "packages/imagemin/package.json",
   ...platformDirectories.map((directory) => `npm/${directory}/package.json`),
+  ...platformDirectories.map((directory) => `npm/sidecar-gifsicle-${directory}/package.json`),
   ...platformDirectories.map((directory) => `npm/sidecar-pngquant-${directory}/package.json`),
   ...platformDirectories.map((directory) => `npm/sidecars-${directory}/package.json`),
 ];

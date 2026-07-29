@@ -35,11 +35,13 @@ const sidecarLicenseFiles = [
   "zlib-LICENSE.txt",
 ];
 const sidecarBinaryNames = ["cjpeg", "cwebp", "jpegtran"];
+const gifsicleLicenseFiles = ["gifsicle-COPYING"];
 const pngquantLicenseFiles = ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"];
 const selectedPlatforms =
   artifactMode === "all" ? platformDirectories : [currentPlatformDirectory()];
 const packageDirectories = [
   ...selectedPlatforms.map((directory) => `npm/${directory}`),
+  ...selectedPlatforms.map((directory) => `npm/sidecar-gifsicle-${directory}`),
   ...selectedPlatforms.map((directory) => `npm/sidecar-pngquant-${directory}`),
   ...selectedPlatforms.map((directory) => `npm/sidecars-${directory}`),
   "napi/imagemin",
@@ -60,7 +62,7 @@ const version = JSON.parse(
 const tarballNames = (await readdir(outputDirectory))
   .filter((name) => name.endsWith(".tgz"))
   .sort();
-const expectedTarballCount = selectedPlatforms.length * 3 + 2;
+const expectedTarballCount = selectedPlatforms.length * 4 + 2;
 assert(
   tarballNames.length === expectedTarballCount,
   `Expected ${expectedTarballCount} tarballs, found ${tarballNames.length}`,
@@ -113,6 +115,10 @@ for (const directory of selectedPlatforms) {
     packages.some(({ name }) => name === `@imagemin-rs/sidecar-pngquant-${directory}`),
     `The ${directory} pngquant tarball is missing`,
   );
+  assert(
+    packages.some(({ name }) => name === `@imagemin-rs/sidecar-gifsicle-${directory}`),
+    `The ${directory} gifsicle tarball is missing`,
+  );
 }
 
 const bundle = {
@@ -130,6 +136,24 @@ function assertTarballContract(manifest, entries) {
   const entryNames = new Set(entries.map(({ name }) => name));
   for (const path of ["package/README.md", "package/package.json"]) {
     assert(entryNames.has(path), `${manifest.name} tarball is missing ${path}`);
+  }
+
+  if (manifest.name.startsWith("@imagemin-rs/sidecar-gifsicle-")) {
+    const directory = manifest.name.slice("@imagemin-rs/sidecar-gifsicle-".length);
+    assert(platformDirectories.includes(directory), `Unexpected gifsicle package ${manifest.name}`);
+    const binaryName = directory.startsWith("win32-") ? "gifsicle.exe" : "gifsicle";
+    for (const path of [
+      `package/${binaryName}`,
+      "package/gifsicle.manifest.json",
+      ...gifsicleLicenseFiles.map((name) => `package/licenses/${name}`),
+    ]) {
+      assert(entryNames.has(path), `${manifest.name} tarball is missing ${path}`);
+    }
+    assert(
+      entries.find(({ name }) => name === `package/${binaryName}`)?.data.byteLength > 0,
+      `${manifest.name} gifsicle is empty`,
+    );
+    return;
   }
 
   if (manifest.name.startsWith("@imagemin-rs/sidecar-pngquant-")) {
@@ -180,6 +204,12 @@ function assertTarballContract(manifest, entries) {
   if (manifest.name === "imagemin-rs") {
     const expected = {
       "@imagemin-rs/binding": version,
+      ...Object.fromEntries(
+        platformDirectories.map((directory) => [
+          `@imagemin-rs/sidecar-gifsicle-${directory}`,
+          version,
+        ]),
+      ),
       ...Object.fromEntries(
         platformDirectories.map((directory) => [`@imagemin-rs/sidecars-${directory}`, version]),
       ),

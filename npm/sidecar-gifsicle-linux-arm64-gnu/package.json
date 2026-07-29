@@ -1,0 +1,34 @@
+{
+  "name": "@imagemin-rs/sidecar-gifsicle-linux-arm64-gnu",
+  "version": "0.1.0-rc.0",
+  "description": "Prebuilt Gifsicle sidecar for imagemin-rs on Linux ARM64 with glibc.",
+  "license": "GPL-2.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "bin": {
+    "gifsicle": "gifsicle"
+  },
+  "files": [
+    "README.md",
+    "gifsicle",
+    "gifsicle.manifest.json",
+    "licenses"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

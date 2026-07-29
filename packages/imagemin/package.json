@@ -48,7 +48,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "gifsicle": "5.3.0",
     "globby": "catalog:",
     "image-dimensions": "catalog:",
     "is-svg": "catalog:",
@@ -60,6 +59,7 @@
     "@ntnyq/tsconfig": "catalog:",
     "@types/node": "catalog:",
     "cwebp-bin": "8.0.0",
+    "gifsicle": "5.3.0",
     "imagemin": "9.0.1",
     "imagemin-avif": "0.1.6",
     "imagemin-gifsicle": "7.0.0",
@@ -79,6 +79,14 @@
   },
   "optionalDependencies": {
     "@imagemin-rs/binding": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-darwin-arm64": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-darwin-x64": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-linux-arm64-gnu": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-linux-arm64-musl": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-linux-x64-gnu": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-linux-x64-musl": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-win32-arm64-msvc": "workspace:*",
+    "@imagemin-rs/sidecar-gifsicle-win32-x64-msvc": "workspace:*",
     "@imagemin-rs/sidecar-pngquant-darwin-arm64": "workspace:*",
     "@imagemin-rs/sidecar-pngquant-darwin-x64": "workspace:*",
     "@imagemin-rs/sidecar-pngquant-linux-arm64-gnu": "workspace:*",

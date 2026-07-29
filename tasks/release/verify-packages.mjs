@@ -28,6 +28,7 @@ const sidecarTools = [
   { binary: "cwebp", provenance: "cwebp" },
   { binary: "jpegtran", provenance: "mozjpeg" },
 ];
+const gifsicleLicenseFiles = ["gifsicle-COPYING"];
 const pngquantLicenseFiles = ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"];
 
 const artifactMode = readArgument("--artifacts") ?? "current";
@@ -64,6 +65,9 @@ assert(rootManifest.version === version, "Root package version does not match th
 assert(bindingManifest.engines?.node === publicManifest.engines?.node, "Node engine ranges differ");
 const expectedPublicOptionalDependencies = {
   "@imagemin-rs/binding": "workspace:*",
+  ...Object.fromEntries(
+    platforms.map(({ directory }) => [`@imagemin-rs/sidecar-gifsicle-${directory}`, "workspace:*"]),
+  ),
   ...Object.fromEntries(
     platforms.map(({ directory }) => [`@imagemin-rs/sidecar-pngquant-${directory}`, "workspace:*"]),
   ),
@@ -361,6 +365,102 @@ for (const platform of platforms) {
       tool: "pngquant",
     });
   }
+
+  const gifsiclePackageName = `@imagemin-rs/sidecar-gifsicle-${platform.directory}`;
+  const gifsicleBinaryName = platform.os === "win32" ? "gifsicle.exe" : "gifsicle";
+  const gifsicleRoot = `npm/sidecar-gifsicle-${platform.directory}`;
+  const gifsicleManifest = await readJson(`${gifsicleRoot}/package.json`);
+  assert(
+    gifsicleManifest.name === gifsiclePackageName,
+    `Unexpected gifsicle package name for ${platform.directory}`,
+  );
+  assert(
+    gifsicleManifest.version === version,
+    `${gifsiclePackageName} version does not match ${version}`,
+  );
+  assert(gifsicleManifest.license === "GPL-2.0-only", `${gifsiclePackageName} license is invalid`);
+  assert(
+    gifsicleManifest.publishConfig?.access === "public",
+    `${gifsiclePackageName} is not publicly publishable`,
+  );
+  assertDeepEqual(
+    gifsicleManifest.cpu,
+    [platform.cpu],
+    `${gifsiclePackageName} CPU constraint is invalid`,
+  );
+  assertDeepEqual(
+    gifsicleManifest.os,
+    [platform.os],
+    `${gifsiclePackageName} OS constraint is invalid`,
+  );
+  assertDeepEqual(
+    gifsicleManifest.libc,
+    platform.libc === undefined ? undefined : [platform.libc],
+    `${gifsiclePackageName} libc constraint is invalid`,
+  );
+  assertDeepEqual(
+    gifsicleManifest.files,
+    ["README.md", gifsicleBinaryName, "gifsicle.manifest.json", "licenses"],
+    `${gifsiclePackageName} files allowlist is invalid`,
+  );
+  assertDeepEqual(
+    gifsicleManifest.bin,
+    { gifsicle: gifsicleBinaryName },
+    `${gifsiclePackageName} bin mapping is invalid`,
+  );
+  assert(
+    gifsicleManifest.engines?.node === publicManifest.engines.node,
+    `${gifsiclePackageName} Node engine differs`,
+  );
+  assert(
+    (await readText(`${gifsicleRoot}/README.md`)).includes(gifsiclePackageName),
+    `${gifsiclePackageName} has no package README`,
+  );
+
+  if (requiredDirectories.has(platform.directory)) {
+    const binaryUrl = new URL(`${gifsicleRoot}/${gifsicleBinaryName}`, workspaceRoot);
+    const binary = await readFile(binaryUrl);
+    const metadata = await stat(binaryUrl);
+    assert(metadata.isFile() && binary.byteLength > 0, `${gifsiclePackageName} is empty`);
+    if (platform.os !== "win32") {
+      assert((metadata.mode & 0o111) !== 0, `${gifsiclePackageName} is not marked executable`);
+    }
+    assertBinaryMagic(binary, platform.os, gifsiclePackageName);
+
+    const provenance = await readJson(`${gifsicleRoot}/gifsicle.manifest.json`);
+    const expectedSources = Object.fromEntries(
+      Object.entries(sidecarPins.gifsicle.sources).sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+    );
+    assertDeepEqual(
+      provenance,
+      {
+        binary: gifsicleBinaryName,
+        bytes: binary.byteLength,
+        schema: 1,
+        sha256: createHash("sha256").update(binary).digest("hex"),
+        sources: expectedSources,
+        target: platform.directory,
+        tool: "gifsicle",
+        version: sidecarPins.gifsicle.version,
+      },
+      `${gifsiclePackageName} provenance manifest is invalid`,
+    );
+    for (const licenseFile of gifsicleLicenseFiles) {
+      const license = await stat(new URL(`${gifsicleRoot}/licenses/${licenseFile}`, workspaceRoot));
+      assert(
+        license.isFile() && license.size > 0,
+        `${gifsiclePackageName} is missing ${licenseFile}`,
+      );
+    }
+    artifacts.push({
+      bytes: binary.byteLength,
+      package: gifsiclePackageName,
+      sha256: provenance.sha256,
+      tool: "gifsicle",
+    });
+  }
 }
 
 for (const path of [
@@ -383,7 +483,7 @@ console.log(
     {
       artifactMode,
       artifacts,
-      packages: 2 + platforms.length * 3,
+      packages: 2 + platforms.length * 4,
       version,
     },
     undefined,

@@ -1,7 +1,6 @@
-import gifsicleBinary from "gifsicle";
-
 import { runBinary } from "./binary";
 import { ImageminError, rethrowIfAborted } from "./errors";
+import { resolveSidecarBinary } from "./sidecar";
 import type { GifsicleOptions, ImageminPlugin } from "./types";
 
 const MAX_GIF_BYTES = 256 * 1024 * 1024;
@@ -36,7 +35,9 @@ export function gifsicle(options: GifsicleOptions = {}): ImageminPlugin {
     try {
       return await runBinary({
         arguments: arguments_,
-        binary: gifsicleBinary,
+        binary: resolveSidecarBinary("gifsicle", {
+          override: process.env["IMAGEMIN_RS_GIFSICLE_PATH"],
+        }),
         displayName: "Gifsicle",
         input,
         signal: context?.signal,

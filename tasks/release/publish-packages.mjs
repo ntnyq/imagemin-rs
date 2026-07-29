@@ -20,8 +20,8 @@ const bundle = JSON.parse(
 if (bundle.version === "0.0.0" && mode !== "dry-run") {
   throw new Error("The 0.0.0 development version cannot be published");
 }
-if (bundle.packages.length !== 26) {
-  throw new Error(`Expected 26 release packages, found ${bundle.packages.length}`);
+if (bundle.packages.length !== 34) {
+  throw new Error(`Expected 34 release packages, found ${bundle.packages.length}`);
 }
 
 const publicPackage = takePackage("imagemin-rs");
@@ -44,12 +44,19 @@ const pngquantPackages = bundle.packages
 if (pngquantPackages.length !== 8) {
   throw new Error(`Expected 8 pngquant packages, found ${pngquantPackages.length}`);
 }
+const gifsiclePackages = bundle.packages
+  .filter(({ name }) => name.startsWith("@imagemin-rs/sidecar-gifsicle-"))
+  .sort((left, right) => left.name.localeCompare(right.name));
+if (gifsiclePackages.length !== 8) {
+  throw new Error(`Expected 8 gifsicle packages, found ${gifsiclePackages.length}`);
+}
 
 const distributionTag = bundle.version.includes("-") ? "next" : "latest";
 const orderedPackages = [
   ...platformPackages,
   ...sidecarPackages,
   ...pngquantPackages,
+  ...gifsiclePackages,
   bindingPackage,
   publicPackage,
 ];

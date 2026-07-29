@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
+  gifsicleSidecarPackageName,
   pngquantSidecarPackageName,
   resolveSidecarBinary,
   sidecarPackageName,
@@ -39,8 +40,20 @@ describe("sidecar resolution", () => {
     );
   });
 
+  test("maps every supported platform tuple to its gifsicle package", () => {
+    expect(gifsicleSidecarPackageName({ arch: "arm64", platform: "darwin" })).toBe(
+      "@imagemin-rs/sidecar-gifsicle-darwin-arm64",
+    );
+    expect(gifsicleSidecarPackageName({ arch: "x64", platform: "win32" })).toBe(
+      "@imagemin-rs/sidecar-gifsicle-win32-x64-msvc",
+    );
+    expect(gifsicleSidecarPackageName({ arch: "x64", libc: "musl", platform: "linux" })).toBe(
+      "@imagemin-rs/sidecar-gifsicle-linux-x64-musl",
+    );
+  });
+
   test("uses an explicit binary path when supplied", () => {
-    for (const tool of ["cjpeg", "cwebp", "jpegtran", "pngquant"] as const) {
+    for (const tool of ["cjpeg", "cwebp", "gifsicle", "jpegtran", "pngquant"] as const) {
       const path = resolve(`fixtures/${tool}`);
       expect(resolveSidecarBinary(tool, { override: path })).toBe(path);
     }
@@ -53,6 +66,17 @@ describe("sidecar resolution", () => {
         "npm",
         `sidecar-pngquant-${currentPlatformDirectory()}`,
         process.platform === "win32" ? "pngquant.exe" : "pngquant",
+      ),
+    );
+  });
+
+  test("resolves gifsicle from its GPL platform package", () => {
+    expect(resolveSidecarBinary("gifsicle")).toBe(
+      join(
+        workspaceRoot,
+        "npm",
+        `sidecar-gifsicle-${currentPlatformDirectory()}`,
+        process.platform === "win32" ? "gifsicle.exe" : "gifsicle",
       ),
     );
   });

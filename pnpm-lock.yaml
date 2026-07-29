@@ -130,6 +130,22 @@ importers:
 
   npm/linux-x64-musl: {}
 
+  npm/sidecar-gifsicle-darwin-arm64: {}
+
+  npm/sidecar-gifsicle-darwin-x64: {}
+
+  npm/sidecar-gifsicle-linux-arm64-gnu: {}
+
+  npm/sidecar-gifsicle-linux-arm64-musl: {}
+
+  npm/sidecar-gifsicle-linux-x64-gnu: {}
+
+  npm/sidecar-gifsicle-linux-x64-musl: {}
+
+  npm/sidecar-gifsicle-win32-arm64-msvc: {}
+
+  npm/sidecar-gifsicle-win32-x64-msvc: {}
+
   npm/sidecar-pngquant-darwin-arm64: {}
 
   npm/sidecar-pngquant-darwin-x64: {}
@@ -168,9 +184,6 @@ importers:
 
   packages/imagemin:
     dependencies:
-      gifsicle:
-        specifier: 5.3.0
-        version: 5.3.0
       globby:
         specifier: 'catalog:'
         version: 14.1.0
@@ -199,6 +212,9 @@ importers:
       cwebp-bin:
         specifier: 8.0.0
         version: 8.0.0
+      gifsicle:
+        specifier: 5.3.0
+        version: 5.3.0
       imagemin:
         specifier: 9.0.1
         version: 9.0.1
@@ -251,6 +267,30 @@ importers:
       '@imagemin-rs/binding':
         specifier: workspace:*
         version: link:../../napi/imagemin
+      '@imagemin-rs/sidecar-gifsicle-darwin-arm64':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-darwin-arm64
+      '@imagemin-rs/sidecar-gifsicle-darwin-x64':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-darwin-x64
+      '@imagemin-rs/sidecar-gifsicle-linux-arm64-gnu':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-linux-arm64-gnu
+      '@imagemin-rs/sidecar-gifsicle-linux-arm64-musl':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-linux-arm64-musl
+      '@imagemin-rs/sidecar-gifsicle-linux-x64-gnu':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-linux-x64-gnu
+      '@imagemin-rs/sidecar-gifsicle-linux-x64-musl':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-linux-x64-musl
+      '@imagemin-rs/sidecar-gifsicle-win32-arm64-msvc':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-win32-arm64-msvc
+      '@imagemin-rs/sidecar-gifsicle-win32-x64-msvc':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-gifsicle-win32-x64-msvc
       '@imagemin-rs/sidecar-pngquant-darwin-arm64':
         specifier: workspace:*
         version: link:../../npm/sidecar-pngquant-darwin-arm64

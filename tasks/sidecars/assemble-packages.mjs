@@ -42,6 +42,13 @@ const sidecarArtifacts = [
     packagePrefix: "sidecar-pngquant",
     tool: "pngquant",
   },
+  {
+    artifact: "gifsicle",
+    binaries: ["gifsicle"],
+    licenses: ["gifsicle-COPYING"],
+    packagePrefix: "sidecar-gifsicle",
+    tool: "gifsicle",
+  },
 ];
 const cliArguments = process.argv.slice(2);
 const artifactsRoot = resolve(readFlag("--artifacts"));

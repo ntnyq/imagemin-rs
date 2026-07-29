@@ -17,12 +17,14 @@ const output = await imagemin.buffer(input, {
 `optimizationLevel` 时不会偷偷补入 level 1，这与 `imagemin-gifsicle@7.0.0`
 的真实代码一致。
 
-该入口执行 `gifsicle@5.3.0` 提供的独立 GPL executable，不链接进 MIT native
-addon。普通 application extensions 默认删除，NETSCAPE loop、frame delays 和
-动画语义保留。进程限制为 256 MiB 输入、512 MiB stdout、1 MiB stderr 与 120 秒。
+该入口执行项目从固定源码自建的 Gifsicle 1.96，不链接进 MIT native addon。8 个
+`@imagemin-rs/sidecar-gifsicle-*` 平台包携带 SHA-256 provenance 与完整 GPL-2.0-only
+文本，不使用运行时下载或安装期编译。普通 application extensions 默认删除，
+NETSCAPE loop、frame delays 和动画语义保留。进程限制为 256 MiB 输入、512 MiB
+stdout、1 MiB stderr 与 120 秒。
 
-`colors` 是有损量化。不同平台安装到的 Gifsicle patch release 可能不同，因此
-不承诺跨平台逐字节确定性。
+`colors` 是有损量化。`gifsicle@5.3.0` 仅保留为开发差分 oracle；跨平台只在同一
+自建 Gifsicle 版本与配置间比较。
 
 ## `giflossless()`：原生保守优化
 

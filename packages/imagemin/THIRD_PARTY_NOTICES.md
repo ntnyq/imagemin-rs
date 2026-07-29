@@ -1,17 +1,24 @@
 # Third-party notices
 
 `imagemin-rs` is MIT licensed. Its `gifsicle()` compatibility adapter executes
-the separately installed `gifsicle@5.3.0` package as a child process.
+Gifsicle 1.96 from the current `@imagemin-rs/sidecar-gifsicle-*` optional
+package as a child process.
 
-Gifsicle is Copyright (C) 1997-2021 Eddie Kohler and is distributed under the
-GNU General Public License version 2. The npm dependency contains its license
-and corresponding source archive under `vendor/source`. The executable is not
-linked into the imagemin-rs native addon.
+Gifsicle is Copyright (C) 1997-2025 Eddie Kohler and is distributed under the
+GNU General Public License version 2 only. The executable is not linked into
+the imagemin-rs native addon. Each platform package includes the complete
+`COPYING` file, exact source URL and SHA-256 value, and a binary provenance
+manifest.
+
+`gifsicle@5.3.0` remains a development-only compatibility oracle. Production
+installation does not use its runtime download or install-time compilation
+path.
 
 Source and license information:
 
 - https://github.com/imagemin/gifsicle-bin
 - https://github.com/kohler/gifsicle
+- https://www.lcdf.org/gifsicle/
 
 The `pngquant()` compatibility adapter executes pngquant 3.0.3 from the current
 `@imagemin-rs/sidecar-pngquant-*` optional package. pngquant and its pinned

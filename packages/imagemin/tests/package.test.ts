@@ -56,6 +56,12 @@ describe("package contract", () => {
       "@imagemin-rs/binding": "workspace:*",
       ...Object.fromEntries(
         platforms.map(({ directory }) => [
+          `@imagemin-rs/sidecar-gifsicle-${directory}`,
+          "workspace:*",
+        ]),
+      ),
+      ...Object.fromEntries(
+        platforms.map(({ directory }) => [
           `@imagemin-rs/sidecar-pngquant-${directory}`,
           "workspace:*",
         ]),
@@ -69,7 +75,13 @@ describe("package contract", () => {
   test("keeps upstream binary download wrappers out of production dependencies", async () => {
     const manifest = await readManifest();
 
-    for (const packageName of ["cwebp-bin", "jpegtran-bin", "mozjpeg", "pngquant-bin"]) {
+    for (const packageName of [
+      "cwebp-bin",
+      "gifsicle",
+      "jpegtran-bin",
+      "mozjpeg",
+      "pngquant-bin",
+    ]) {
       expect(manifest.dependencies).not.toHaveProperty(packageName);
       expect(manifest.devDependencies).toHaveProperty(packageName);
     }
@@ -162,6 +174,23 @@ describe("package contract", () => {
       });
       if ("libc" in platform) expect(pngquantManifest.libc).toEqual([platform.libc]);
       else expect(pngquantManifest.libc).toBeUndefined();
+
+      const gifsicleManifest = await readJson(
+        new URL(`npm/sidecar-gifsicle-${platform.directory}/package.json`, workspaceRootUrl),
+      );
+      const gifsicleBinary = platform.os === "win32" ? "gifsicle.exe" : "gifsicle";
+      expect(gifsicleManifest).toMatchObject({
+        bin: { gifsicle: gifsicleBinary },
+        cpu: [platform.cpu],
+        engines: publicManifest.engines,
+        files: ["README.md", gifsicleBinary, "gifsicle.manifest.json", "licenses"],
+        license: "GPL-2.0-only",
+        name: `@imagemin-rs/sidecar-gifsicle-${platform.directory}`,
+        os: [platform.os],
+        version: publicManifest.version,
+      });
+      if ("libc" in platform) expect(gifsicleManifest.libc).toEqual([platform.libc]);
+      else expect(gifsicleManifest.libc).toBeUndefined();
     }
   });
 
@@ -192,6 +221,8 @@ describe("package contract", () => {
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-mozjpeg.mjs");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-pngquant.sh");
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-pngquant.mjs");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/build-gifsicle.sh");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-gifsicle.mjs");
   });
 });
 

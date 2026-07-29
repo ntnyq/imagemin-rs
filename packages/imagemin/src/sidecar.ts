@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 
-type SidecarTool = "cjpeg" | "cwebp" | "jpegtran" | "pngquant";
+type SidecarTool = "cjpeg" | "cwebp" | "gifsicle" | "jpegtran" | "pngquant";
 
 interface ResolveSidecarOptions {
   override?: string | undefined;
@@ -21,7 +21,12 @@ export function resolveSidecarBinary(
 ): string {
   if (options.override !== undefined) return resolve(options.override);
 
-  const packageName = tool === "pngquant" ? pngquantSidecarPackageName() : sidecarPackageName();
+  const packageName =
+    tool === "pngquant"
+      ? pngquantSidecarPackageName()
+      : tool === "gifsicle"
+        ? gifsicleSidecarPackageName()
+        : sidecarPackageName();
   let manifestPath: string;
   try {
     manifestPath = require.resolve(`${packageName}/package.json`);
@@ -42,6 +47,10 @@ export function sidecarPackageName(platform: SidecarPlatform = currentPlatform()
 
 export function pngquantSidecarPackageName(platform: SidecarPlatform = currentPlatform()): string {
   return platformPackageName("sidecar-pngquant", platform);
+}
+
+export function gifsicleSidecarPackageName(platform: SidecarPlatform = currentPlatform()): string {
+  return platformPackageName("sidecar-gifsicle", platform);
 }
 
 function platformPackageName(prefix: string, platform: SidecarPlatform): string {

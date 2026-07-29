@@ -21,6 +21,10 @@ const pins = JSON.parse(
     sources: Record<string, { sha256: string; url: string; version: string }>;
     version: string;
   };
+  gifsicle: {
+    sources: Record<string, { sha256: string; url: string; version: string }>;
+    version: string;
+  };
   mozjpeg: {
     sources: Record<string, { sha256: string; url: string; version: string }>;
     version: string;
@@ -154,6 +158,36 @@ describe("sidecar scripts", () => {
       target: "darwin-arm64",
       tool: "pngquant",
       version: pins.pngquant.version,
+    });
+  });
+
+  test("writes a deterministic gifsicle provenance manifest", async () => {
+    const binary = Buffer.from("self-built-gifsicle");
+    const binaryPath = join(sandboxRoot, "gifsicle");
+    const outputPath = join(sandboxRoot, "gifsicle.manifest.json");
+    await writeFile(binaryPath, binary);
+
+    await execFileAsync(process.execPath, [
+      manifestScript,
+      "--tool",
+      "gifsicle",
+      "--target",
+      "darwin-arm64",
+      "--binary",
+      binaryPath,
+      "--output",
+      outputPath,
+    ]);
+
+    expect(JSON.parse(await readFile(outputPath, "utf8"))).toEqual({
+      binary: "gifsicle",
+      bytes: binary.byteLength,
+      schema: 1,
+      sha256: createHash("sha256").update(binary).digest("hex"),
+      sources: pins.gifsicle.sources,
+      target: "darwin-arm64",
+      tool: "gifsicle",
+      version: pins.gifsicle.version,
     });
   });
 
@@ -345,6 +379,54 @@ describe("sidecar scripts", () => {
         licenseFile,
       );
     }
+  });
+
+  test("assembles gifsicle into its GPL platform package", async () => {
+    const target = "darwin-arm64";
+    const artifactDirectory = join(sandboxRoot, "artifacts", `sidecar-gifsicle-${target}`);
+    const packageDirectory = join(sandboxRoot, "npm", `sidecar-gifsicle-${target}`);
+    const binaryPath = join(artifactDirectory, "gifsicle");
+    await mkdir(join(artifactDirectory, "licenses"), { recursive: true });
+    await mkdir(packageDirectory, { recursive: true });
+    await writeFile(binaryPath, "self-built-gifsicle", { mode: 0o755 });
+    await writeFile(
+      join(packageDirectory, "package.json"),
+      await readFile(join(workspaceRoot, `npm/sidecar-gifsicle-${target}/package.json`)),
+    );
+    await writeFile(join(artifactDirectory, "licenses", "gifsicle-COPYING"), "GPL-2.0");
+    await execFileAsync(process.execPath, [
+      manifestScript,
+      "--tool",
+      "gifsicle",
+      "--target",
+      target,
+      "--binary",
+      binaryPath,
+      "--output",
+      join(artifactDirectory, "gifsicle.manifest.json"),
+    ]);
+
+    await execFileAsync(process.execPath, [
+      assemblePackagesScript,
+      "--artifacts",
+      join(sandboxRoot, "artifacts"),
+      "--npm-dir",
+      join(sandboxRoot, "npm"),
+      "--targets",
+      target,
+      "--tools",
+      "gifsicle",
+    ]);
+
+    await expect(readFile(join(packageDirectory, "gifsicle"), "utf8")).resolves.toBe(
+      "self-built-gifsicle",
+    );
+    await expect(
+      readFile(join(packageDirectory, "gifsicle.manifest.json"), "utf8"),
+    ).resolves.toMatch(/"target": "darwin-arm64"/u);
+    await expect(
+      readFile(join(packageDirectory, "licenses", "gifsicle-COPYING"), "utf8"),
+    ).resolves.toBe("GPL-2.0");
   });
 });
 

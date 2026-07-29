@@ -26,11 +26,15 @@ const sidecarManifestPaths = platformDirectories.map(
 const pngquantManifestPaths = platformDirectories.map(
   (directory) => `npm/sidecar-pngquant-${directory}/package.json`,
 );
+const gifsicleManifestPaths = platformDirectories.map(
+  (directory) => `npm/sidecar-gifsicle-${directory}/package.json`,
+);
 const manifestPaths = [
   "package.json",
   "napi/imagemin/package.json",
   "packages/imagemin/package.json",
   ...platformDirectories.map((directory) => `npm/${directory}/package.json`),
+  ...gifsicleManifestPaths,
   ...pngquantManifestPaths,
   ...sidecarManifestPaths,
 ];

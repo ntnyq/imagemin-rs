@@ -1,5 +1,8 @@
 # Phase 2 GIF / OptiPNG codec 选型与兼容性调研
 
+> 更新日期：2026-07-29。历史兼容 oracle 仍固定在 Gifsicle 1.92；生产 sidecar 已升级为
+> 固定源码自建的 Gifsicle 1.96。
+
 ## 调研范围与结论
 
 - 调研日期：2026-07-17（Asia/Shanghai）。
@@ -11,7 +14,7 @@
 1. GIF 的兼容基准固定为 [`imagemin-gifsicle@7.0.0`](https://registry.npmjs.org/imagemin-gifsicle/7.0.0)，源码提交固定为 [`c91e5b2c`](https://github.com/imagemin/imagemin-gifsicle/tree/c91e5b2c1c8e7f0d2221ea779d19d3e6d1ab41be)。其依赖范围 `gifsicle:^5.0.0` 截至调研日会解析到 [`gifsicle@5.3.0`](https://registry.npmjs.org/gifsicle/5.3.0)，对应 gitHead [`7d471d8b`](https://github.com/imagemin/gifsicle-bin/tree/7d471d8bd4249452e1b4807525a2308936ee4f2f)，其中 vendored C 源码是 **Gifsicle 1.92**。差分预言机必须把这三个版本一起锁定，不能只锁顶层包。
 2. **不要把 Gifsicle C 或 `gifsicle` Rust FFI crate 链入 MIT core，也不要采用 gifski。** Gifsicle 是 GPLv2；`gifsicle@1.95.0` crate 编译该 GPL C 源码并只提供 unsafe/raw FFI。gifski 是 AGPL-3.0-or-later，而且是会重新量化帧的高质量 GIF 制作器，不是 lossless Gifsicle 替代品。
 3. GIF 原生路线采用自有的 conservative re-encoder：首选精确固定 `gif = "=0.14.2"` 与 `gif-dispose = "=6.0.0"`，并把项目 MSRV 从 1.88 提升到 1.90。第一阶段只做安全解析、应用扩展清理、LZW 重编码和 interlace；严格保存画布、帧数量、delay、disposal、loop、透明语义和逐帧合成像素。后续才以差分/渲染门禁加入 changed-rectangle 与 transparency delta。
-4. `optimizationLevel` 的 1/2/3 和 `colors` 在原生算法被证明之前，必须路由到显式配置的外部 compatibility engine，或者以稳定错误拒绝，不能悄悄用“不太一样”的 Rust 算法。精确 engine 应是用户安装的外部 Gifsicle，或单独发布、许可证明确为 GPL 的 sidecar；不得自动捆入默认 MIT native 包。
+4. `optimizationLevel` 的 1/2/3 和 `colors` 在原生算法被证明之前，必须路由到独立 Gifsicle compatibility engine，不能悄悄用“不太一样”的 Rust 算法。生产实现采用单独发布、明确标为 GPL-2.0-only 的 Gifsicle 1.96 平台 sidecar；它不链接或复制进默认 MIT native 包。
 5. PNG 的兼容基准固定为 [`imagemin-optipng@8.0.0`](https://registry.npmjs.org/imagemin-optipng/8.0.0)，提交 [`abae5230`](https://github.com/imagemin/imagemin-optipng/tree/abae52303e06e2b5697d32c529578e17f680fef7)，以及 [`optipng-bin@7.0.1`](https://registry.npmjs.org/optipng-bin/7.0.1)，提交 [`14f7065b`](https://github.com/imagemin/optipng-bin/tree/14f7065bdca9cb0bdc718a4a5b8ac982c8054f05)。后者的 vendored source 是 **OptiPNG 0.7.7**，采用 zlib license。
 6. **现有 `oxipng@10.1.1` 可以承载 OptiPNG-shaped native API，但只能声明 API/视觉兼容，不得声明算法或 byte-for-byte 兼容。** 在发布前必须把 `StripChunks::None` 改为 `All`、处理 OptiPNG level 0 的特殊语义，并允许 metadata 清理、interlace 转换或 error recovery 的必要增大输出。Oxipng 官方也明确说明它不是 OptiPNG 的 drop-in replacement。
 
@@ -130,8 +133,7 @@ gifsicle(options)
         |                                      |
         |                                      +-- gif-dispose semantic validator
         |
-        +-- O1/O2/O3 or colors -----------> configured external Gifsicle 1.92
-                                               or stable unsupported error
+        +-- O1/O2/O3 or colors -----------> self-built Gifsicle 1.96 sidecar
 ```
 
 ### 推荐 public options
@@ -312,7 +314,7 @@ gif-dispose = "=5.0.1"
 
 - `gifsicle` Rust crate：GPL、unsafe C FFI、process-global CLI API；
 - `gifski`：AGPL，并改变图像；
-- npm `gifsicle@5.3.0`：只允许 optional sidecar 或 dev oracle；
+- npm `gifsicle@5.3.0`：只作为 dev oracle；
 - npm `optipng-bin@7.0.1`：只作为 dev oracle，不进入 native runtime 包。
 
 ## 安全与资源限制
@@ -435,7 +437,7 @@ Gifsicle 1.92 source 自带 11 个 `testie` 场景，包括 transparency expansi
 2. 对 `license-file` crate 不能只标为 unknown 后人工放行，必须打开实际文件；`gifsicle` crate 就是典型例子；
 3. npm audit 不能只信 package metadata。`gifsicle@5.3.0` 自报 MIT，但 vendored Gifsicle source 是 GPLv2；scanner 必须遍历 `vendor/source`、下载的 native binary notices 与 postinstall 来源；
 4. SBOM 列出 Rust crates、编译进入 `.node` 的 C/asm、oracle binaries 和各自源码 commit/checksum；
-5. 默认 npm/native tarball 测试断言不包含 `gifsicle`、Gifsicle C、gifski 或 optipng oracle binary；
+5. MIT root/native tarball 测试断言不内嵌 Gifsicle C、gifski 或 optipng oracle binary；GPL Gifsicle 只能出现在独立平台包；
 6. 如果发布 exact GIF sidecar，使用单独 package/产物、清楚标为 GPL，并随产物提供对应许可证、首选修改源码和可复现 build scripts；发布方式需法律复核；
 7. OptiPNG oracle 虽为 permissive zlib license，也要保留 attribution 和 vendored third-party notices。
 
@@ -450,8 +452,8 @@ Gifsicle 1.92 source 自带 11 个 `testie` 场景，包括 transparency expansi
 - non-GIF identity、Buffer error、三字节 detection、truthy argv 有契约测试；
 - native-safe 完整保持 timeline、loop、disposal、transparency 和逐帧 RGBA；
 - ordinary application extension 删除与 NETSCAPE loop 保留经过 fixture 验证；
-- O1/O2/O3/colors 在未通过门禁前只走 configured external engine 或稳定拒绝；
-- default MIT artifact 不含 GPL/AGPL code/binary；
+- O1/O2/O3/colors 只走固定的 Gifsicle 1.96 sidecar；
+- MIT root/native artifact 不含 GPL/AGPL code/binary，GPL executable 仅在独立平台包；
 - 输入、canvas、frame、extension、总像素和 timeout limits 全部可观测且不可绕过。
 
 ### OptiPNG
@@ -471,9 +473,9 @@ Phase 2 推荐组合为：
 
 - **GIF exact truth source：** `imagemin-gifsicle@7.0.0` + `gifsicle@5.3.0` + Gifsicle 1.92；
 - **GIF native core：** owned adapter 包装 `gif@0.14.2` + `gif-dispose@6.0.0`，先保守重编码，再逐级实现 delta；
-- **GIF unsupported compatibility：** 用户配置的 external Gifsicle，或单独 GPL sidecar；默认 MIT 包不捆绑；
+- **GIF production compatibility：** 固定源码、SHA-256 与构建配置的 Gifsicle 1.96，按平台作为 GPL-2.0-only sidecar 独立分发；
 - **PNG exact truth source：** `imagemin-optipng@8.0.0` + `optipng-bin@7.0.1` + OptiPNG 0.7.7；
 - **PNG native core：** 精确固定 `oxipng@10.1.1`，提供清楚标注的 semantic option mapping；
-- **许可策略：** default closure 拒绝 GPL/AGPL，scanner 深入 vendored source/native artifacts，而不是相信 npm 顶层 `license` 字段。
+- **许可策略：** MIT addon 拒绝 GPL/AGPL 链接，GPL executable 独立标记和分发；scanner 深入 vendored source/native artifacts，而不是相信 npm 顶层 `license` 字段。
 
 这条路线让默认 binding 保持 permissive、内存安全和现代跨平台发布，同时不把“能重新编码 GIF/PNG”误写成“已经复刻 Gifsicle/OptiPNG”。精确兼容与原生覆盖率通过可观测 routing 和 conformance corpus 逐步收敛。

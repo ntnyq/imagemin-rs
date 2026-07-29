@@ -5,10 +5,12 @@
 
 ## 决策
 
-`gifsicle()` 是 `imagemin-gifsicle@7.0.0` 的兼容入口，固定依赖
-`gifsicle@5.3.0`，通过受限 child process 执行 GPL Gifsicle。该 executable
-与 MIT Rust/N-API addon 保持进程边界，绝不静态或动态链接进 `.node`。
-输入、stdout、stderr 和 wall time 都有硬上限。
+`gifsicle()` 是 `imagemin-gifsicle@7.0.0` 的兼容入口，通过受限 child process
+执行项目从固定源码自建的 Gifsicle 1.96。8 个 GPL-2.0-only
+`@imagemin-rs/sidecar-gifsicle-*` 平台包独立分发 executable、provenance 和许可证；
+它与 MIT Rust/N-API addon 保持进程边界，绝不静态或动态链接进 `.node`。
+`gifsicle@5.3.0` 仅保留为开发差分 oracle。输入、stdout、stderr 和 wall time 都有
+硬上限。
 
 `giflossless()` 是独立的 MIT/Apache 原生入口。它固定 `gif@0.13.3` 与
 `gif-dispose@5.0.1` 以保持 Rust 1.88 MSRV，对可证明安全的动画构建 global
@@ -36,8 +38,8 @@ Oxipng 官方明确不是 OptiPNG drop-in replacement，但能提供相同的无
 
 - `gifsicle()` 安装闭包包含独立 GPL executable；发布前必须保留 GPL notice、
   对应源码和法律复核记录。
-- Gifsicle 预编译产物可能按平台具有不同 patch version；兼容门禁比较语义，
-  release smoke 同时记录 `--version`，不承诺跨平台字节一致。
+- 生产平台统一为 Gifsicle 1.96，并记录源码/二进制 SHA-256；兼容门禁比较语义，
+  release smoke 同时记录 `--version`。
 - 原生 GIF 默认保存 comment/application metadata；`strip:true` 才删除。公开
   Gifsicle compatibility path 采用上游 `--no-app-extensions` policy。
 - GIF native hard limits：256 MiB 输入、512 MiB canvas estimate、10,000 帧、

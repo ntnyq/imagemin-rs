@@ -35,7 +35,7 @@ Phase 2..5 的兼容 sidecar 一直以 npm 历史包为开发 oracle：`cwebp-bi
 | cjpeg (mozjpeg) | mozilla/mozjpeg                 | `v4.1.1` | IJG + BSD-3-Clause + Zlib | `mozjpeg@8`       |
 | jpegtran        | mozilla/mozjpeg（同一构建产物） | `v4.1.1` | 同上                      | `jpegtran-bin@7`  |
 | pngquant        | kornelski/pngquant              | `3.0.3`  | GPL-3.0-or-later          | `pngquant-bin@9`  |
-| gifsicle        | kohler/gifsicle                 | `v1.96`  | GPL-2.0                   | `gifsicle@5.3.0`  |
+| gifsicle        | kohler/gifsicle                 | `v1.96`  | GPL-2.0-only              | `gifsicle@5.3.0`  |
 
 mozjpeg 一次构建同时产出 `cjpeg` 与 `jpegtran`，一并修正 3.2/1.5.1 漂移。AVIF 的
 Sharp 运行时不在本 ADR 范围（其审计见产品完成度审计与 ADR 0007）；OptiPNG 兼容面由
@@ -50,7 +50,7 @@ Sharp 运行时不在本 ADR 范围（其审计见产品完成度审计与 ADR 0
 - 源码从 pinned tag 获取并校验 SHA-256，不使用任何预编译产物；
 - musl 目标全静态链接；gnu 目标在受控 glibc 基线容器内构建（下限跟随 Node 22 的
   glibc ≥ 2.28 政策）；macOS 双架构由 clang `-arch` 交叉产出；Windows arm64 使用
-  原生 `windows-11-arm` runner；
+  原生 `windows-11-arm` runner，Gifsicle 使用 MSVC 与静态 CRT；
 - 每个产物记录 `{schema, tool, version, target, binary, bytes, sha256, sources}` 到
   manifest；`sources` 保存全部直接构建输入的版本、URL 与 SHA-256，作为发布
   fingerprint 与 SBOM 的输入；
@@ -63,7 +63,7 @@ Sharp 运行时不在本 ADR 范围（其审计见产品完成度审计与 ADR 0
 - `@imagemin-rs/sidecars-<platform>`：cwebp、cjpeg、jpegtran（BSD/IJG/Zlib/libpng/
   libtiff 族）；
 - `@imagemin-rs/sidecar-pngquant-<platform>`：GPL-3.0-or-later，含完整许可证文本；
-- `@imagemin-rs/sidecar-gifsicle-<platform>`：GPL-2.0，含完整许可证文本。
+- `@imagemin-rs/sidecar-gifsicle-<platform>`：GPL-2.0-only，含完整许可证文本。
 
 三族 × 8 平台 = 24 个新包，均带 `os`/`cpu`/`libc` 过滤与二进制白名单。根包
 `imagemin-rs` 将它们列为 optionalDependencies：默认安装保持与上游 imagemin 生态一致
@@ -93,15 +93,14 @@ encoder 升级（libwebp 1.2.1 → 1.6.0、mozjpeg 3.2 → 4.1.1）后，与历�
 
 - 消除 CVE-2023-4863 暴露面与 postinstall 供应链面，pnpm ≥ 10 安装开箱即用；
 - 安装体积从"五个下载器 + 回退编译工具链"变为一个平台原生包集合；
-- 发布单元从 10 包增至 34 包，`verify/pack/smoke/publish` 脚本与 release workflow
-  必须逐包覆盖 sidecar 家族；
+- 发布单元已从 10 包增至 34 包，`verify/pack/smoke/publish` 脚本与 release workflow
+  逐包覆盖全部 sidecar 家族；
 - conformance 基线迁移到新 encoder 版本时，受影响的 byte-parity 测试需要显式改写为
   两层语义，属一次性成本。
 
 ## 未决项
 
 - maintainer 对 GPL 再分发模型（聚合判断、随包文本、源码 offer 形式）的法律确认；
-- Windows gifsicle 的构建工具链选择（MSVC 直构 vs llvm-mingw），在 P1.4 落地时定；
-- cwebp、MozJPEG cjpeg/jpegtran 与 pngquant 已进入 release workflow，并覆盖构建期
-  真实输入 smoke、provenance、完整许可证和 tarball 全 codec smoke；gifsicle 在 P2
-  继续补齐同等门禁。
+- cwebp、MozJPEG cjpeg/jpegtran、pngquant 与 Gifsicle 已进入 release workflow，并
+  覆盖构建期真实输入 smoke、provenance、完整许可证和 tarball 全 codec smoke；
+  macOS ARM64 已本地实测，其余 7 个目标等待首次 CI 证据。

@@ -18,11 +18,11 @@
 
 兼容阶段完成后，发布加固按以下顺序推进：
 
-1. **已实现**：cwebp、MozJPEG cjpeg/jpegtran 与 pngquant 自建 sidecar 的源码校验、
-   多平台构建、npm 分发与真实 smoke；
-2. **进行中**：扩展 gifsicle GPL 平台包；
-3. 将全部 sidecar 接入 verify、pack、smoke、publish 与 provenance；
-4. 完成 8 平台 RC 演练，再评估首个公开版本。
+1. **已实现**：cwebp、MozJPEG cjpeg/jpegtran、pngquant 与 Gifsicle 自建 sidecar 的
+   源码校验、多平台构建、npm 分发与真实 smoke；
+2. **已实现**：全部 24 个 sidecar 平台包接入 verify、pack、smoke、publish 与
+   provenance；
+3. **进行中**：完成 8 平台 RC 演练，再评估首个公开版本。
 
 详细分发决策见 [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)。
 
