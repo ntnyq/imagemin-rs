@@ -4,6 +4,17 @@
 uses a pinned Sharp/libvips/libheif/libaom runtime in an isolated Node.js child
 process so its native libraries never load into the caller.
 
+Sharp is an optional peer and is not part of the default imagemin-rs install.
+Opt in before converting AVIF:
+
+```sh
+pnpm add sharp@0.35.3
+```
+
+Non-convertible inputs still pass through without Sharp. A convertible input
+without the peer rejects with `ERR_IMAGEMIN_CODEC`, `plugin: "avif"`, and the
+installation command.
+
 ## Usage
 
 ```ts
@@ -60,3 +71,6 @@ Each encode runs in a constrained worker with Sharp cache disabled and
 concurrency set to one. Limits cover 256 MiB input, 512 MiB output, 16,384
 pixels per side, 67,108,864 total pixels, bounded metadata and stderr, and
 hard execution time. The packaged runtime currently supports 8-bit AVIF only.
+
+The initial 1.0 scope keeps this opt-in boundary. Making Sharp a default
+dependency again would reopen the LGPL and AOM distribution review.

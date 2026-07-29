@@ -2,12 +2,18 @@
 
 - 状态：Accepted
 - 日期：2026-07-17
+- 修订：2026-07-30（1.0 采用 L2，可选 peer）
 
 ## 决策
 
 公开 `avif()` 以 `imagemin-avif@0.1.6` 的插件工厂、quality/lossless/speed/
-chromaSubsampling shape 和默认值为兼容起点，固定 `sharp@0.35.3` 作为产品 runtime。
-这是语义兼容，不承诺与上游动态解析到的 Sharp 0.33.5 逐字节一致。
+chromaSubsampling shape 和默认值为兼容起点，固定 `sharp@0.35.3` 作为可选 peer
+runtime。这是语义兼容，不承诺与上游动态解析到的 Sharp 0.33.5 逐字节一致。
+
+首个 1.0 采用许可证决策单的 L2：默认安装闭包不包含 Sharp。只有可转换输入才解析
+Sharp；未安装时返回稳定 `ERR_IMAGEMIN_CODEC`、`plugin:"avif"` 和精确安装命令。
+导入包、使用其他插件及 AVIF 非目标输入都不解析 Sharp。恢复默认安装将重新打开
+LGPL/AOM 分发审计。
 
 Sharp 通过 `process.execPath` 启动的隔离 worker 加载。父进程只解析 Sharp module path，
 不会加载其 native addon。worker 从 stdin 读取、向 stdout 写 AVIF，使用静态 source 与
@@ -65,7 +71,7 @@ Sharp 0.35.3 预构建 runtime 明确拒绝 10/12-bit AVIF output，所以公开
 - animation/page identity、dimension/metadata bombs、options 和 `.avif` destination 有
   契约测试；
 - Phase 6 基准包含每次进程启动成本，并记录 4-job 并发 wall time 与事件循环延迟；
-- v1 前仍需从 packed tarball 在 Linux GNU/musl、macOS x64/arm64、Windows x64 做
-  frozen install、AVIF smoke、许可证/SBOM/CVE 和平台最低版本审计。
+- v1 前仍需从 packed tarball 在八个平台分别验证默认无 Sharp 和显式安装
+  `sharp@0.35.3` 两条路径，以及 AVIF smoke、许可证/SBOM/CVE 和最低版本审计。
 
 完整证据见 [Phase 6 调研](../../docs/research/avif-codec-selection.md)。

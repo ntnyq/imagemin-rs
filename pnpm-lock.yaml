@@ -221,9 +221,6 @@ importers:
       junk:
         specifier: 'catalog:'
         version: 4.0.1
-      sharp:
-        specifier: 0.35.3
-        version: 0.35.3(@types/node@24.13.3)
       svgo:
         specifier: 'catalog:'
         version: 4.0.2
@@ -279,6 +276,9 @@ importers:
       pngquant-bin:
         specifier: 9.0.0
         version: 9.0.0
+      sharp:
+        specifier: 0.35.3
+        version: 0.35.3(@types/node@24.13.3)
       tsdown:
         specifier: 'catalog:'
         version: 0.22.8(typescript@7.0.2)

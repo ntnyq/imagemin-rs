@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 1.0 public trial guide
+    url: https://imagemin-rs.ntnyq.dev/guide/public-trial
+    about: Read the supported trial paths and release-blocking criteria.

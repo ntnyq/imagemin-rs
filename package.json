@@ -1,6 +1,6 @@
 {
   "name": "imagemin-rs-monorepo",
-  "version": "0.1.0-rc.7",
+  "version": "0.1.0-rc.8",
   "private": true,
   "type": "module",
   "scripts": {
@@ -30,7 +30,7 @@
     "release:publish:dry-run": "node tasks/release/publish-packages.mjs --mode=dry-run",
     "release:version": "node tasks/release/set-version.mjs",
     "test": "cargo test --locked --workspace && pnpm run test:tasks && pnpm run build:native && pnpm run build:wasm && pnpm --filter @imagemin-rs/binding test && pnpm --filter @imagemin-rs/wasm test && pnpm --filter imagemin-rs test",
-    "test:tasks": "node --test tasks/sidecars/run-binary.test.mjs tasks/sidecars/read-pin.test.mjs tasks/release/prepare-gpl-sources.test.mjs tasks/release/security-policy.test.mjs tasks/release/smoke-worker-command.test.mjs tasks/release/spawn-command.test.mjs tasks/release/verify-aom-security.test.mjs",
+    "test:tasks": "node --test tasks/sidecars/run-binary.test.mjs tasks/sidecars/read-pin.test.mjs tasks/release/fetch-pngquant-cargo-sources.test.mjs tasks/release/prepare-gpl-sources.test.mjs tasks/release/security-policy.test.mjs tasks/release/smoke-worker-command.test.mjs tasks/release/spawn-command.test.mjs tasks/release/verify-aom-security.test.mjs",
     "typecheck": "pnpm run build:native && pnpm run build:wasm && pnpm --filter @imagemin-rs/wasm typecheck && pnpm --filter imagemin-rs typecheck"
   },
   "devDependencies": {

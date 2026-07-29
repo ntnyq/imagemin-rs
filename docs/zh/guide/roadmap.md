@@ -15,7 +15,7 @@
 每个 codec 阶段都包含 codec ADR、真实 corpus、Rust Adapter、N-API 测试、JavaScript
 兼容契约、平台 smoke、benchmark 和公开兼容表。
 
-## 当前重点：稳定版加固
+## 当前重点：完整公开 RC
 
 已经完成的发布工作包括：
 
@@ -25,17 +25,28 @@
 4. 阻断发布的 RustSec、Cargo policy 和生产 npm 高危依赖审计；
 5. release tag 已通过完整跨平台打包与真实 codec smoke 矩阵。
 
-稳定版剩余工作已经从“补平台构建”转为“关闭证据缺口”：
+维护者已为 1.0 选择保守分发模型：
 
-1. 完成维护者与律师对 GPL、LGPL 和 AOM 专利文本交付模型的复核；tagged release
-   已准备附加经校验的 GPL 源码输入；
-2. 通过 OpenVEX、显式构建配置、AOM 源码历史断言和 8 平台 smoke 持续复现已经
-   完成的原生依赖审计；
-3. AVIF 10/12-bit 在具备可测试兼容契约前不进入首个稳定版范围。
+1. Sharp 是精确版本的可选 peer，AVIF 需要 opt-in，默认安装不分发 Sharp/libvips；
+2. 每个 GPL Gifsicle/pngquant 平台包都携带匹配源码和构建材料，同时保留 release-wide
+   备份资产；
+3. AVIF 10/12-bit 不进入首个稳定版范围。
 
-随后继续扩大 corpus 与性能基线。首个浏览器原生 codec runtime 已完成：
-`@imagemin-rs/wasm` 暴露共享 GIF、PNG 与 SVG Rust path，Playground 的 PNG 输出
-已使用其中的 Oxipng path。
+下一个 RC 必须把这套模型证明为一个完整公开单元：35 个同版本 npm 包、8 平台安装与
+codec smoke、默认无 Sharp 和显式 Sharp 两条路径、provenance/SBOM/notice，以及匹配
+GitHub 资产。它也会完成 `@imagemin-rs/wasm` 的一次性公开 bootstrap。
 
-详细分发决策见 [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)，
-具体门槛见[实现计划](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/implementation-plan.md)。
+## 1.0 日期与门禁
+
+稳定版目标日期是 **2026 年 8 月 17 日**。计划中的 `0.1.0-rc.8` 必须连续公开 14 天，
+且没有未关闭的 release-blocking 缺陷。阻断问题修复后必须发布新 RC，并重新计时。
+若完整 RC 延迟或试用证据不足，1.0 顺延；日期不能覆盖门禁。
+
+参与方式与阻断标准见 [1.0 公开试用](./public-trial.md)。唯一内部 gate 表见
+[1.0 发布计划](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/1.0-release-plan.md)。
+
+## 1.0 之后
+
+更大的视觉/损坏输入 corpus、更长性能历史、更多 WASM codec、AVIF 10/12-bit/HDR、
+OS-level 资源隔离和 permissive 原生 AVIF profile 属于 1.x，不阻断已经锁定的 1.0
+契约。

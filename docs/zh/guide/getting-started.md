@@ -12,6 +12,16 @@ pnpm add imagemin-rs@next
 发布候选阶段统一使用 npm `next` tag；稳定版发布后才会把不带 tag 的
 `pnpm add imagemin-rs` 作为推荐命令。
 
+首个稳定版将 AVIF 设为显式 opt-in。只有调用 `avif()` 的项目才需要安装固定版本的
+可选 peer：
+
+```sh
+pnpm add sharp@0.35.3
+```
+
+导入 imagemin-rs 以及使用其他所有插件都不会安装或加载 Sharp。未安装 peer 时，
+可转换的 AVIF 输入会返回稳定且包含安装命令的错误。
+
 ## Buffer 优化
 
 ```ts
@@ -87,8 +97,8 @@ PNG 有损量化使用独立 `pngquant()` sidecar；JPEG 可在有损 `mozjpeg()
 PNG/JPEG/TIFF 转 WebP 使用 `webp()`；文件入口会把输出扩展名更新为 `.webp`，并对
 动画/多页输入保守 no-op。详见 [WebP 转码](./webp.md)。
 
-静态 PNG/JPEG/GIF/WebP/TIFF 转 AVIF 使用隔离的 `avif()` worker；多帧和多页输入保守
-no-op。详见 [AVIF 转码](./avif.md)。
+显式安装 Sharp 后，静态 PNG/JPEG/GIF/WebP/TIFF 转 AVIF 使用隔离的 `avif()`
+worker；多帧和多页输入保守 no-op。详见 [AVIF 转码](./avif.md)。
 
 也可以在[浏览器 Playground](/zh/playground) 中直接处理浏览器支持的常见格式。上传的
 图片只在本地浏览器中处理，不会发送到服务器。

@@ -63,6 +63,34 @@ try {
       },
     },
   );
+  await run(
+    process.execPath,
+    [
+      fileURLToPath(new URL("./smoke-without-sharp.mjs", import.meta.url)),
+      "--installation-root",
+      temporaryRoot,
+    ],
+    { cwd: workspaceRoot },
+  );
+  await run(
+    "npm",
+    [
+      "install",
+      "--no-audit",
+      "--no-fund",
+      "--no-package-lock",
+      "--save-exact",
+      "--foreground-scripts",
+      "sharp@0.35.3",
+    ],
+    {
+      cwd: temporaryRoot,
+      env: {
+        ...process.env,
+        npm_config_cache: resolve(temporaryRoot, ".npm-cache"),
+      },
+    },
+  );
   const reportPath = readArgument("--report");
   const sbomPath = readArgument("--sbom");
   const worker = resolveSmokeWorkerCommand({

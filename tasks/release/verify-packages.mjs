@@ -30,6 +30,14 @@ const sidecarTools = [
 ];
 const gifsicleLicenseFiles = ["gifsicle-COPYING"];
 const pngquantLicenseFiles = ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"];
+const publicLegalFileSha256 = {
+  "packages/imagemin/licenses/aom-LICENSE":
+    "60f3f7e003a4a7736aad7c008380fbfbcd3bf19544c589efebba824a2b9e145b",
+  "packages/imagemin/licenses/aom-PATENTS":
+    "eb1955a99d10bf2bbb37c375e7a61bdb560b76ab8590c1a45be6c2a20245146e",
+  "packages/imagemin/licenses/sharp-libvips-THIRD-PARTY-NOTICES.md":
+    "25ffcfa69e28b1913ced27ec778b90f24911a1bb3021253577e8b0af55db0d49",
+};
 
 const artifactMode = readArgument("--artifacts") ?? "current";
 if (!["all", "current", "none"].includes(artifactMode)) {
@@ -81,6 +89,21 @@ assertDeepEqual(
   publicManifest.optionalDependencies,
   expectedPublicOptionalDependencies,
   "Public package optional dependency matrix is incomplete",
+);
+assert(publicManifest.dependencies?.sharp === undefined, "Sharp must not be installed by default");
+assert(
+  publicManifest.devDependencies?.sharp === "0.35.3",
+  "Tests must pin the supported Sharp version",
+);
+assertDeepEqual(
+  publicManifest.peerDependencies,
+  { sharp: "0.35.3" },
+  "Sharp peer dependency is invalid",
+);
+assertDeepEqual(
+  publicManifest.peerDependenciesMeta,
+  { sharp: { optional: true } },
+  "Sharp peer dependency must be optional",
 );
 
 const expectedOptionalDependencies = Object.fromEntries(
@@ -306,7 +329,7 @@ for (const platform of platforms) {
   );
   assertDeepEqual(
     pngquantManifest.files,
-    ["README.md", pngquantBinaryName, "pngquant.manifest.json", "licenses"],
+    ["README.md", pngquantBinaryName, "pngquant.manifest.json", "licenses", "sources"],
     `${pngquantPackageName} files allowlist is invalid`,
   );
   assertDeepEqual(
@@ -321,7 +344,7 @@ for (const platform of platforms) {
   const pngquantReadme = await readText(`${pngquantRoot}/README.md`);
   assert(pngquantReadme.includes(pngquantPackageName), `${pngquantPackageName} has no README`);
   assert(
-    pngquantReadme.includes("matching `imagemin-rs` GitHub Release"),
+    pngquantReadme.includes("sources/source-manifest.json"),
     `${pngquantPackageName} does not document corresponding source delivery`,
   );
 
@@ -362,6 +385,11 @@ for (const platform of platforms) {
         `${pngquantPackageName} is missing ${licenseFile}`,
       );
     }
+    await assertGplSourcePackage({
+      packageName: pngquantPackageName,
+      packageRoot: pngquantRoot,
+      tool: "pngquant",
+    });
     artifacts.push({
       bytes: binary.byteLength,
       package: pngquantPackageName,
@@ -404,7 +432,7 @@ for (const platform of platforms) {
   );
   assertDeepEqual(
     gifsicleManifest.files,
-    ["README.md", gifsicleBinaryName, "gifsicle.manifest.json", "licenses"],
+    ["README.md", gifsicleBinaryName, "gifsicle.manifest.json", "licenses", "sources"],
     `${gifsiclePackageName} files allowlist is invalid`,
   );
   assertDeepEqual(
@@ -419,7 +447,7 @@ for (const platform of platforms) {
   const gifsicleReadme = await readText(`${gifsicleRoot}/README.md`);
   assert(gifsicleReadme.includes(gifsiclePackageName), `${gifsiclePackageName} has no README`);
   assert(
-    gifsicleReadme.includes("matching `imagemin-rs` GitHub Release"),
+    gifsicleReadme.includes("sources/source-manifest.json"),
     `${gifsiclePackageName} does not document corresponding source delivery`,
   );
 
@@ -460,6 +488,11 @@ for (const platform of platforms) {
         `${gifsiclePackageName} is missing ${licenseFile}`,
       );
     }
+    await assertGplSourcePackage({
+      packageName: gifsiclePackageName,
+      packageRoot: gifsicleRoot,
+      tool: "gifsicle",
+    });
     artifacts.push({
       bytes: binary.byteLength,
       package: gifsiclePackageName,
@@ -473,6 +506,9 @@ for (const path of [
   "packages/imagemin/dist/index.mjs",
   "packages/imagemin/dist/index.d.mts",
   "packages/imagemin/LICENSE",
+  "packages/imagemin/licenses/aom-LICENSE",
+  "packages/imagemin/licenses/aom-PATENTS",
+  "packages/imagemin/licenses/sharp-libvips-THIRD-PARTY-NOTICES.md",
   "packages/imagemin/README.md",
   "packages/imagemin/THIRD_PARTY_NOTICES.md",
   "wasm/imagemin/dist/index.js",
@@ -487,6 +523,13 @@ for (const path of [
 ]) {
   const metadata = await stat(new URL(path, workspaceRoot));
   assert(metadata.isFile() && metadata.size > 0, `Required release file is missing: ${path}`);
+}
+for (const [path, expectedSha256] of Object.entries(publicLegalFileSha256)) {
+  const contents = await readFile(new URL(path, workspaceRoot));
+  assert(
+    createHash("sha256").update(contents).digest("hex") === expectedSha256,
+    `Required legal file differs from its reviewed copy: ${path}`,
+  );
 }
 const wasmDistEntries = await readdir(new URL("wasm/imagemin/dist", workspaceRoot));
 assert(
@@ -540,6 +583,65 @@ function assertBinaryMagic(binary, os, packageName) {
       `${packageName} is not a Mach-O binary`,
     );
   }
+}
+
+async function assertGplSourcePackage({ packageName, packageRoot, tool }) {
+  const sourceManifest = await readJson(`${packageRoot}/sources/source-manifest.json`);
+  assertDeepEqual(
+    {
+      package: sourceManifest.package,
+      schema: sourceManifest.schema,
+      tool: sourceManifest.tool,
+      version: sourceManifest.version,
+    },
+    { package: packageName, schema: 1, tool, version },
+    `${packageName} source manifest identity is invalid`,
+  );
+
+  const expectedSources = Object.entries(sidecarPins[tool].sources)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([name, source]) => ({
+      filename: `${name}-${source.version}.tar.gz`,
+      name,
+      sha256: source.sha256,
+      tool,
+      url: source.url,
+      version: source.version,
+    }));
+  assertDeepEqual(
+    sourceManifest.sources,
+    expectedSources,
+    `${packageName} corresponding source list is invalid`,
+  );
+
+  const expectedMaterials =
+    tool === "pngquant"
+      ? ["pngquant-cargo-sources.tar", "sidecar-build-scripts.tar"]
+      : ["sidecar-build-scripts.tar"];
+  assertDeepEqual(
+    sourceManifest.materials.map(({ filename }) => filename).sort(),
+    expectedMaterials,
+    `${packageName} build-material list is invalid`,
+  );
+
+  for (const descriptor of [...sourceManifest.sources, ...sourceManifest.materials]) {
+    const body = await readFile(
+      new URL(`${packageRoot}/sources/${descriptor.filename}`, workspaceRoot),
+    );
+    assert(
+      createHash("sha256").update(body).digest("hex") === descriptor.sha256,
+      `${packageName} source material ${descriptor.filename} has an invalid checksum`,
+    );
+    if (descriptor.bytes !== undefined) {
+      assert(
+        descriptor.bytes === body.byteLength,
+        `${packageName} source material ${descriptor.filename} has an invalid byte count`,
+      );
+    }
+  }
+
+  const readme = await readText(`${packageRoot}/sources/README.md`);
+  assert(readme.includes(`${packageName}@${version}`), `${packageName} source README is invalid`);
 }
 
 function assertDeepEqual(actual, expected, message) {

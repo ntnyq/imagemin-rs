@@ -47,7 +47,8 @@ describe("without an installed sharp dependency", () => {
 
     await expect(avif()(png)).rejects.toMatchObject({
       code: "ERR_IMAGEMIN_CODEC",
-      message: expect.stringContaining("sharp") as string,
+      message: expect.stringContaining("pnpm add sharp@0.35.3") as string,
+      plugin: "avif",
     });
     expect(sharpResolveAttempts.count).toBeGreaterThan(0);
   });

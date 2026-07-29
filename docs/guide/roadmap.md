@@ -17,7 +17,7 @@ Every codec phase includes a codec ADR, real corpus, Rust adapter, N-API tests,
 JavaScript compatibility contract, platform smoke tests, benchmarks, and a
 public compatibility table.
 
-## Current focus: release hardening
+## Current focus: the complete public RC
 
 Completed release work includes:
 
@@ -32,22 +32,34 @@ Completed release work includes:
 5. tagged release candidates validated through the full cross-platform
    packaging and smoke matrix.
 
-Next milestones are stable-release readiness and more corpus coverage and
-performance baselines. The first browser-native codec runtime is complete:
-`@imagemin-rs/wasm` exposes the shared GIF, PNG, and SVG Rust paths, and the
-Playground uses its Oxipng path for PNG output.
+The maintainer selected the conservative distribution model for 1.0:
 
-Stable-release readiness now focuses on the remaining evidence rather than
-platform enablement:
+1. Sharp is an exact optional peer, so AVIF is opt-in and the default install
+   does not distribute the Sharp/libvips stack;
+2. every GPL Gifsicle/pngquant platform package carries matching source and
+   build materials, in addition to the release-wide backup assets;
+3. AVIF 10/12-bit remains outside the initial stable scope.
 
-1. complete maintainer and legal review of the GPL, LGPL, and AOM patent-text
-   delivery model; tagged releases now attach verified GPL source inputs;
-2. keep the completed native dependency audit reproducible through OpenVEX,
-   explicit build configuration, AOM source-history assertions, and
-   eight-platform smoke evidence;
-3. keep AVIF 10/12-bit output out of the initial stable scope unless it gains a
-   tested compatibility contract.
+The next release candidate must prove that model as one complete public unit:
+35 same-version npm packages, eight-platform install and codec smoke, both
+without-Sharp and explicit-Sharp paths, provenance/SBOM/notices, and matching
+GitHub assets. It also completes the one-time public bootstrap of
+`@imagemin-rs/wasm`.
 
-See [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)
-and the [implementation plan](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/implementation-plan.md)
-for detailed gates.
+## 1.0 date and gates
+
+The target stable date is **August 17, 2026**. The planned `0.1.0-rc.8` trial
+must remain public for 14 consecutive days with no open release-blocking
+defect. A blocking fix publishes a new RC and restarts that clock. If the full
+RC is late or the trial evidence is incomplete, 1.0 moves; the date does not
+override a gate.
+
+See [1.0 Public Trial](./public-trial.md) for participation and blocking
+criteria. The canonical internal gate table is the
+[1.0 release plan](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/1.0-release-plan.md).
+
+## After 1.0
+
+Broader visual and corrupt-input corpora, longer performance histories, more
+WASM codecs, AVIF 10/12-bit/HDR, OS-level resource isolation, and a permissive
+native AVIF profile are 1.x work. They do not block the locked 1.0 contract.

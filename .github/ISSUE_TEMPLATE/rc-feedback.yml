@@ -1,0 +1,59 @@
+name: 1.0 RC feedback
+description: Report an installation or runtime result from the public 1.0 trial
+title: "[RC feedback]: "
+labels:
+  - rc-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing the 1.0 release candidate. Do not upload private images.
+  - type: input
+    id: package-version
+    attributes:
+      label: Exact imagemin-rs version
+      placeholder: 0.1.0-rc.8
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Runtime and platform
+      description: Include Node.js or browser version, OS, architecture, and libc where relevant.
+      placeholder: Node 24.16.0, Ubuntu 24.04, x64, glibc
+    validations:
+      required: true
+  - type: input
+    id: package-manager
+    attributes:
+      label: Package manager and install command
+      placeholder: pnpm 11.13.1 — pnpm add imagemin-rs@next
+    validations:
+      required: true
+  - type: checkboxes
+    id: paths
+    attributes:
+      label: Paths tested
+      options:
+        - label: Default Node installation without Sharp
+        - label: AVIF after explicitly installing sharp@0.35.3
+        - label: Browser or Web Worker with @imagemin-rs/wasm
+  - type: textarea
+    id: codecs
+    attributes:
+      label: Codecs and result
+      description: List the codecs exercised, whether they passed, and any output checks performed.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Failure reproduction
+      description: If anything failed, provide the smallest reproducible commands and public fixture.
+  - type: checkboxes
+    id: conduct
+    attributes:
+      label: Confirmation
+      options:
+        - label: I removed private images, credentials, tokens, and sensitive logs.
+          required: true

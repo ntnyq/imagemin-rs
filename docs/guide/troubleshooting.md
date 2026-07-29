@@ -55,8 +55,11 @@ Replace the suffix for the target platform. Containers must install
 dependencies inside an image for the same OS, architecture, and libc used at
 runtime. Copying `node_modules` across those boundaries is unsupported.
 
-AVIF uses Sharp in a separate Node process. Deployment bundlers must also
-retain Sharp's optional platform packages and embedded shared libraries.
+AVIF is opt-in and uses Sharp in a separate Node process. Install the exact
+supported peer with `pnpm add sharp@0.35.3`. Without it, convertible inputs
+reject with `ERR_IMAGEMIN_CODEC` and `plugin: "avif"`; other plugins continue
+to work. Deployment bundlers for AVIF must retain Sharp's optional platform
+packages and embedded shared libraries.
 
 ## Stable error codes
 

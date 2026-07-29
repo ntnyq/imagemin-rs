@@ -7,6 +7,24 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.1.0-rc.8] - 2026-07-30
+
+### Added
+
+- Added complete corresponding-source bundles to every Gifsicle and pngquant
+  platform package, including all 45 registry sources pinned by the pngquant
+  Cargo lockfile and the release build inputs.
+- Added a measurable 14-day public trial protocol and one canonical 1.0 gate
+  table, targeting August 17, 2026 when all gates pass.
+
+### Changed
+
+- Adopted the L2 distribution model for 1.0: Sharp 0.35.3 is now an exact
+  optional peer, so AVIF is opt-in and the default install does not distribute
+  Sharp/libvips.
+- Extended release smoke tests to verify both the default installation without
+  Sharp and the explicit AVIF installation with Sharp.
+
 ## [0.1.0-rc.7] - 2026-07-29
 
 ### Added
@@ -90,7 +108,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Added reproducible native and sidecar packages for macOS, Linux, and Windows,
   plus release verification, smoke tests, provenance, and SBOM generation.
 
-[Unreleased]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.7...HEAD
+[Unreleased]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.8...HEAD
+[0.1.0-rc.8]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.7...v0.1.0-rc.8
 [0.1.0-rc.7]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.6...v0.1.0-rc.7
 [0.1.0-rc.6]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.5...v0.1.0-rc.6
 [0.1.0-rc.5]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.4...v0.1.0-rc.5

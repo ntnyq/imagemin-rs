@@ -48,8 +48,10 @@ pnpm why @imagemin-rs/sidecar-gifsicle-linux-x64-gnu
 按目标平台替换 package suffix。容器必须在与运行环境相同的操作系统、架构和 libc
 镜像中安装依赖；不支持跨这些边界复制 `node_modules`。
 
-AVIF 在独立 Node process 中使用 Sharp。部署 bundler 还必须保留 Sharp 的 optional
-平台包和内嵌共享库。
+AVIF 是 opt-in，并在独立 Node process 中使用 Sharp。请安装精确支持的 peer：
+`pnpm add sharp@0.35.3`。未安装时，可转换输入以 `ERR_IMAGEMIN_CODEC` 和
+`plugin: "avif"` 拒绝，其他插件仍可使用。部署 AVIF 时，bundler 还必须保留 Sharp
+的 optional 平台包和内嵌共享库。
 
 ## 稳定错误码
 

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { chmod, copyFile, mkdir, readFile, stat } from "node:fs/promises";
+import { chmod, copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const platformDirectories = [
@@ -41,6 +41,7 @@ const sidecarArtifacts = [
     licenses: ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"],
     packagePrefix: "sidecar-pngquant",
     tool: "pngquant",
+    usesGplSources: true,
   },
   {
     artifact: "gifsicle",
@@ -48,11 +49,18 @@ const sidecarArtifacts = [
     licenses: ["gifsicle-COPYING"],
     packagePrefix: "sidecar-gifsicle",
     tool: "gifsicle",
+    usesGplSources: true,
   },
 ];
 const cliArguments = process.argv.slice(2);
 const artifactsRoot = resolve(readFlag("--artifacts"));
 const npmRoot = resolve(readFlag("--npm-dir"));
+const gplSourcesRootFlag = readOptionalFlag("--gpl-sources");
+const gplSourcesRoot = gplSourcesRootFlag === undefined ? undefined : resolve(gplSourcesRootFlag);
+const gplSourceManifest =
+  gplSourcesRoot === undefined
+    ? undefined
+    : JSON.parse(await readFile(join(gplSourcesRoot, "gpl-source-manifest.json"), "utf8"));
 const targetArgument = readFlag("--targets");
 const requestedTargets = targetArgument === "all" ? platformDirectories : targetArgument.split(",");
 const requestedToolNames =
@@ -116,11 +124,22 @@ for (const target of requestedTargets) {
       );
       licenseCopies.push([path, join(packageRoot, "licenses", licenseFile)]);
     }
+    const sourcePackage =
+      sidecar.usesGplSources === true && gplSourceManifest !== undefined
+        ? await prepareGplSourcePackage({
+            packageManifest,
+            packageRoot,
+            sourceManifest: gplSourceManifest,
+            sourceRoot: gplSourcesRoot,
+            tool: sidecar.tool,
+          })
+        : undefined;
     pendingCopies.push({
       binaries: binaryCopies,
       licenses: licenseCopies,
       manifests: manifestCopies,
       packageRoot,
+      sourcePackage,
       target,
     });
   }
@@ -134,6 +153,16 @@ for (const item of pendingCopies) {
   }
   for (const manifest of item.manifests) await copyFile(...manifest);
   for (const license of item.licenses) await copyFile(...license);
+  if (item.sourcePackage !== undefined) {
+    const sourceRoot = join(item.packageRoot, "sources");
+    await mkdir(sourceRoot, { recursive: true });
+    for (const source of item.sourcePackage.copies) await copyFile(...source);
+    await writeFile(
+      join(sourceRoot, "source-manifest.json"),
+      `${JSON.stringify(item.sourcePackage.manifest, undefined, 2)}\n`,
+    );
+    await writeFile(join(sourceRoot, "README.md"), item.sourcePackage.readme);
+  }
 }
 
 console.log(
@@ -144,7 +173,7 @@ function readFlag(flag) {
   const value = readOptionalFlag(flag);
   if (value === undefined) {
     throw new TypeError(
-      "Usage: node tasks/sidecars/assemble-packages.mjs --artifacts <dir> --npm-dir <dir> --targets <target,...> [--tools <tool,...>]",
+      "Usage: node tasks/sidecars/assemble-packages.mjs --artifacts <dir> --npm-dir <dir> --targets <target,...> [--tools <tool,...>] [--gpl-sources <dir>]",
     );
   }
   return value;
@@ -154,6 +183,81 @@ function readOptionalFlag(flag) {
   const index = cliArguments.indexOf(flag);
   const value = index === -1 ? undefined : cliArguments[index + 1];
   return value === undefined || value.startsWith("--") ? undefined : value;
+}
+
+async function prepareGplSourcePackage({
+  packageManifest,
+  packageRoot,
+  sourceManifest,
+  sourceRoot,
+  tool,
+}) {
+  assert(sourceManifest.schema === 2, "GPL source manifest schema is invalid");
+  assert(
+    sourceManifest.version === packageManifest.version,
+    `${packageManifest.name} and GPL source versions differ`,
+  );
+  assert(Array.isArray(sourceManifest.sources), "GPL source entries are missing");
+  assert(Array.isArray(sourceManifest.materials), "GPL build materials are missing");
+  const sources = sourceManifest.sources.filter((descriptor) => descriptor.tool === tool);
+  const materials = sourceManifest.materials.filter(
+    (descriptor) => Array.isArray(descriptor.tools) && descriptor.tools.includes(tool),
+  );
+  assert(sources.length > 0, `GPL sources for ${tool} are missing`);
+  assert(materials.length > 0, `GPL build materials for ${tool} are missing`);
+
+  const copies = [];
+  for (const descriptor of [...sources, ...materials]) {
+    assertSourceMaterialDescriptor(descriptor, tool);
+    const inputPath = join(sourceRoot, descriptor.filename);
+    const body = await readFile(inputPath);
+    assert(
+      createHash("sha256").update(body).digest("hex") === descriptor.sha256,
+      `${descriptor.filename} differs from the GPL source manifest`,
+    );
+    copies.push([inputPath, join(packageRoot, "sources", descriptor.filename)]);
+  }
+
+  return {
+    copies,
+    manifest: {
+      materials,
+      package: packageManifest.name,
+      schema: 1,
+      sources,
+      tool,
+      version: packageManifest.version,
+    },
+    readme: `# Corresponding source materials
+
+This directory accompanies the ${tool} executable in
+\`${packageManifest.name}@${packageManifest.version}\`.
+
+\`source-manifest.json\` records the SHA-256 of every source and build-material
+file. \`sidecar-build-scripts.tar\` preserves the exact repository paths,
+scripts, pins, lockfile, and platform configuration used by the release.
+${
+  tool === "pngquant"
+    ? "\n`pngquant-cargo-sources.tar` contains every registry source archive in the pinned Cargo lockfile, including target-specific entries.\n"
+    : ""
+}
+The matching immutable Git tag and GitHub Release provide duplicate copies and
+the release-wide manifest. These materials remain under their respective
+upstream licenses.
+`,
+  };
+}
+
+function assertSourceMaterialDescriptor(descriptor, tool) {
+  assert(
+    descriptor !== null &&
+      typeof descriptor === "object" &&
+      typeof descriptor.filename === "string" &&
+      /^[0-9A-Za-z_.+-]+$/u.test(descriptor.filename) &&
+      typeof descriptor.sha256 === "string" &&
+      /^[\da-f]{64}$/u.test(descriptor.sha256),
+    `GPL source descriptor for ${tool} is invalid`,
+  );
 }
 
 function assert(condition, message) {

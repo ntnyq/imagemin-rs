@@ -40,6 +40,14 @@ const sidecarLicenseFiles = [
 const sidecarBinaryNames = ["cjpeg", "cwebp", "jpegtran"];
 const gifsicleLicenseFiles = ["gifsicle-COPYING"];
 const pngquantLicenseFiles = ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"];
+const publicLegalFileSha256 = {
+  "package/licenses/aom-LICENSE":
+    "60f3f7e003a4a7736aad7c008380fbfbcd3bf19544c589efebba824a2b9e145b",
+  "package/licenses/aom-PATENTS":
+    "eb1955a99d10bf2bbb37c375e7a61bdb560b76ab8590c1a45be6c2a20245146e",
+  "package/licenses/sharp-libvips-THIRD-PARTY-NOTICES.md":
+    "25ffcfa69e28b1913ced27ec778b90f24911a1bb3021253577e8b0af55db0d49",
+};
 const selectedPlatforms =
   artifactMode === "all" ? platformDirectories : [currentPlatformDirectory()];
 const packageDirectories = [
@@ -63,6 +71,9 @@ for (const packageDirectory of packageDirectories) {
 const version = JSON.parse(
   await readFile(resolve(workspaceRoot, "packages/imagemin/package.json"), "utf8"),
 ).version;
+const sidecarPins = JSON.parse(
+  await readFile(resolve(workspaceRoot, "tasks/sidecars/pins.json"), "utf8"),
+);
 const tarballNames = (await readdir(outputDirectory))
   .filter((name) => name.endsWith(".tgz"))
   .sort();
@@ -168,6 +179,7 @@ function assertTarballContract(manifest, entries) {
       entries.find(({ name }) => name === `package/${binaryName}`)?.data.byteLength > 0,
       `${manifest.name} gifsicle is empty`,
     );
+    assertPackedGplSources(manifest, entries, "gifsicle");
     return;
   }
 
@@ -186,6 +198,7 @@ function assertTarballContract(manifest, entries) {
       entries.find(({ name }) => name === `package/${binaryName}`)?.data.byteLength > 0,
       `${manifest.name} pngquant is empty`,
     );
+    assertPackedGplSources(manifest, entries, "pngquant");
     return;
   }
 
@@ -217,6 +230,17 @@ function assertTarballContract(manifest, entries) {
   assert(entryNames.has("package/LICENSE"), `${manifest.name} tarball is missing package/LICENSE`);
 
   if (manifest.name === "imagemin-rs") {
+    assert(manifest.dependencies?.sharp === undefined, "Sharp must not be installed by default");
+    assertDeepEqual(
+      manifest.peerDependencies,
+      { sharp: "0.35.3" },
+      "The public tarball Sharp peer dependency is invalid",
+    );
+    assertDeepEqual(
+      manifest.peerDependenciesMeta,
+      { sharp: { optional: true } },
+      "The public tarball Sharp peer dependency must be optional",
+    );
     const expected = {
       "@imagemin-rs/binding": version,
       ...Object.fromEntries(
@@ -243,9 +267,19 @@ function assertTarballContract(manifest, entries) {
     for (const path of [
       "package/dist/index.d.mts",
       "package/dist/index.mjs",
+      "package/licenses/aom-LICENSE",
+      "package/licenses/aom-PATENTS",
+      "package/licenses/sharp-libvips-THIRD-PARTY-NOTICES.md",
       "package/THIRD_PARTY_NOTICES.md",
     ]) {
       assert(entryNames.has(path), `The public tarball is missing ${path}`);
+    }
+    for (const [path, expectedSha256] of Object.entries(publicLegalFileSha256)) {
+      const entry = entries.find(({ name }) => name === path);
+      assert(
+        createHash("sha256").update(entry.data).digest("hex") === expectedSha256,
+        `The public tarball contains an unexpected copy of ${path}`,
+      );
     }
     return;
   }
@@ -327,6 +361,72 @@ function readTarEntries(archive) {
   }
 
   return entries;
+}
+
+function assertPackedGplSources(manifest, entries, tool) {
+  const sourceManifestEntry = entries.find(
+    ({ name }) => name === "package/sources/source-manifest.json",
+  );
+  assert(
+    sourceManifestEntry !== undefined,
+    `${manifest.name} tarball is missing package/sources/source-manifest.json`,
+  );
+  assert(
+    entries.some(({ name }) => name === "package/sources/README.md"),
+    `${manifest.name} tarball is missing package/sources/README.md`,
+  );
+  const sourceManifest = JSON.parse(sourceManifestEntry.data.toString("utf8"));
+  assertDeepEqual(
+    {
+      package: sourceManifest.package,
+      schema: sourceManifest.schema,
+      tool: sourceManifest.tool,
+      version: sourceManifest.version,
+    },
+    { package: manifest.name, schema: 1, tool, version },
+    `${manifest.name} source manifest identity is invalid`,
+  );
+
+  const expectedSources = Object.entries(sidecarPins[tool].sources)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([name, source]) => ({
+      filename: `${name}-${source.version}.tar.gz`,
+      name,
+      sha256: source.sha256,
+      tool,
+      url: source.url,
+      version: source.version,
+    }));
+  assertDeepEqual(
+    sourceManifest.sources,
+    expectedSources,
+    `${manifest.name} corresponding source list is invalid`,
+  );
+  const expectedMaterials =
+    tool === "pngquant"
+      ? ["pngquant-cargo-sources.tar", "sidecar-build-scripts.tar"]
+      : ["sidecar-build-scripts.tar"];
+  assertDeepEqual(
+    sourceManifest.materials.map(({ filename }) => filename).sort(),
+    expectedMaterials,
+    `${manifest.name} build-material list is invalid`,
+  );
+
+  for (const descriptor of [...sourceManifest.sources, ...sourceManifest.materials]) {
+    const path = `package/sources/${descriptor.filename}`;
+    const entry = entries.find(({ name }) => name === path);
+    assert(entry !== undefined, `${manifest.name} tarball is missing ${path}`);
+    assert(
+      createHash("sha256").update(entry.data).digest("hex") === descriptor.sha256,
+      `${manifest.name} tarball contains an invalid ${path}`,
+    );
+    if (descriptor.bytes !== undefined) {
+      assert(
+        descriptor.bytes === entry.data.byteLength,
+        `${manifest.name} tarball contains an invalid byte count for ${path}`,
+      );
+    }
+  }
 }
 
 function readTarString(header, offset, length) {
