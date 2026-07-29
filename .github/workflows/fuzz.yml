@@ -8,7 +8,7 @@ on:
       - ".github/workflows/fuzz.yml"
       - "Cargo.lock"
       - "Cargo.toml"
-      - "crates/imagemin/**"
+      - "crates/**"
       - "fixtures/**"
       - "fuzz/**"
   pull_request:
@@ -18,7 +18,7 @@ on:
       - ".github/workflows/fuzz.yml"
       - "Cargo.lock"
       - "Cargo.toml"
-      - "crates/imagemin/**"
+      - "crates/**"
       - "fixtures/**"
       - "fuzz/**"
   schedule:
