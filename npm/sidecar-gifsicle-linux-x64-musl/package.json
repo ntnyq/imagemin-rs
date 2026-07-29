@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecar-gifsicle-linux-x64-musl",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.6",
   "description": "Prebuilt Gifsicle sidecar for imagemin-rs on Linux x64 with musl.",
   "license": "GPL-2.0-only",
   "repository": {

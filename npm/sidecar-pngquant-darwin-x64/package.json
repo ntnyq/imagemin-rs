@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecar-pngquant-darwin-x64",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.6",
   "description": "Prebuilt pngquant sidecar for imagemin-rs on macOS x64.",
   "license": "GPL-3.0-or-later",
   "repository": {
