@@ -2,7 +2,7 @@
 
 - 决策日期：2026-07-30
 - 适用范围：首个稳定版及此前最后一个完整 RC
-- 当前状态：**MAINTAINER DECISION COMPLETE — 完整 RC 技术验证待完成**
+- 当前状态：**MAINTAINER DECISION COMPLETE — RC 技术 bundle 已验证，registry 证据待完成**
 - 事实底稿：[`docs/research/native-distribution-license-model.md`](../docs/research/native-distribution-license-model.md)
 
 > 本文记录维护者选择的保守分发模型，不构成法律意见。仓库自动化只能证明制品、
@@ -27,11 +27,12 @@
    时才进入应用闭包。
 6. 上游 `@img/sharp-libvips-*` tarball 只有许可证摘要和链接，没有附带 GNU GPLv3、
    LGPLv3 与 AOM Patent License 1.0 全文。
-7. 当前工作树已把 libaom 3.14.1 的 BSD 许可、AOM Patent License 1.0 和
-   sharp-libvips 第三方清单纳入 `imagemin-rs` tarball contract；这尚未被公开 RC 验证。
-8. 当前工作树还让每个 GPL 平台 tarball 包含对应上游源码、项目构建材料；pngquant
-   额外包含 lockfile 中全部 45 个 registry 源码归档。manifest 与 pack verifier 会
-   逐文件核对摘要；这尚未被八平台公开 RC 验证。
+7. `v0.1.0-rc.9` 已把 libaom 3.14.1 的 BSD 许可、AOM Patent License 1.0 和
+   sharp-libvips 第三方清单纳入 `imagemin-rs` tarball contract，并由 pack verifier
+   与 Release smoke 核对固定摘要。
+8. `v0.1.0-rc.9` 的每个 GPL 平台 tarball 包含对应上游源码、项目构建材料；pngquant
+   额外包含 lockfile 中全部 45 个 registry 源码归档。manifest、pack verifier 与
+   八平台 Release smoke 已逐文件核对摘要；npm registry 回读仍待 35 包正式发布。
 9. 当前 `@imagemin-rs/wasm` 不包含或依赖 Gifsicle、pngquant、Sharp、libvips、libaom，
    因此不在本次原生许可证 HOLD 的制品范围内。
 
@@ -134,21 +135,21 @@
 
 - [ ] 全部 35 个 npm 包同版本公开，且 root optional dependency closure 可安装；
 - [ ] Git tag、GitHub Release、npm tarball 和 dist-tag 指向同一不可变版本；
-- [ ] GPL source-to-binary manifest 覆盖八平台及所有实际静态链接依赖；
+- [x] GPL source-to-binary manifest 覆盖八平台及所有实际静态链接依赖；
 - [ ] `fetch-pngquant-cargo-sources.mjs` 取得的全部 lockfile registry 源码随所选交付
       模型发布，并由最终 tarball/release verifier 重新核对；
-- [ ] 最终 tarball 内的许可文本与固定官方摘要一致；
-- [ ] 八平台全新安装和全部 codec smoke 通过；
+- [x] 最终 tarball 内的许可文本与固定官方摘要一致；
+- [x] 八平台全新安装和全部 codec smoke 通过；
 - [ ] 若选 L1，八平台 LGPL 替换或重链接证据通过；
-- [ ] 若选 L2，无 Sharp 安装与显式 Sharp 安装两种路径均在八平台通过；
+- [x] 若选 L2，无 Sharp 安装与显式 Sharp 安装两种路径均在八平台通过；
 - [ ] 发布资产备份、可用性监控与一次恢复演练完成；
 - [ ] 审计人从公开 registry 重新下载并核对版本、摘要、notice 和源码入口。
 
-验证版本：**计划 `0.1.0-rc.9`**
+验证版本：**`0.1.0-rc.9`**
 
-验证 workflow：**待填写**
+验证 workflow：**[`v0.1.0-rc.9` Release workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30487591906)**
 
-验证负责人：**待填写**
+验证负责人：**repository maintainer**
 
 ## 最终批准
 

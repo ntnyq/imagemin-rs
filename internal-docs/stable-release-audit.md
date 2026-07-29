@@ -3,7 +3,7 @@
 - 审计日期：2026-07-30
 - 证据截止日期：2026-07-30（Asia/Shanghai）
 - 范围：仓库固定的原生 sidecar、`sharp@0.35.3` 在八个平台目标上的预编译运行时、相关许可证与 npm 供应链证明
-- 建议门槛状态：**CONDITIONAL PASS（分发模型已选；完整 RC 证据待完成）**
+- 建议门槛状态：**CONDITIONAL PASS（分发模型与 RC bundle 已验证；registry 证据待完成）**
 
 > 本文是一次发布时点的安全与许可证证据快照，不是“没有漏洞”的保证，也不是法律意见。NVD、上游公告和 npm 证明都可能滞后或不完整。
 
@@ -28,14 +28,16 @@
 
 2026-07-30，维护者选择 L2（Sharp 不进入默认安装闭包）及 GPL 随每个平台 npm 包
 交付源码/构建材料。原来的“分发模型未决”人工 HOLD 已关闭；该决定不构成法律意见。
-工作树已通过当前平台真实 tarball smoke，证明默认无 Sharp 会返回可操作错误，显式
-安装 `sharp@0.35.3` 后全部 codec 可运行，并验证 GPL 包内源码摘要。
+`v0.1.0-rc.9` 的公开 Release workflow 已通过 WASM 与八平台真实 tarball smoke，
+证明默认无 Sharp 会返回可操作错误，显式安装 `sharp@0.35.3` 后全部 codec 可运行，
+并验证 GPL 包内源码、构建材料和许可/AOM 文本摘要。
 
 稳定版现在为 conditional pass。完整事实模型见
 [`docs/research/native-distribution-license-model.md`](../docs/research/native-distribution-license-model.md)，
 已选择的交付路径、责任人与技术退出条件见
-[`license-release-signoff.md`](./license-release-signoff.md)。`0.1.0-rc.9` 仍须完成
-35 包、八平台、两种 Sharp 路径与公开 registry 回读；在这些证据完成前不得发布
+[`license-release-signoff.md`](./license-release-signoff.md)。`0.1.0-rc.9` 已完成
+35 包技术 bundle、八平台与两种 Sharp 路径；仍须完成 npm 35 包同版本发布、
+provenance 与公开 registry 回读。在这些证据完成前不得启动公开试用计时或发布
 1.0。本次证据没有显示其他安全阻断项。
 
 ## 证据范围与方法
