@@ -48,7 +48,7 @@ GitHub assets. It also completes the one-time public bootstrap of
 
 ## 1.0 date and gates
 
-The target stable date is **August 17, 2026**. The planned `0.1.0-rc.8` trial
+The target stable date is **August 17, 2026**. The planned `0.1.0-rc.9` trial
 must remain public for 14 consecutive days with no open release-blocking
 defect. A blocking fix publishes a new RC and restarts that clock. If the full
 RC is late or the trial evidence is incomplete, 1.0 moves; the date does not

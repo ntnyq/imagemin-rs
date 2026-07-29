@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/binding-linux-x64-musl",
-  "version": "0.1.0-rc.8",
+  "version": "0.1.0-rc.9",
   "description": "Private native binding for imagemin-rs.",
   "license": "MIT",
   "repository": {

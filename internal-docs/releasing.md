@@ -140,6 +140,13 @@ npm 不允许 brand-new package 使用 staged publishing，而且 package 尚不
 再为它配置与其余包相同的 trusted publisher。完成这个一次性步骤前，不得启动 35 包
 direct release，以免形成部分发布。
 
+首次引导必须使用低于正式候选版本、且不会参与发布闭包的一次性版本
+`0.0.1-bootstrap.0`，并使用独立的 `bootstrap` dist-tag。引导 tarball 只允许从已通过
+WASM smoke 的 release artifact 派生，除 `package.json` 中的版本外不得改变内容。
+不得使用计划中的 RC 版本完成引导，否则后续 35 包 direct release 会因 WASM 同版本已
+存在而在发布到一半时失败。引导版本可见并配置 trusted publisher 后，完整候选版本从
+未使用过的版本号开始发布。
+
 引导完成后，日常发布必须从受保护的 GitHub environment 运行：
 
 ```sh

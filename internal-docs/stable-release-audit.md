@@ -34,7 +34,7 @@
 稳定版现在为 conditional pass。完整事实模型见
 [`docs/research/native-distribution-license-model.md`](../docs/research/native-distribution-license-model.md)，
 已选择的交付路径、责任人与技术退出条件见
-[`license-release-signoff.md`](./license-release-signoff.md)。`0.1.0-rc.8` 仍须完成
+[`license-release-signoff.md`](./license-release-signoff.md)。`0.1.0-rc.9` 仍须完成
 35 包、八平台、两种 Sharp 路径与公开 registry 回读；在这些证据完成前不得发布
 1.0。本次证据没有显示其他安全阻断项。
 

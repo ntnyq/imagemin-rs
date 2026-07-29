@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.1.0-rc.9] - 2026-07-30
+
+### Fixed
+
+- Executed native Windows Node binaries directly during release smoke tests
+  instead of incorrectly treating `node.exe` as a command shim.
+
 ## [0.1.0-rc.8] - 2026-07-30
 
 ### Added
@@ -108,7 +115,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Added reproducible native and sidecar packages for macOS, Linux, and Windows,
   plus release verification, smoke tests, provenance, and SBOM generation.
 
-[Unreleased]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.8...HEAD
+[Unreleased]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.9...HEAD
+[0.1.0-rc.9]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.8...v0.1.0-rc.9
 [0.1.0-rc.8]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.7...v0.1.0-rc.8
 [0.1.0-rc.7]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.6...v0.1.0-rc.7
 [0.1.0-rc.6]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.5...v0.1.0-rc.6
