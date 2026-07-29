@@ -150,7 +150,7 @@ jobs:
           --output-dir ../../.release/native-artifacts --npm-dir ../../npm
       - uses: actions/download-artifact@v8
         with:
-          pattern: sidecar-cwebp-*
+          pattern: sidecar-*
           path: .release/sidecar-artifacts
       - name: Assemble sidecar packages
         run: >-

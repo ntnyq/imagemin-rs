@@ -21,6 +21,10 @@ const pins = JSON.parse(
     sources: Record<string, { sha256: string; url: string; version: string }>;
     version: string;
   };
+  mozjpeg: {
+    sources: Record<string, { sha256: string; url: string; version: string }>;
+    version: string;
+  };
 };
 
 let sandboxRoot: string;
@@ -64,6 +68,38 @@ describe("sidecar scripts", () => {
       tool: "cwebp",
       version: pins.cwebp.version,
     });
+  });
+
+  test("writes deterministic MozJPEG manifests for both binaries", async () => {
+    for (const binaryName of ["cjpeg", "jpegtran"]) {
+      const binary = Buffer.from(`self-built-${binaryName}`);
+      const binaryPath = join(sandboxRoot, binaryName);
+      const outputPath = join(sandboxRoot, `${binaryName}.manifest.json`);
+      await writeFile(binaryPath, binary);
+
+      await execFileAsync(process.execPath, [
+        manifestScript,
+        "--tool",
+        "mozjpeg",
+        "--target",
+        "darwin-arm64",
+        "--binary",
+        binaryPath,
+        "--output",
+        outputPath,
+      ]);
+
+      expect(JSON.parse(await readFile(outputPath, "utf8"))).toEqual({
+        binary: binaryName,
+        bytes: binary.byteLength,
+        schema: 1,
+        sha256: createHash("sha256").update(binary).digest("hex"),
+        sources: pins.mozjpeg.sources,
+        target: "darwin-arm64",
+        tool: "mozjpeg",
+        version: pins.mozjpeg.version,
+      });
+    }
   });
 
   test("rejects unsupported targets before writing a manifest", async () => {
@@ -147,15 +183,35 @@ describe("sidecar scripts", () => {
     const artifactDirectory = join(sandboxRoot, "artifacts", `sidecar-cwebp-${target}`);
     const packageDirectory = join(sandboxRoot, "npm", `sidecars-${target}`);
     const binaryPath = join(artifactDirectory, "cwebp");
+    const mozjpegArtifactDirectory = join(sandboxRoot, "artifacts", `sidecar-mozjpeg-${target}`);
     await mkdir(join(artifactDirectory, "licenses"), { recursive: true });
+    await mkdir(join(mozjpegArtifactDirectory, "licenses"), { recursive: true });
     await mkdir(packageDirectory, { recursive: true });
     await writeFile(binaryPath, "self-built-cwebp", { mode: 0o755 });
+    for (const binaryName of ["cjpeg", "jpegtran"]) {
+      const mozjpegBinaryPath = join(mozjpegArtifactDirectory, binaryName);
+      await writeFile(mozjpegBinaryPath, `self-built-${binaryName}`, { mode: 0o755 });
+      await execFileAsync(process.execPath, [
+        manifestScript,
+        "--tool",
+        "mozjpeg",
+        "--target",
+        target,
+        "--binary",
+        mozjpegBinaryPath,
+        "--output",
+        join(mozjpegArtifactDirectory, `${binaryName}.manifest.json`),
+      ]);
+    }
     await writeFile(
       join(packageDirectory, "package.json"),
       await readFile(join(workspaceRoot, `npm/sidecars-${target}/package.json`)),
     );
     for (const licenseFile of sidecarLicenseFiles) {
       await writeFile(join(artifactDirectory, "licenses", licenseFile), licenseFile);
+    }
+    for (const licenseFile of mozjpegLicenseFiles) {
+      await writeFile(join(mozjpegArtifactDirectory, "licenses", licenseFile), licenseFile);
     }
     await execFileAsync(process.execPath, [
       manifestScript,
@@ -182,10 +238,21 @@ describe("sidecar scripts", () => {
     await expect(readFile(join(packageDirectory, "cwebp"), "utf8")).resolves.toBe(
       "self-built-cwebp",
     );
+    await expect(readFile(join(packageDirectory, "cjpeg"), "utf8")).resolves.toBe(
+      "self-built-cjpeg",
+    );
+    await expect(readFile(join(packageDirectory, "jpegtran"), "utf8")).resolves.toBe(
+      "self-built-jpegtran",
+    );
     await expect(readFile(join(packageDirectory, "cwebp.manifest.json"), "utf8")).resolves.toMatch(
       /"target": "darwin-arm64"/u,
     );
     for (const licenseFile of sidecarLicenseFiles) {
+      await expect(readFile(join(packageDirectory, "licenses", licenseFile), "utf8")).resolves.toBe(
+        licenseFile,
+      );
+    }
+    for (const licenseFile of mozjpegLicenseFiles) {
       await expect(readFile(join(packageDirectory, "licenses", licenseFile), "utf8")).resolves.toBe(
         licenseFile,
       );
@@ -202,3 +269,5 @@ const sidecarLicenseFiles = [
   "libwebp-PATENTS.txt",
   "zlib-LICENSE.txt",
 ] as const;
+
+const mozjpegLicenseFiles = ["mozjpeg-LICENSE.md", "mozjpeg-README.ijg"] as const;

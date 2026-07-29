@@ -23,21 +23,25 @@ describe("sidecar resolution", () => {
     );
   });
 
-  test("uses an explicit cwebp path when supplied", () => {
-    const path = resolve("fixtures/cwebp");
-    expect(resolveSidecarBinary("cwebp", { override: path })).toBe(path);
+  test("uses an explicit binary path when supplied", () => {
+    for (const tool of ["cjpeg", "cwebp", "jpegtran"] as const) {
+      const path = resolve(`fixtures/${tool}`);
+      expect(resolveSidecarBinary(tool, { override: path })).toBe(path);
+    }
   });
 
-  test("resolves cwebp from the current platform package", () => {
-    const binary = resolveSidecarBinary("cwebp");
-    expect(binary).toBe(
-      join(
-        workspaceRoot,
-        "npm",
-        `sidecars-${currentPlatformDirectory()}`,
-        process.platform === "win32" ? "cwebp.exe" : "cwebp",
-      ),
-    );
+  test("resolves BSD sidecars from the current platform package", () => {
+    for (const tool of ["cjpeg", "cwebp", "jpegtran"] as const) {
+      const binary = resolveSidecarBinary(tool);
+      expect(binary).toBe(
+        join(
+          workspaceRoot,
+          "npm",
+          `sidecars-${currentPlatformDirectory()}`,
+          process.platform === "win32" ? `${tool}.exe` : tool,
+        ),
+      );
+    }
   });
 });
 

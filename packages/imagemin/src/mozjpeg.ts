@@ -1,8 +1,7 @@
-import mozjpegBinary from "mozjpeg";
-
 import { runBinary } from "./binary";
 import { ImageminError, rethrowIfAborted } from "./errors";
 import { isJpeg, validateJpegResourceLimits } from "./jpeg";
+import { resolveSidecarBinary } from "./sidecar";
 import type { ImageminPlugin, MozjpegOptions } from "./types";
 
 const MAX_OUTPUT_BYTES = 512 * 1024 * 1024;
@@ -76,7 +75,9 @@ export function mozjpeg(options: MozjpegOptions = {}): ImageminPlugin {
     try {
       return await runBinary({
         arguments: arguments_,
-        binary: mozjpegBinary,
+        binary: resolveSidecarBinary("cjpeg", {
+          override: process.env["IMAGEMIN_RS_CJPEG_PATH"],
+        }),
         displayName: "MozJPEG cjpeg",
         input,
         signal: context?.signal,

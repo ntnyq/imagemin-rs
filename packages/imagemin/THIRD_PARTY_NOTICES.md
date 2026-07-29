@@ -31,31 +31,23 @@ Source and license information:
 The Rust GIF implementation was adapted from the MIT-licensed delta planning
 algorithm in `losslessly@0.1.1`, Copyright (c) 2026 Krystian Doroszewicz.
 
-The `mozjpeg()` compatibility adapter executes the separately installed
-`mozjpeg@8.0.0` cjpeg executable as a child process. The npm wrapper is MIT
-licensed; the codec binary contains code under the IJG license, BSD 3-Clause,
-and zlib-style licenses. The executable is not linked into the imagemin-rs
-native addon. The current compatibility artifact reports MozJPEG 3.2
-(build 20180508). Release artifacts must include the exact codec source,
-license texts, build provenance and a binary/source SHA-256 manifest.
+The `mozjpeg()` and `jpegtran()` compatibility adapters execute MozJPEG 4.1.1
+`cjpeg` and `jpegtran` executables from the current
+`@imagemin-rs/sidecars-*` optional package. Both executables come from one
+pinned Mozilla MozJPEG source archive and are not linked into the imagemin-rs
+native addon. Each platform package carries the upstream MozJPEG and IJG
+license texts, the source archive SHA-256 value, and a separate binary
+provenance manifest.
+
+`mozjpeg@8.0.0` and `jpegtran-bin@7.0.0` remain development-only compatibility
+oracles. Production installation does not use their runtime download or
+install-time compilation paths.
 
 Source and license information:
 
 - https://github.com/imagemin/mozjpeg-bin
-- https://github.com/mozilla/mozjpeg
-
-The `jpegtran()` compatibility adapter executes the separately installed
-`jpegtran-bin@7.0.0` executable as a child process. The npm wrapper is MIT
-licensed; libjpeg-turbo combines the IJG license, BSD 3-Clause, and zlib-style
-licenses. The executable is not linked into the imagemin-rs native addon. The
-current compatibility artifact reports libjpeg-turbo 1.5.1 (build 20161213).
-Release artifacts must preserve the complete upstream notices and record the
-exact source and binary hashes.
-
-Source and license information:
-
 - https://github.com/imagemin/jpegtran-bin
-- https://github.com/libjpeg-turbo/libjpeg-turbo
+- https://github.com/mozilla/mozjpeg
 
 The `webp()` compatibility adapter executes the cwebp 1.6.0 executable from the
 current `@imagemin-rs/sidecars-*` optional package. It is built from pinned

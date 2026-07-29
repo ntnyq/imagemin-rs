@@ -19,7 +19,14 @@ const sidecarLicenseFiles = [
   "libtiff-LICENSE.md",
   "libwebp-COPYING.txt",
   "libwebp-PATENTS.txt",
+  "mozjpeg-LICENSE.md",
+  "mozjpeg-README.ijg",
   "zlib-LICENSE.txt",
+];
+const sidecarTools = [
+  { binary: "cjpeg", provenance: "mozjpeg" },
+  { binary: "cwebp", provenance: "cwebp" },
+  { binary: "jpegtran", provenance: "mozjpeg" },
 ];
 
 const artifactMode = readArgument("--artifacts") ?? "current";
@@ -142,7 +149,11 @@ for (const platform of platforms) {
   }
 
   const sidecarPackageName = `@imagemin-rs/sidecars-${platform.directory}`;
-  const sidecarBinaryName = platform.os === "win32" ? "cwebp.exe" : "cwebp";
+  const sidecarBinaries = sidecarTools.map(({ binary, provenance }) => ({
+    binary,
+    file: platform.os === "win32" ? `${binary}.exe` : binary,
+    provenance,
+  }));
   const sidecarRoot = `npm/sidecars-${platform.directory}`;
   const sidecarManifest = await readJson(`${sidecarRoot}/package.json`);
   assert(
@@ -174,12 +185,16 @@ for (const platform of platforms) {
   );
   assertDeepEqual(
     sidecarManifest.files,
-    ["README.md", sidecarBinaryName, "cwebp.manifest.json", "licenses"],
+    [
+      "README.md",
+      ...sidecarBinaries.flatMap(({ binary, file }) => [file, `${binary}.manifest.json`]),
+      "licenses",
+    ],
     `${sidecarPackageName} files allowlist is invalid`,
   );
   assertDeepEqual(
     sidecarManifest.bin,
-    { cwebp: sidecarBinaryName },
+    Object.fromEntries(sidecarBinaries.map(({ binary, file }) => [binary, file])),
     `${sidecarPackageName} bin mapping is invalid`,
   );
   assert(
@@ -192,35 +207,49 @@ for (const platform of platforms) {
   );
 
   if (requiredDirectories.has(platform.directory)) {
-    const binaryUrl = new URL(`${sidecarRoot}/${sidecarBinaryName}`, workspaceRoot);
-    const binary = await readFile(binaryUrl);
-    const metadata = await stat(binaryUrl);
-    assert(metadata.isFile() && binary.byteLength > 0, `${sidecarPackageName} cwebp is empty`);
-    if (platform.os !== "win32") {
-      assert((metadata.mode & 0o111) !== 0, `${sidecarPackageName} cwebp is not marked executable`);
-    }
-    assertBinaryMagic(binary, platform.os, sidecarPackageName);
+    for (const sidecar of sidecarBinaries) {
+      const binaryUrl = new URL(`${sidecarRoot}/${sidecar.file}`, workspaceRoot);
+      const binary = await readFile(binaryUrl);
+      const metadata = await stat(binaryUrl);
+      assert(
+        metadata.isFile() && binary.byteLength > 0,
+        `${sidecarPackageName} ${sidecar.binary} is empty`,
+      );
+      if (platform.os !== "win32") {
+        assert(
+          (metadata.mode & 0o111) !== 0,
+          `${sidecarPackageName} ${sidecar.binary} is not marked executable`,
+        );
+      }
+      assertBinaryMagic(binary, platform.os, sidecarPackageName);
 
-    const provenance = await readJson(`${sidecarRoot}/cwebp.manifest.json`);
-    const expectedSources = Object.fromEntries(
-      Object.entries(sidecarPins.cwebp.sources).sort(([left], [right]) =>
-        left.localeCompare(right),
-      ),
-    );
-    assertDeepEqual(
-      provenance,
-      {
-        binary: sidecarBinaryName,
+      const provenance = await readJson(`${sidecarRoot}/${sidecar.binary}.manifest.json`);
+      const expectedSources = Object.fromEntries(
+        Object.entries(sidecarPins[sidecar.provenance].sources).sort(([left], [right]) =>
+          left.localeCompare(right),
+        ),
+      );
+      assertDeepEqual(
+        provenance,
+        {
+          binary: sidecar.file,
+          bytes: binary.byteLength,
+          schema: 1,
+          sha256: createHash("sha256").update(binary).digest("hex"),
+          sources: expectedSources,
+          target: platform.directory,
+          tool: sidecar.provenance,
+          version: sidecarPins[sidecar.provenance].version,
+        },
+        `${sidecarPackageName} ${sidecar.binary} provenance manifest is invalid`,
+      );
+      artifacts.push({
         bytes: binary.byteLength,
-        schema: 1,
-        sha256: createHash("sha256").update(binary).digest("hex"),
-        sources: expectedSources,
-        target: platform.directory,
-        tool: "cwebp",
-        version: sidecarPins.cwebp.version,
-      },
-      `${sidecarPackageName} provenance manifest is invalid`,
-    );
+        package: sidecarPackageName,
+        sha256: provenance.sha256,
+        tool: sidecar.binary,
+      });
+    }
     for (const licenseFile of sidecarLicenseFiles) {
       const license = await stat(new URL(`${sidecarRoot}/licenses/${licenseFile}`, workspaceRoot));
       assert(
@@ -228,12 +257,6 @@ for (const platform of platforms) {
         `${sidecarPackageName} is missing ${licenseFile}`,
       );
     }
-    artifacts.push({
-      bytes: binary.byteLength,
-      package: sidecarPackageName,
-      sha256: provenance.sha256,
-      tool: "cwebp",
-    });
   }
 }
 

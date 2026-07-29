@@ -1,22 +1,24 @@
 # Phase 4 JPEG codec 选型调研
 
-更新日期：2026-07-17
+更新日期：2026-07-29
 
 ## 结论
 
 Phase 4 使用受限 sidecar 实现两个兼容入口：
 
-- `mozjpeg()` 固定 `imagemin-mozjpeg@10.0.0` 与 `mozjpeg@8.0.0`；
-- `jpegtran()` 固定 `imagemin-jpegtran@8.0.0` 与 `jpegtran-bin@7.0.0`。
+- `mozjpeg()` 固定 `imagemin-mozjpeg@10.0.0` 的 option shape，生产执行项目自建的
+  MozJPEG 4.1.1 `cjpeg`；
+- `jpegtran()` 固定 `imagemin-jpegtran@8.0.0` 的语义，生产执行同次构建产出的
+  MozJPEG 4.1.1 `jpegtran`。
 
-这不是对 Rust FFI 的永久否定，而是当前兼容与风险隔离的最优边界。同一 executable
-下，sidecar 可以逐字节复现上游参数和结果；C codec 崩溃、超时与输出膨胀不会穿过
-napi-rs addon。相反，直接链接 Rust `mozjpeg`/sys crate 会扩大 unsafe、panic、
-NASM/SIMD、交叉编译和许可证审计面，仍不能保证与上游 npm binary 的 byte parity。
+这不是对 Rust FFI 的永久否定，而是当前兼容与风险隔离的最优边界。C codec 崩溃、
+超时与输出膨胀不会穿过 napi-rs addon。直接链接 Rust `mozjpeg`/sys crate 会扩大
+unsafe、panic、NASM/SIMD、交叉编译和许可证审计面，仍不能保证与上游 npm binary
+的 byte parity。
 
-最终产品不能直接把这两个历史 npm binary wrapper 当作可重复发布方案。发布流水线
-必须从固定 source revision 自建每个平台 artifact，记录编译器/flags、codec version、
-SHA-256 与完整许可证文本，并禁止安装时静默 fallback 到本机编译。
+历史 `mozjpeg@8.0.0` 与 `jpegtran-bin@7.0.0` 只作开发差分 oracle。生产发布从
+SHA-256 固定的 MozJPEG 4.1.1 archive 构建 8 个目标，记录 codec version、源码与
+二进制 SHA-256，并随平台包分发完整许可证文本；安装时没有下载或本机编译回退。
 
 ## 固定的上游行为
 
@@ -100,23 +102,21 @@ libjpeg-turbo version 1.5.1 (build 20161213)
 这些限制不是 fuzzing 的替代品。最终 release gate 仍需 libFuzzer/corpus、真实平台安装
 smoke、恶意 marker/segment corpus 与 worker-pool/并发压力测试。
 
-## 平台与可重复发布缺口
+## 平台与可重复发布状态
 
 历史 wrapper 的 macOS/Linux/Windows 预编译产物可能不是同一 codec revision；arm64
 和 musl 缺失时还可能在安装机本地编译。即使 JavaScript 版本相同，也不能推导出
 跨平台字节相同或性能可比。
 
-推荐发布 gate：
+已经实现：
 
-1. 固定 MozJPEG/libjpeg-turbo source commit 与 dependency source；
-2. 在项目 CI 中分别构建 darwin arm64/x64、linux gnu arm64/x64、linux musl
-   arm64/x64、Windows x64（支持矩阵若缩小，必须公开）；
-3. 禁止网络下载和 install-time compile fallback；
-4. 生成 codec `-version`、编译 flags、source SHA-256、binary SHA-256 与 SBOM；
-5. 从最终 npm tarball 安装并运行 color、grayscale、progressive、metadata 与 malformed
+1. 固定 MozJPEG 4.1.1 source archive 与 SHA-256；
+2. CI 定义 darwin arm64/x64、linux gnu/musl arm64/x64、Windows arm64/x64 构建；
+3. 禁止 runtime download 和 install-time compile fallback；
+4. 每个二进制生成版本、source SHA-256 与 binary SHA-256 provenance；
+5. 构建期对真实 JPEG 执行 cjpeg/jpegtran smoke，并从最终 npm tarball 运行全 codec
    smoke；
-6. 对所有平台执行同一结构/像素 conformance，只有相同 artifact 才声明 byte parity；
-7. 将 IJG、BSD-3-Clause、zlib-style 全部 notice 与 source availability 一起发布。
+6. 平台包附带 MozJPEG 与 IJG 完整许可证文本。
 
-在这些门禁完成前，Phase 4 可以声明“固定开发 artifact 上兼容”，不能声明“已解决
-跨平台可重复发布”。
+macOS ARM64 已完成实际构建、动态依赖检查与 tarball 安装 smoke。其余 7 个目标仍需
+取得首次 CI 实跑证据；SBOM 和完整 release rehearsal 仍属于 P3。

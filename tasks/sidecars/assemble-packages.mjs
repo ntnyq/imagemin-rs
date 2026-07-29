@@ -12,14 +12,27 @@ const platformDirectories = [
   "win32-arm64-msvc",
   "win32-x64-msvc",
 ];
-const licenseFiles = [
-  "libjpeg-turbo-LICENSE.md",
-  "libjpeg-turbo-README.ijg",
-  "libpng-LICENSE.txt",
-  "libtiff-LICENSE.md",
-  "libwebp-COPYING.txt",
-  "libwebp-PATENTS.txt",
-  "zlib-LICENSE.txt",
+const sidecarArtifacts = [
+  {
+    artifact: "cwebp",
+    binaries: ["cwebp"],
+    licenses: [
+      "libjpeg-turbo-LICENSE.md",
+      "libjpeg-turbo-README.ijg",
+      "libpng-LICENSE.txt",
+      "libtiff-LICENSE.md",
+      "libwebp-COPYING.txt",
+      "libwebp-PATENTS.txt",
+      "zlib-LICENSE.txt",
+    ],
+    tool: "cwebp",
+  },
+  {
+    artifact: "mozjpeg",
+    binaries: ["cjpeg", "jpegtran"],
+    licenses: ["mozjpeg-LICENSE.md", "mozjpeg-README.ijg"],
+    tool: "mozjpeg",
+  },
 ];
 const cliArguments = process.argv.slice(2);
 const artifactsRoot = resolve(readFlag("--artifacts"));
@@ -35,51 +48,69 @@ for (const target of requestedTargets) {
 
 const pendingCopies = [];
 for (const target of requestedTargets) {
-  const binaryName = target.startsWith("win32-") ? "cwebp.exe" : "cwebp";
-  const artifactRoot = join(artifactsRoot, `sidecar-cwebp-${target}`);
   const packageRoot = join(npmRoot, `sidecars-${target}`);
-  const binaryPath = join(artifactRoot, binaryName);
-  const binary = await readFile(binaryPath);
-  const binaryMetadata = await stat(binaryPath);
-  const provenance = JSON.parse(await readFile(join(artifactRoot, "cwebp.manifest.json"), "utf8"));
   const packageManifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
-
   assert(
     packageManifest.name === `@imagemin-rs/sidecars-${target}`,
     `Unexpected package manifest for ${target}`,
   );
-  assert(binaryMetadata.isFile() && binary.byteLength > 0, `${target} cwebp is empty`);
-  assert(provenance.schema === 1, `${target} cwebp manifest schema is invalid`);
-  assert(provenance.tool === "cwebp", `${target} artifact does not describe cwebp`);
-  assert(provenance.target === target, `${target} artifact manifest target is invalid`);
-  assert(provenance.binary === binaryName, `${target} artifact binary name is invalid`);
-  assert(provenance.bytes === binary.byteLength, `${target} artifact byte count is invalid`);
-  assert(
-    provenance.sha256 === createHash("sha256").update(binary).digest("hex"),
-    `${target} artifact checksum is invalid`,
-  );
 
-  const licensePaths = [];
-  for (const licenseFile of licenseFiles) {
-    const path = join(artifactRoot, "licenses", licenseFile);
-    const metadata = await stat(path);
-    assert(metadata.isFile() && metadata.size > 0, `${target} artifact is missing ${licenseFile}`);
-    licensePaths.push([path, join(packageRoot, "licenses", licenseFile)]);
+  for (const sidecar of sidecarArtifacts) {
+    const artifactRoot = join(artifactsRoot, `sidecar-${sidecar.artifact}-${target}`);
+    const binaryCopies = [];
+    const manifestCopies = [];
+    for (const baseName of sidecar.binaries) {
+      const binaryName = target.startsWith("win32-") ? `${baseName}.exe` : baseName;
+      const binaryPath = join(artifactRoot, binaryName);
+      const binary = await readFile(binaryPath);
+      const binaryMetadata = await stat(binaryPath);
+      const manifestName = `${baseName}.manifest.json`;
+      const provenance = JSON.parse(await readFile(join(artifactRoot, manifestName), "utf8"));
+
+      assert(binaryMetadata.isFile() && binary.byteLength > 0, `${target} ${baseName} is empty`);
+      assert(provenance.schema === 1, `${target} ${baseName} manifest schema is invalid`);
+      assert(
+        provenance.tool === sidecar.tool,
+        `${target} artifact does not describe ${sidecar.tool}`,
+      );
+      assert(provenance.target === target, `${target} artifact manifest target is invalid`);
+      assert(provenance.binary === binaryName, `${target} artifact binary name is invalid`);
+      assert(provenance.bytes === binary.byteLength, `${target} artifact byte count is invalid`);
+      assert(
+        provenance.sha256 === createHash("sha256").update(binary).digest("hex"),
+        `${target} artifact checksum is invalid`,
+      );
+      binaryCopies.push([binaryPath, join(packageRoot, binaryName)]);
+      manifestCopies.push([join(artifactRoot, manifestName), join(packageRoot, manifestName)]);
+    }
+
+    const licenseCopies = [];
+    for (const licenseFile of sidecar.licenses) {
+      const path = join(artifactRoot, "licenses", licenseFile);
+      const metadata = await stat(path);
+      assert(
+        metadata.isFile() && metadata.size > 0,
+        `${target} artifact is missing ${licenseFile}`,
+      );
+      licenseCopies.push([path, join(packageRoot, "licenses", licenseFile)]);
+    }
+    pendingCopies.push({
+      binaries: binaryCopies,
+      licenses: licenseCopies,
+      manifests: manifestCopies,
+      packageRoot,
+      target,
+    });
   }
-  pendingCopies.push({
-    binary: [binaryPath, join(packageRoot, binaryName)],
-    licenses: licensePaths,
-    manifest: [join(artifactRoot, "cwebp.manifest.json"), join(packageRoot, "cwebp.manifest.json")],
-    packageRoot,
-    target,
-  });
 }
 
 for (const item of pendingCopies) {
   await mkdir(join(item.packageRoot, "licenses"), { recursive: true });
-  await copyFile(...item.binary);
-  if (!item.target.startsWith("win32-")) await chmod(item.binary[1], 0o755);
-  await copyFile(...item.manifest);
+  for (const binary of item.binaries) {
+    await copyFile(...binary);
+    if (!item.target.startsWith("win32-")) await chmod(binary[1], 0o755);
+  }
+  for (const manifest of item.manifests) await copyFile(...manifest);
   for (const license of item.licenses) await copyFile(...license);
 }
 

@@ -8,12 +8,18 @@
     "url": "git+https://github.com/ntnyq/imagemin-rs.git"
   },
   "bin": {
-    "cwebp": "cwebp"
+    "cjpeg": "cjpeg",
+    "cwebp": "cwebp",
+    "jpegtran": "jpegtran"
   },
   "files": [
     "README.md",
+    "cjpeg",
+    "cjpeg.manifest.json",
     "cwebp",
     "cwebp.manifest.json",
+    "jpegtran",
+    "jpegtran.manifest.json",
     "licenses"
   ],
   "os": [

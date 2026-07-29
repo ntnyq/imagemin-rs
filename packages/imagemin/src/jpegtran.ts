@@ -1,8 +1,7 @@
-import jpegtranBinary from "jpegtran-bin";
-
 import { runBinary } from "./binary";
 import { ImageminError, rethrowIfAborted } from "./errors";
 import { isJpeg, validateJpegResourceLimits } from "./jpeg";
+import { resolveSidecarBinary } from "./sidecar";
 import type { ImageminPlugin, JpegtranOptions } from "./types";
 
 const MAX_OUTPUT_BYTES = 512 * 1024 * 1024;
@@ -26,7 +25,9 @@ export function jpegtran(options: JpegtranOptions = {}): ImageminPlugin {
     try {
       return await runBinary({
         arguments: arguments_,
-        binary: jpegtranBinary,
+        binary: resolveSidecarBinary("jpegtran", {
+          override: process.env["IMAGEMIN_RS_JPEGTRAN_PATH"],
+        }),
         displayName: "jpegtran",
         input,
         signal: context?.signal,

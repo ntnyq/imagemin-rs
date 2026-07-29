@@ -79,6 +79,7 @@ coefficients 保持无损，但 EXIF orientation、ICC profile 与 comment 会�
 stderr、执行时间与解码尺寸上限。非 JPEG 原样返回；损坏但具有 JPEG signature 的
 输入返回 codec error。
 
-当前 npm compatibility artifacts 在平台间可能来自不同版本或安装时本机编译。
-开发基线是 MozJPEG 3.2 与 libjpeg-turbo 1.5.1；v1 发布前会改为项目自建、带
-SHA-256 和来源 provenance 的统一平台 sidecar。在此之前不承诺跨平台 byte parity。
+生产路径使用项目从固定源码构建的 MozJPEG 4.1.1 `cjpeg` 与 `jpegtran`。8 个
+`@imagemin-rs/sidecars-*` 平台包携带各二进制的 SHA-256、来源 provenance 和完整许可
+文本，不使用运行时下载或安装期编译。历史 `mozjpeg@8.0.0` 与
+`jpegtran-bin@7.0.0` 仅保留为开发差分 oracle；不同 encoder 版本间不承诺 byte parity。

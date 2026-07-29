@@ -30,8 +30,11 @@ const sidecarLicenseFiles = [
   "libtiff-LICENSE.md",
   "libwebp-COPYING.txt",
   "libwebp-PATENTS.txt",
+  "mozjpeg-LICENSE.md",
+  "mozjpeg-README.ijg",
   "zlib-LICENSE.txt",
 ];
+const sidecarBinaryNames = ["cjpeg", "cwebp", "jpegtran"];
 const selectedPlatforms =
   artifactMode === "all" ? platformDirectories : [currentPlatformDirectory()];
 const packageDirectories = [
@@ -126,18 +129,25 @@ function assertTarballContract(manifest, entries) {
   if (manifest.name.startsWith("@imagemin-rs/sidecars-")) {
     const directory = manifest.name.slice("@imagemin-rs/sidecars-".length);
     assert(platformDirectories.includes(directory), `Unexpected sidecar package ${manifest.name}`);
-    const binaryName = directory.startsWith("win32-") ? "cwebp.exe" : "cwebp";
+    const binaries = sidecarBinaryNames.map((baseName) => ({
+      baseName,
+      fileName: directory.startsWith("win32-") ? `${baseName}.exe` : baseName,
+    }));
     for (const path of [
-      `package/${binaryName}`,
-      "package/cwebp.manifest.json",
+      ...binaries.flatMap(({ baseName, fileName }) => [
+        `package/${fileName}`,
+        `package/${baseName}.manifest.json`,
+      ]),
       ...sidecarLicenseFiles.map((name) => `package/licenses/${name}`),
     ]) {
       assert(entryNames.has(path), `${manifest.name} tarball is missing ${path}`);
     }
-    assert(
-      entries.find(({ name }) => name === `package/${binaryName}`)?.data.byteLength > 0,
-      `${manifest.name} cwebp is empty`,
-    );
+    for (const binary of binaries) {
+      assert(
+        entries.find(({ name }) => name === `package/${binary.fileName}`)?.data.byteLength > 0,
+        `${manifest.name} ${binary.baseName} is empty`,
+      );
+    }
     return;
   }
 

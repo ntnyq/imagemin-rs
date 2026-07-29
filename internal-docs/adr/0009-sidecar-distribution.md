@@ -102,5 +102,6 @@ encoder 升级（libwebp 1.2.1 → 1.6.0、mozjpeg 3.2 → 4.1.1）后，与历�
 
 - maintainer 对 GPL 再分发模型（聚合判断、随包文本、源码 offer 形式）的法律确认；
 - Windows gifsicle 的构建工具链选择（MSVC 直构 vs llvm-mingw），在 P1.4 落地时定；
-- cwebp 已进入 release workflow，并覆盖版本、PNG/JPEG/TIFF 构建期 smoke 与完整
-  tarball smoke；其余 sidecar 在 P2 逐个补齐同等门禁。
+- cwebp 与 MozJPEG cjpeg/jpegtran 已进入 release workflow，并覆盖构建期真实输入
+  smoke、provenance、完整许可证和 tarball 全 codec smoke；pngquant 与 gifsicle 在
+  P2 继续补齐同等门禁。

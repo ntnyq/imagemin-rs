@@ -18,4 +18,10 @@ coverage
 npm/sidecars-*/cwebp
 npm/sidecars-*/cwebp.exe
 npm/sidecars-*/cwebp.manifest.json
+npm/sidecars-*/cjpeg
+npm/sidecars-*/cjpeg.exe
+npm/sidecars-*/cjpeg.manifest.json
+npm/sidecars-*/jpegtran
+npm/sidecars-*/jpegtran.exe
+npm/sidecars-*/jpegtran.manifest.json
 npm/sidecars-*/licenses

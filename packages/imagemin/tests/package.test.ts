@@ -5,6 +5,8 @@ import { describe, expect, test } from "vitest";
 interface PackageManifest {
   bin?: Record<string, string>;
   cpu?: string[];
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
   engines?: Record<string, string>;
   exports: Record<string, unknown>;
   files: string[];
@@ -58,6 +60,15 @@ describe("package contract", () => {
     });
   });
 
+  test("keeps upstream binary download wrappers out of production dependencies", async () => {
+    const manifest = await readManifest();
+
+    for (const packageName of ["cwebp-bin", "jpegtran-bin", "mozjpeg"]) {
+      expect(manifest.dependencies).not.toHaveProperty(packageName);
+      expect(manifest.devDependencies).toHaveProperty(packageName);
+    }
+  });
+
   test("keeps the loader and all platform package manifests release-consistent", async () => {
     const publicManifest = await readManifest();
     const bindingManifest = await readJson(new URL("napi/imagemin/package.json", workspaceRootUrl));
@@ -104,12 +115,24 @@ describe("package contract", () => {
       const sidecarManifest = await readJson(
         new URL(`npm/sidecars-${platform.directory}/package.json`, workspaceRootUrl),
       );
-      const sidecarBinary = platform.os === "win32" ? "cwebp.exe" : "cwebp";
+      const sidecarBinaries = Object.fromEntries(
+        ["cjpeg", "cwebp", "jpegtran"].map((binary) => [
+          binary,
+          platform.os === "win32" ? `${binary}.exe` : binary,
+        ]),
+      );
       expect(sidecarManifest).toMatchObject({
-        bin: { cwebp: sidecarBinary },
+        bin: sidecarBinaries,
         cpu: [platform.cpu],
         engines: publicManifest.engines,
-        files: ["README.md", sidecarBinary, "cwebp.manifest.json", "licenses"],
+        files: [
+          "README.md",
+          ...Object.entries(sidecarBinaries).flatMap(([binary, file]) => [
+            file,
+            `${binary}.manifest.json`,
+          ]),
+          "licenses",
+        ],
         name: `@imagemin-rs/sidecars-${platform.directory}`,
         os: [platform.os],
         version: publicManifest.version,
@@ -142,6 +165,8 @@ describe("package contract", () => {
     expect(workflow).toContain("publish-packages.mjs --mode=stage");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-cwebp.sh");
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-cwebp.mjs");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/build-mozjpeg.sh");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-mozjpeg.mjs");
   });
 });
 

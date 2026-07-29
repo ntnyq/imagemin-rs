@@ -5,15 +5,15 @@
 
 ## 决策
 
-`mozjpeg()` 固定 `imagemin-mozjpeg@10.0.0` 的公开 option shape，并执行
-`mozjpeg@8.0.0` 提供的独立 `cjpeg` sidecar。`jpegtran()` 固定
-`imagemin-jpegtran@8.0.0`，执行 `jpegtran-bin@7.0.0` 的独立 sidecar。两条路径
-都通过共享的受限 child-process runner 运行，不把 C codec 链接进 napi-rs addon。
+`mozjpeg()` 固定 `imagemin-mozjpeg@10.0.0` 的公开 option shape，并执行项目自建的
+MozJPEG 4.1.1 `cjpeg` sidecar。`jpegtran()` 固定 `imagemin-jpegtran@8.0.0`，执行同次
+构建产出的 MozJPEG 4.1.1 `jpegtran`。两条路径都通过共享的受限 child-process runner
+运行，不把 C codec 链接进 napi-rs addon。
 
-当前 macOS arm64 开发基线分别报告 MozJPEG 3.2（build 20180508）和
-libjpeg-turbo 1.5.1（build 20161213）。这是兼容 oracle，不是最终跨平台发布
-artifact。v1 发布必须自行构建、固定来源和工具链，并验证每个平台 sidecar 的版本
-与 SHA-256；安装时回退到本机编译不属于可重复发布路径。
+源码 archive、版本和 SHA-256 固定在 `tasks/sidecars/pins.json`。8 个
+`@imagemin-rs/sidecars-*` 平台包携带二进制、逐文件 provenance manifest 与完整
+MozJPEG/IJG 许可证文本；发布安装不再使用运行时下载或本机编译回退。
+`mozjpeg@8.0.0` 与 `jpegtran-bin@7.0.0` 只保留为开发差分 oracle。
 
 `mozjpeg()` 支持 quality、progressive、targa、revert、fastCrush、dcScanOpt、
 trellis、trellisDC、tune、overshoot、arithmetic、dct、quantBaseline、quantTable、
@@ -51,6 +51,8 @@ stdin/stdout 取代上游 jpegtran adapter 的临时文件。固定 fixture 证�
   解码证明颜色和灰度 fixture 像素完全相等。
 - `targa` 继承上游形状，但插件先做 JPEG signature guard，因此不是通用 TGA 输入
   转换入口。
-- 多架构统一 sidecar、自建 provenance、许可证清单与安装 smoke 仍属于最终发布 gate。
+- 8 目标构建、provenance、许可证清单、verify/pack 与全 codec 安装 smoke 已接入发布
+  workflow；macOS ARM64 已通过本机构建和 tarball smoke，其余 7 个目标等待首次 CI
+  实跑证据。
 
 完整证据见 [Phase 4 调研](../../docs/research/jpeg-codec-selection.md)。

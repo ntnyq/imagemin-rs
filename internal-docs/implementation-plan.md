@@ -115,13 +115,12 @@ pngquant 质量语义且要求 Rust 1.90，本阶段不公开。当前平台侧 
 
 完成标准：解码尺寸/颜色空间/metadata 策略稳定；progressive scan 有结构测试；平台包 smoke test 通过。
 
-已落实的决策（2026-07-17）：`mozjpeg()` 固定 `imagemin-mozjpeg@10.0.0` 与
-`mozjpeg@8.0.0`，覆盖完整公开 option shape、默认 progressive、EXIF/ICC/comment、
-灰度和独立解码误差门禁，并修复上游 `quantBaseline` 参数 bug。`jpegtran()` 固定
-`imagemin-jpegtran@8.0.0` 与 `jpegtran-bin@7.0.0`，baseline/progressive/
-arithmetic matrix 与上游逐字节一致，且验证系数无损。两者通过受限 sidecar 隔离；
-`jpegtran -copy none` 删除 EXIF/ICC/comment 的显示语义风险已公开。最终发布仍需自建、
-fingerprint 并统一各平台 sidecar；详见 ADR 0005。
+已落实的决策（2026-07-29）：`mozjpeg()` 固定 `imagemin-mozjpeg@10.0.0` 的 option
+shape，`jpegtran()` 固定 `imagemin-jpegtran@8.0.0` 的语义；生产路径使用项目从固定
+源码自建的 MozJPEG 4.1.1 `cjpeg`/`jpegtran`，历史 npm 二进制仅作开发 oracle。完整
+options、默认 progressive、EXIF/ICC/comment、灰度、独立解码误差、arithmetic matrix
+与系数无损均有门禁，并修复上游 `quantBaseline` 参数 bug。8 目标构建、fingerprint、
+许可证、发布校验和真实安装 smoke 已接入，macOS ARM64 已实测；详见 ADR 0005。
 
 ## Phase 5：WebP
 
@@ -168,8 +167,9 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
 2. **P1 cwebp sidecar 纵切面（实现完成）**：固定并校验 libwebp 源码，完成 8 目标构建、
    manifest、平台 npm 包、运行时解析和真实转码 smoke；macOS ARM64 tarball 已实测，
    其余 7 个目标等待 CI 首次实跑证据。
-3. **P2 其余 sidecar 与发布链（进行中）**：扩展 mozjpeg/jpegtran、pngquant、gifsicle，
-   按许可证拆包，并让 verify/pack/smoke/publish 覆盖 24 个 sidecar 平台包。
+3. **P2 其余 sidecar 与发布链（进行中）**：mozjpeg/jpegtran 已完成；继续扩展
+   pngquant、gifsicle，按许可证拆包，并让 verify/pack/smoke/publish 覆盖 24 个
+   sidecar 平台包。
 4. **P3 RC 演练**：完成 GPL 法律确认、SBOM/provenance、8 平台 tarball 安装与每 codec
    smoke，执行不发布到 registry 的完整 release rehearsal。
 

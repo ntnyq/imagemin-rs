@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 
-type SidecarTool = "cwebp";
+type SidecarTool = "cjpeg" | "cwebp" | "jpegtran";
 
 interface ResolveSidecarOptions {
   override?: string | undefined;

@@ -2,10 +2,10 @@
 
 更新日期：2026-07-29
 
-当前 P1 发布单元由 18 个同版本 npm 包组成：`imagemin-rs`、`@imagemin-rs/binding`、
-8 个 `@imagemin-rs/binding-*` 平台包和 8 个 `@imagemin-rs/sidecars-*` 平台包。P2
-加入 GPL sidecar 家族后会扩展为 34 包。任何一个包都不能单独版本漂移。`0.0.0`
-只表示未发布开发状态，发布脚本会拒绝它。
+当前 P2 发布单元仍由 18 个同版本 npm 包组成：`imagemin-rs`、`@imagemin-rs/binding`、
+8 个 `@imagemin-rs/binding-*` 平台包和 8 个同时携带 cwebp、cjpeg、jpegtran 的
+`@imagemin-rs/sidecars-*` 平台包。加入 GPL sidecar 家族后会扩展为 34 包。任何一个
+包都不能单独版本漂移。`0.0.0` 只表示未发布开发状态，发布脚本会拒绝它。
 
 ## 安全模型
 
@@ -42,9 +42,10 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
 
 5. 提交并推送已验证 commit，再创建不可变 tag `v0.x.y`。tag 必须和所有 manifest 的
    `0.x.y` 一致。
-6. 等待 `Release` workflow 的 8 个 binding 构建、8 个 cwebp 构建、18 包汇总和 8 平台
-   全 codec tarball smoke 全部通过。下载并保存 `release-packages` artifact；其中的
-   `release-manifest.json` 含每个 tarball 的 SHA-512 integrity。
+6. 等待 `Release` workflow 的 8 个 binding、8 个 cwebp、8 个 MozJPEG 构建，以及
+   18 包汇总和 8 平台全 codec tarball smoke 全部通过。下载并保存
+   `release-packages` artifact；其中的 `release-manifest.json` 含每个 tarball 的
+   SHA-512 integrity。
 
 本地 `release:bundle:current` 只证明当前 OS/CPU。不能用它替代 GitHub workflow 的 8
 平台门禁。

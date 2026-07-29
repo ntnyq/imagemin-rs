@@ -164,15 +164,9 @@ importers:
       is-svg:
         specifier: 'catalog:'
         version: 6.1.0
-      jpegtran-bin:
-        specifier: 7.0.0
-        version: 7.0.0
       junk:
         specifier: 'catalog:'
         version: 4.0.1
-      mozjpeg:
-        specifier: 8.0.0
-        version: 8.0.0
       pngquant-bin:
         specifier: 9.0.0
         version: 9.0.0
@@ -222,6 +216,12 @@ importers:
       jpeg-js:
         specifier: 0.4.4
         version: 0.4.4
+      jpegtran-bin:
+        specifier: 7.0.0
+        version: 7.0.0
+      mozjpeg:
+        specifier: 8.0.0
+        version: 8.0.0
       tsdown:
         specifier: 'catalog:'
         version: 0.22.8(typescript@7.0.2)
