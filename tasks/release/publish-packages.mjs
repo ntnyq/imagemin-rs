@@ -7,11 +7,8 @@ import { fileURLToPath } from "node:url";
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const bundleDirectory = resolve(workspaceRoot, readArgument("--bundle") ?? ".release/npm");
 const mode = readArgument("--mode") ?? "dry-run";
-if (!["dry-run", "publish", "stage"].includes(mode)) {
-  throw new TypeError("--mode must be dry-run, publish, or stage");
-}
-if (mode === "publish" && !process.argv.includes("--bootstrap")) {
-  throw new Error("Direct publishing is reserved for the first release and requires --bootstrap");
+if (!["dry-run", "publish"].includes(mode)) {
+  throw new TypeError("--mode must be dry-run or publish");
 }
 
 const bundle = JSON.parse(
@@ -68,10 +65,7 @@ for (const descriptor of orderedPackages) {
     throw new Error(`Integrity mismatch for ${descriptor.tarball}`);
   }
 
-  const arguments_ =
-    mode === "stage"
-      ? ["stage", "publish", tarballPath, "--access", "public", "--tag", distributionTag]
-      : ["publish", tarballPath, "--access", "public", "--tag", distributionTag];
+  const arguments_ = ["publish", tarballPath, "--access", "public", "--tag", distributionTag];
   if (mode === "dry-run") {
     console.log(`npm ${arguments_.join(" ")}`);
   } else {

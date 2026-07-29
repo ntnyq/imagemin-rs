@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: Validate a release tag or stage its existing npm packages
+        description: Validate a release tag or publish its npm packages
         options:
           - validate
-          - stage
+          - publish
         default: validate
         required: true
         type: choice
@@ -290,8 +290,8 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  stage-npm:
-    if: github.event_name == 'workflow_dispatch' && inputs.action == 'stage'
+  publish-npm:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'publish'
     needs:
       - smoke-desktop
       - smoke-linux
@@ -317,7 +317,7 @@ jobs:
       - run: npm install --global npm@12.0.1
       - run: npm --version
       - run: node tasks/release/verify-release-ref.mjs
-      - run: node tasks/release/publish-packages.mjs --mode=stage --bundle=.release/npm
+      - run: node tasks/release/publish-packages.mjs --mode=publish --bundle=.release/npm
 
   github-release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
