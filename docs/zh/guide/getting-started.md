@@ -3,10 +3,14 @@
 ## 安装
 
 ```sh
-pnpm add imagemin-rs
+pnpm add imagemin-rs@next
 ```
 
-要求 Node.js 22.13+。受支持的 macOS、Linux 与 Windows 平台均提供原生包。
+要求 Node.js 22.13+。受支持的 macOS、Linux 与 Windows 平台均提供原生包。安装时必须
+保留 optional dependencies，因为当前平台的原生 binding 和 codec 可执行文件由这些包提供。
+
+发布候选阶段统一使用 npm `next` tag；稳定版发布后才会把不带 tag 的
+`pnpm add imagemin-rs` 作为推荐命令。
 
 ## Buffer 优化
 
@@ -88,3 +92,6 @@ no-op。详见 [AVIF 转码](./avif.md)。
 
 也可以在[浏览器 Playground](/zh/playground) 中直接处理浏览器支持的常见格式。上传的
 图片只在本地浏览器中处理，不会发送到服务器。
+
+从现有 imagemin 项目迁移时，请继续阅读[从 imagemin 迁移](./migration-from-imagemin.md)。
+原生包、sidecar 或部署失败见[安装与运行排错](./troubleshooting.md)。

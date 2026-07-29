@@ -316,9 +316,11 @@ for (const platform of platforms) {
     pngquantManifest.engines?.node === publicManifest.engines.node,
     `${pngquantPackageName} Node engine differs`,
   );
+  const pngquantReadme = await readText(`${pngquantRoot}/README.md`);
+  assert(pngquantReadme.includes(pngquantPackageName), `${pngquantPackageName} has no README`);
   assert(
-    (await readText(`${pngquantRoot}/README.md`)).includes(pngquantPackageName),
-    `${pngquantPackageName} has no package README`,
+    pngquantReadme.includes("matching `imagemin-rs` GitHub Release"),
+    `${pngquantPackageName} does not document corresponding source delivery`,
   );
 
   if (requiredDirectories.has(platform.directory)) {
@@ -412,9 +414,11 @@ for (const platform of platforms) {
     gifsicleManifest.engines?.node === publicManifest.engines.node,
     `${gifsiclePackageName} Node engine differs`,
   );
+  const gifsicleReadme = await readText(`${gifsicleRoot}/README.md`);
+  assert(gifsicleReadme.includes(gifsiclePackageName), `${gifsiclePackageName} has no README`);
   assert(
-    (await readText(`${gifsicleRoot}/README.md`)).includes(gifsiclePackageName),
-    `${gifsiclePackageName} has no package README`,
+    gifsicleReadme.includes("matching `imagemin-rs` GitHub Release"),
+    `${gifsiclePackageName} does not document corresponding source delivery`,
   );
 
   if (requiredDirectories.has(platform.directory)) {

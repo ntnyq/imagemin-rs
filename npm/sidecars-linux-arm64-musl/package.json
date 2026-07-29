@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecars-linux-arm64-musl",
-  "version": "0.1.0-rc.6",
+  "version": "0.1.0-rc.7",
   "description": "Prebuilt image codec sidecars for imagemin-rs on Linux ARM64 with musl.",
   "license": "(BSD-3-Clause AND IJG AND Zlib AND libpng-2.0 AND libtiff)",
   "repository": {

@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
+
 jobs:
   build-cwebp:
     name: Build cwebp ${{ matrix.directory }}

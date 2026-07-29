@@ -43,3 +43,12 @@ test("enables CMake's MSVC runtime abstraction before selecting the static CRT",
     /-DCMAKE_POLICY_DEFAULT_CMP0091=NEW\s+-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded/u,
   );
 });
+
+test("explicitly disables MozJPEG's vulnerable 12-bit build path", async () => {
+  const buildScript = await readFile(new URL("./build-mozjpeg.sh", import.meta.url), "utf8");
+
+  assert.match(buildScript, /-DWITH_12BIT=OFF/u);
+  assert.match(buildScript, /WITH_12BIT:BOOL=OFF/u);
+  assert.match(buildScript, /-DWITH_ARITH_DEC=OFF/u);
+  assert.match(buildScript, /-DWITH_ARITH_ENC=OFF/u);
+});

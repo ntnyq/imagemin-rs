@@ -68,6 +68,6 @@ lossless WebP 保持 alpha 和所有可见像素。alpha=0 像素的 RGB 完全�
 libjpeg-turbo 与 libtiff。8 个 `@imagemin-rs/sidecars-*` optional packages 各自携带
 源码摘要、二进制 SHA-256 和完整许可证文本；安装时不联网，也没有本机编译 fallback。
 
-macOS ARM64 已完成真实构建、PNG/JPEG/TIFF 转码和 tarball 安装 smoke。其余 7 个平台
-必须由 release workflow 取得同等证据后才能发布；跨平台 byte parity 只对同一次发布的
-固定 artifact 承诺。`cwebp-bin@8.0.0` 仅保留为开发差分 oracle。
+`v0.1.0-rc.6` 已在全部 8 个目标完成真实构建、PNG/JPEG/TIFF 转码和 tarball 安装
+smoke。跨平台 byte parity 只对同一次发布的固定 artifact 承诺。
+`cwebp-bin@8.0.0` 仅保留为开发差分 oracle。

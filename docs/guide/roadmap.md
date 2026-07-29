@@ -36,6 +36,17 @@ Next milestones are stable-release readiness, more corpus coverage and
 performance baselines, and a browser-native codec runtime that can replace the
 Playground's current Canvas-based preview engine.
 
+Stable-release readiness now focuses on the remaining evidence rather than
+platform enablement:
+
+1. complete maintainer and legal review of the GPL, LGPL, and AOM patent-text
+   delivery model; tagged releases now attach verified GPL source inputs;
+2. keep the completed native dependency audit reproducible through OpenVEX,
+   explicit build configuration, AOM source-history assertions, and
+   eight-platform smoke evidence;
+3. keep AVIF 10/12-bit output out of the initial stable scope unless it gains a
+   tested compatibility contract.
+
 See [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)
 and the [implementation plan](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/implementation-plan.md)
 for detailed gates.

@@ -48,6 +48,7 @@ const versionedPaths = [
   "Cargo.lock",
   "fuzz/Cargo.lock",
   "napi/imagemin/src-js/index.js",
+  "security/imagemin-rs.openvex.json",
 ];
 
 let sandboxRoot: string;
@@ -74,11 +75,13 @@ describe("set-version", () => {
       to: "7.7.7-sandbox.0",
     });
     await expectSandboxVersion("7.7.7-sandbox.0");
+    expect(await readSandboxVexVersion()).toBe(2);
 
     // A second bump exercises the Cargo.toml substring ordering again with a
     // prerelease current version.
     await runSetVersion("7.7.7-sandbox.1");
     await expectSandboxVersion("7.7.7-sandbox.1");
+    expect(await readSandboxVexVersion()).toBe(3);
   });
 
   test("accepts the package-manager argument separator", async () => {
@@ -446,6 +449,14 @@ async function readSandboxFile(path: string): Promise<string> {
   return readFile(join(sandboxRoot, path), "utf8");
 }
 
+async function readSandboxVexVersion(): Promise<number> {
+  return (
+    JSON.parse(await readSandboxFile("security/imagemin-rs.openvex.json")) as {
+      version: number;
+    }
+  ).version;
+}
+
 async function snapshotSandbox(): Promise<Record<string, string>> {
   const entries = await Promise.all(
     versionedPaths.map(async (path) => [path, await readSandboxFile(path)] as const),
@@ -478,6 +489,17 @@ async function expectSandboxVersion(version: string): Promise<void> {
     [...loader.matchAll(/expected ([0-9A-Za-z.-]+) but got/gu)].map((match) => match[1]),
   );
   expect([...loaderVersions]).toEqual([version]);
+
+  const vex = JSON.parse(await readSandboxFile("security/imagemin-rs.openvex.json")) as {
+    "@id": string;
+    statements: Array<{ products: Array<{ "@id": string }> }>;
+  };
+  expect(vex["@id"].endsWith(version)).toBe(true);
+  for (const statement of vex.statements) {
+    for (const product of statement.products) {
+      expect(product["@id"].endsWith(`@${version}`)).toBe(true);
+    }
+  }
 }
 
 const rustPackageNames = [

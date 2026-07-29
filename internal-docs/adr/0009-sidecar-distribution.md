@@ -103,4 +103,4 @@ encoder 升级（libwebp 1.2.1 → 1.6.0、mozjpeg 3.2 → 4.1.1）后，与历�
 - maintainer 对 GPL 再分发模型（聚合判断、随包文本、源码 offer 形式）的法律确认；
 - cwebp、MozJPEG cjpeg/jpegtran、pngquant 与 Gifsicle 已进入 release workflow，并
   覆盖构建期真实输入 smoke、provenance、完整许可证和 tarball 全 codec smoke；
-  macOS ARM64 已本地实测，其余 7 个目标等待首次 CI 证据。
+  `v0.1.0-rc.6` 已取得全部 8 个目标的实跑证据。

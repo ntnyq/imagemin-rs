@@ -23,8 +23,13 @@ compatibility boundaries, architecture, and release policy.
 ## Install
 
 ```sh
-pnpm add imagemin-rs
+pnpm add imagemin-rs@next
 ```
+
+The project is currently published under the npm `next` tag while the release
+candidate is validated. See the
+[migration guide](https://imagemin-rs.ntnyq.dev/guide/migration-from-imagemin)
+when replacing an existing imagemin setup.
 
 ## Quick Start
 

@@ -28,6 +28,12 @@ addon. Each platform package includes the complete pngquant and libimagequant
 `COPYRIGHT` files, exact source URLs and SHA-256 values, and a binary provenance
 manifest.
 
+Starting with `0.1.0-rc.7`, the matching `imagemin-rs` GitHub Release also
+attaches the exact Gifsicle, pngquant, and libimagequant source archives, a
+SHA-256 manifest, and links to the tagged build scripts and pins. These assets
+supplement the notices inside each npm package; they do not replace the
+maintainer's responsibility to confirm all corresponding-source obligations.
+
 `pngquant-bin@9.0.0` remains a development-only compatibility oracle.
 Production installation does not use its runtime download or install-time
 compilation path.

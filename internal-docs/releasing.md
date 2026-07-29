@@ -52,6 +52,10 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
    `release-sbom.cdx.json` 含发布 tarball 和固定 sidecar 源码，
    `release-dependencies.cdx.json` 含 Rust 与生产 npm 依赖闭包。每个 smoke job 另上传
    `smoke-<platform>` artifact，内含 codec 报告和该平台实际安装后的 Sharp SBOM。
+   tag 对应的 GitHub Release 还必须包含经 pins 的 SHA-256 验证过的 Gifsicle、
+   pngquant 和 libimagequant 源码压缩包、`gpl-source-manifest.json` 以及
+   `GPL-SOURCE-README.md`，并上传与版本同步的 OpenVEX。release audit 还会从 AOM
+   官方 tag 历史断言批准的修复 commit。
 
 本地 `release:bundle:current` 只证明当前 OS/CPU。不能用它替代 GitHub workflow 的 8
 平台门禁。
@@ -73,12 +77,14 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
 - 当前锁文件下共 84 个 Rust 与 81 个 npm 组件；依赖变化时数量随锁文件更新。
 
 两份文件均为确定性 CycloneDX 1.6 JSON，本地已通过官方 1.6 JSON Schema 和引用闭合
-校验。8 个平台 smoke 还会从全新安装中读取 `sharp.versions`，记录实际 `@img/sharp-*`
-平台包、内嵌原生库版本，以及 `.node`/共享库文件的 SHA-256 和大小。macOS ARM64
-实测为 2 个平台包、28 个内嵌库组件和 2 个原生文件；其余平台等待 release workflow
-证据。CI 和 release 均会拒绝 RustSec advisory、Cargo 许可证/来源违规和 npm production
-high/critical advisory。该门禁不覆盖固定 sidecar 源码及 Sharp 内嵌 C 库，发布当日仍需
-对最终 SBOM 执行原生依赖漏洞审计。第三方许可证正文仍以各 tarball 和
+校验。8 个平台 smoke 会从全新安装中读取 `sharp.versions`，记录实际 `@img/sharp-*`
+平台包、内嵌原生库版本，以及 `.node`/共享库文件的 SHA-256 和大小。
+`v0.1.0-rc.6` 的 8 个目标均已上传对应 smoke artifact；完整 release bundle、依赖审计
+和 npm stage job 也已通过。CI 和 release 均会拒绝 RustSec advisory、Cargo
+许可证/来源违规和 npm production high/critical advisory。固定 sidecar 与 Sharp 内嵌
+C 库已完成发布时点审计：MozJPEG/libxml2 的构建面结论由 OpenVEX 和 smoke 断言覆盖，
+AOM 的指定修复由官方 tag 历史和运行时版本双重断言。数据库与上游公告仍可能变化，
+因此每个稳定候选都要重新复核最终 SBOM。第三方许可证正文仍以各 tarball 和
 `THIRD_PARTY_NOTICES.md` 为准。
 
 ## 本地演练记录
@@ -95,16 +101,36 @@ high/critical advisory。该门禁不覆盖固定 sidecar 源码及 Sharp 内嵌
 - 依赖清单覆盖 84 个非 dev Rust 与 81 个生产 npm/Sharp 平台包组件；
 - 当前平台 smoke 另生成 32 组件的 Sharp runtime SBOM，2 个原生文件均有 SHA-256；
 - 首轮并行 public package 测试出现一次 Vitest fork worker 启动超时；失败文件隔离重跑
-  和随后完整 207 项测试均通过。完整 8 平台 CI 仍需提供无抖动证据。
+  和随后完整 207 项测试均通过；在这次本地演练结束时，完整 8 平台 CI 仍需提供
+  无抖动证据。
 
-这次演练不覆盖其余 7 平台的 Sharp/libvips 清单、完整 34 包 bundle、sidecar/Sharp
-原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法律确认。
+这次本地演练当时不覆盖其余 7 平台的 Sharp/libvips 清单、完整 34 包 bundle、
+sidecar/Sharp 原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法律确认。
 
-## 首次发布引导
+## 跨平台 RC 记录
+
+2026-07-29 的
+[`v0.1.0-rc.6` Release workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30428078178)
+完成：
+
+- 8 个 binding target 与 cwebp、MozJPEG、pngquant、Gifsicle 的完整构建矩阵；
+- 34 包 release bundle、SHA-512、CycloneDX 和依赖审计；
+- macOS、Windows、Linux GNU/musl 的 x64/arm64 全新安装及 11 codec smoke；
+- 每个平台的 Sharp/libvips runtime SBOM 与原生文件摘要；
+- OIDC npm staged publishing；registry 中的 `0.1.0-rc.6` 公开包带 SLSA provenance。
+
+这次运行关闭了“其余 7 平台、完整 34 包演练、首次公开包和真实 provenance”缺口。
+`0.1.0-rc.7` 起，tag workflow 会把 Gifsicle、pngquant 与 libimagequant 的精确源码
+输入及校验清单附加到对应 GitHub Release。该机制提供可持续的源码交付证据，但仍不能
+替代维护者/律师对 GPL 完整对应源码、保留期限与聚合分发义务的最终确认。最低系统
+版本已固定为 macOS 11、Linux glibc 2.28/musl 1.1.19 与 Windows 10/Server 2016，
+并由公开平台政策和 package contract 覆盖。
+
+## 首次发布引导（已完成）
 
 npm 不允许 brand-new package 使用 staged publishing，而且 package 尚不存在时也无法给它
-配置 trusted publisher。因此当前 34 个包的首次版本必须由 maintainer 在 tag workflow 全通过后
-用交互式 npm 登录和 2FA 引导一次：
+配置 trusted publisher。34 个包的首次引导已经完成；以下命令只保留为历史和恢复说明，
+后续版本不得再次使用 `--bootstrap`：
 
 ```sh
 node tasks/release/publish-packages.mjs \
@@ -118,7 +144,7 @@ node tasks/release/publish-packages.mjs \
 package”的顺序发布。不要在 CI 中保存 bootstrap token。若中途失败，只继续补齐
 同一已验证 bundle 中缺失的包；不要重新打包或移动 tag。
 
-首次版本可见后，分别为全部 34 个包配置：
+首次版本可见后，已为全部 34 个包配置：
 
 - GitHub owner：`ntnyq`
 - repository：`imagemin-rs`
@@ -126,14 +152,18 @@ package”的顺序发布。不要在 CI 中保存 bootstrap token。若中途�
 - environment：`npm`
 - allowed action：仅 `npm stage publish`
 
-验证一次 staged release 后，把传统 publishing access 设为“Require 2FA and disallow
-tokens”，并撤销 bootstrap token。
+`v0.1.0-rc.6` 已验证一次 staged release 和真实 npm provenance。传统 publishing
+access 与 bootstrap credential 的最终账户侧状态仍需 maintainer 在 npm 设置中确认；
+仓库证据不能替代该账户检查。
 
 ## 后续 staged release
 
 在 GitHub Actions 手动运行 `Release`，ref 选择已通过的 tag，`action` 选择 `stage`。工作流
 会重新构建和 smoke，而不是信任旧 artifact，然后以 OIDC 把 34 个 tarball 分别送入 npm
 staging area。
+
+预发布版本固定使用 `next` dist-tag，稳定版本使用 `latest`。发布候选期的安装文档必须
+显式写成 `pnpm add imagemin-rs@next`，避免无 tag 安装落到旧的 `latest`。
 
 批准前逐个核对：package name/version、SHA-512、文件列表、依赖版本、provenance、tag 和
 workflow run。全部一致后在 npmjs.com 的 Staged Packages 页面以 2FA 批准。多包发布不是

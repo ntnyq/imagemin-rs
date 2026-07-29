@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "aom": {
+    "repository": "https://aomedia.googlesource.com/aom",
+    "version": "3.14.1",
+    "tagCommit": "03087864cf4bea6abb0d28f95cf7843511413d8f",
+    "requiredFixCommits": [
+      {
+        "commit": "243f8ae84bfbc495b3a3c12948abc4dff3af2f84",
+        "reason": "LAP stats-buffer bounds fix"
+      },
+      {
+        "commit": "a93ba0ffaacd5f576a241bf739110e65287e516d",
+        "reason": "SVC layer-id bounds fix"
+      }
+    ]
+  }
+}

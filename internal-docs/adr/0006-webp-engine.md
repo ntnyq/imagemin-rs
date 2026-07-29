@@ -55,7 +55,7 @@ libtiff 4.7.2。平台包携带各上游许可证、libwebp `PATENTS` grant、�
   一样使用临时文件。自建发布 cwebp 必须恢复 Windows EXIF 提取并移除该测试分支。
 - 文件 API 根据最终 magic 更新 destination extension；PNG/JPEG/TIFF 转 WebP 会写入
   `.webp`，原格式未变化时保留源扩展名。
-- macOS ARM64 已完成原生构建、PNG/JPEG/TIFF smoke、provenance 校验与 tarball 安装；
-  其余目标等待 sidecar workflow 的首次实跑证据。
+- `v0.1.0-rc.6` 已在全部 8 个目标完成原生构建、真实输入 smoke、provenance 校验与
+  tarball 安装。
 
 完整证据见 [Phase 5 调研](../../docs/research/webp-codec-selection.md)。

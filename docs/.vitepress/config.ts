@@ -29,6 +29,9 @@ export default defineConfig({
           {
             items: [
               { link: "/guide/getting-started", text: "Quick Start" },
+              { link: "/guide/migration-from-imagemin", text: "Migration" },
+              { link: "/guide/troubleshooting", text: "Troubleshooting" },
+              { link: "/guide/platform-support", text: "Platform Support" },
               { link: "/guide/svg", text: "SVG Optimization" },
               { link: "/guide/gif-png", text: "GIF & Lossless PNG" },
               { link: "/guide/pngquant", text: "Lossy PNG Quantization" },
@@ -71,6 +74,9 @@ export default defineConfig({
           {
             items: [
               { link: "/zh/guide/getting-started", text: "快速开始" },
+              { link: "/zh/guide/migration-from-imagemin", text: "迁移指南" },
+              { link: "/zh/guide/troubleshooting", text: "安装与运行排错" },
+              { link: "/zh/guide/platform-support", text: "平台支持政策" },
               { link: "/zh/guide/svg", text: "SVG 优化" },
               { link: "/zh/guide/gif-png", text: "GIF 与无损 PNG" },
               { link: "/zh/guide/pngquant", text: "PNG 有损量化" },

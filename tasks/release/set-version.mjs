@@ -107,6 +107,16 @@ const versionOccurrences = [...loader.matchAll(versionPattern)].length;
 assert(versionOccurrences > 0, `Generated binding loader does not contain ${currentVersion}`);
 pendingWrites.push([loaderPath, loader.replaceAll(versionPattern, nextVersion)]);
 
+const vexPath = "security/imagemin-rs.openvex.json";
+const vex = await readText(vexPath);
+const vexOccurrences = [...vex.matchAll(versionPattern)].length;
+assert(vexOccurrences > 0, `OpenVEX document does not contain ${currentVersion}`);
+const nextVex = JSON.parse(vex.replaceAll(versionPattern, nextVersion));
+assert(Number.isInteger(nextVex.version), "OpenVEX document version is invalid");
+nextVex.timestamp = new Date().toISOString();
+nextVex.version += 1;
+pendingWrites.push([vexPath, `${JSON.stringify(nextVex, undefined, 2)}\n`]);
+
 for (const [path, value] of pendingWrites) {
   await writeFile(resolve(workspaceRoot, path), value);
 }

@@ -213,6 +213,8 @@ describe("package contract", () => {
       expect(sidecarWorkflow).toContain(`directory: ${platform.directory}`);
     }
     expect(workflow).toContain("uses: ./.github/workflows/sidecars.yml");
+    expect(workflow).toContain('MACOSX_DEPLOYMENT_TARGET: "11.0"');
+    expect(sidecarWorkflow).toContain('MACOSX_DEPLOYMENT_TARGET: "11.0"');
     expect(workflow).toContain("node tasks/sidecars/assemble-packages.mjs");
     expect(workflow).toContain("node tasks/release/verify-packages.mjs --artifacts=all --release");
     expect(workflow).toContain("node tasks/release/smoke-packages.mjs");
@@ -228,10 +230,14 @@ describe("package contract", () => {
       expect(value).toContain("pnpm audit --prod --audit-level high");
       expect(value).toContain("command-arguments: advisories bans licenses sources");
     }
+    expect(workflow).toContain("node tasks/release/verify-aom-security.mjs");
     expect(workflow).toContain("environment: npm");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("publish-packages.mjs --mode=stage");
     expect(workflow).toContain('gh release create "$GITHUB_REF_NAME"');
+    expect(workflow).toContain("prepare-gpl-sources.mjs");
+    expect(workflow).toContain('gh release upload "$GITHUB_REF_NAME"');
+    expect(workflow).toContain("security/imagemin-rs.openvex.json");
     expect(workflow).toContain("--generate-notes");
     expect(workflow).toContain("contents: write");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-cwebp.sh");
@@ -242,6 +248,9 @@ describe("package contract", () => {
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-pngquant.mjs");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-gifsicle.sh");
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-gifsicle.mjs");
+    expect(sidecarWorkflow).toContain("zig-target: aarch64-linux-gnu.2.28");
+    expect(sidecarWorkflow).toContain("zig-target: x86_64-linux-gnu.2.28");
+    expect(ciWorkflow).toContain("node: [22.x, 24.x, 26.x]");
   });
 });
 

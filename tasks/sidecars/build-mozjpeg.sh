@@ -29,6 +29,9 @@ cmake_flags=(
   -DENABLE_SHARED=OFF
   -DENABLE_STATIC=ON
   -DPNG_SUPPORTED=OFF
+  -DWITH_12BIT=OFF
+  -DWITH_ARITH_DEC=OFF
+  -DWITH_ARITH_ENC=OFF
   -DWITH_FUZZ=OFF
   -DWITH_JAVA=OFF
   -DWITH_TURBOJPEG=OFF
@@ -66,6 +69,15 @@ if [[ "$target" != win32-* ]] && command -v ninja >/dev/null 2>&1; then
 fi
 
 cmake -S "$source_root" -B "$build_root" "${cmake_flags[@]}"
+for cache_entry in \
+  "WITH_12BIT:BOOL=OFF" \
+  "WITH_ARITH_DEC:BOOL=OFF" \
+  "WITH_ARITH_ENC:BOOL=OFF"; do
+  if ! grep -qx "$cache_entry" "$build_root/CMakeCache.txt"; then
+    echo "MozJPEG configuration assertion failed: $cache_entry" >&2
+    exit 1
+  fi
+done
 cmake --build "$build_root" --config Release --parallel \
   --target cjpeg-static jpegtran-static
 

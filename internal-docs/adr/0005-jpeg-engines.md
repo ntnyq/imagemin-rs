@@ -52,7 +52,7 @@ stdin/stdout 取代上游 jpegtran adapter 的临时文件。固定 fixture 证�
 - `targa` 继承上游形状，但插件先做 JPEG signature guard，因此不是通用 TGA 输入
   转换入口。
 - 8 目标构建、provenance、许可证清单、verify/pack 与全 codec 安装 smoke 已接入发布
-  workflow；macOS ARM64 已通过本机构建和 tarball smoke，其余 7 个目标等待首次 CI
-  实跑证据。
+  workflow；`v0.1.0-rc.6` 已取得全部 8 个目标的构建、tarball 安装与真实 codec
+  smoke 证据。
 
 完整证据见 [Phase 4 调研](../../docs/research/jpeg-codec-selection.md)。

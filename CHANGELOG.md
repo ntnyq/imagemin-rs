@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.1.0-rc.7] - 2026-07-29
+
 ### Added
 
 - Added an English-first documentation site with a Simplified Chinese locale.
@@ -14,11 +16,24 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   batch optimization, configurable output, size comparisons, and ZIP downloads.
 - Added GitHub Pages deployment for `imagemin-rs.ntnyq.dev`.
 - Added automatic GitHub Release creation after tagged release validation.
+- Added English and Simplified Chinese migration and native-package
+  troubleshooting guides.
+- Added a tested platform-support policy covering minimum macOS, Linux libc,
+  Windows, and Node.js versions.
+- Added checksum-verified GPL source archives and a source manifest to tagged
+  GitHub Releases for the Gifsicle and pngquant sidecar packages.
+- Added release OpenVEX statements for build-scoped MozJPEG and libxml2
+  findings, plus source-history assertions for AOM security fixes.
 
 ### Changed
 
 - Reduced the repository README to the public overview, installation, and quick
   start, with detailed material moved to the documentation site.
+- Clarified release-candidate installation through the npm `next` tag and
+  synchronized release-readiness evidence with the completed eight-platform
+  `v0.1.0-rc.6` matrix.
+- Explicitly disabled MozJPEG's 12-bit build path and locked the release
+  configuration with a task test.
 
 ## [0.1.0-rc.6] - 2026-07-29
 
@@ -75,7 +90,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Added reproducible native and sidecar packages for macOS, Linux, and Windows,
   plus release verification, smoke tests, provenance, and SBOM generation.
 
-[Unreleased]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.6...HEAD
+[Unreleased]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.7...HEAD
+[0.1.0-rc.7]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.6...v0.1.0-rc.7
 [0.1.0-rc.6]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.5...v0.1.0-rc.6
 [0.1.0-rc.5]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.4...v0.1.0-rc.5
 [0.1.0-rc.4]: https://github.com/ntnyq/imagemin-rs/compare/v0.1.0-rc.3...v0.1.0-rc.4

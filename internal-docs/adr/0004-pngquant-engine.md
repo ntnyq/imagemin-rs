@@ -49,8 +49,9 @@ GPL-3.0-or-later；直接链接会改变 MIT addon 的分发边界。商业 libi
 - pngquant 可以输出比输入更大的文件；兼容入口不擅自 keep-smaller。quality floor
   失败才按 exit 99 返回原文件。
 - 8 目标构建、版本、provenance、许可证、verify/pack 与全 codec tarball smoke 已
-  接入 release workflow；macOS ARM64 已实测，其余 7 个目标等待首次 CI 证据。
+  接入 release workflow；`v0.1.0-rc.6` 已取得全部 8 个目标的真实安装与 codec
+  smoke 证据。
 - npm tarball 保留 GPL notice 与对应 source availability；maintainer 法律复核仍是
-  首次发布门槛。
+  稳定版门槛。
 
 完整证据见 [Phase 3 调研](../../docs/research/pngquant-codec-selection.md)。

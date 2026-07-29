@@ -3,11 +3,16 @@
 ## Install
 
 ```sh
-pnpm add imagemin-rs
+pnpm add imagemin-rs@next
 ```
 
 imagemin-rs requires Node.js 22.13 or newer. Native packages are provided for
-supported macOS, Linux, and Windows targets.
+supported macOS, Linux, and Windows targets. Keep optional dependencies enabled:
+they carry the native binding and codec executables for the current platform.
+
+The package uses npm's `next` tag during the release-candidate period. The
+unqualified `pnpm add imagemin-rs` command will become the recommended command
+after the stable release.
 
 ## Optimize a buffer
 
@@ -86,3 +91,7 @@ magic.
 
 You can also try common browser-supported formats locally in the
 [Playground](/playground). Uploaded files never leave the browser.
+
+Migrating an existing project? Continue with
+[Migrating from imagemin](./migration-from-imagemin.md). For native package,
+sidecar, or deployment failures, see [Troubleshooting](./troubleshooting.md).

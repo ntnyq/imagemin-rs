@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -17,6 +17,11 @@ const requireFromInstallation = createRequire(resolve(installationRoot, "package
 const entry = requireFromInstallation.resolve("imagemin-rs");
 const api = await import(pathToFileURL(entry).href);
 const sharpVersions = requireFromInstallation("sharp").versions;
+const nativeDependencyPolicy = JSON.parse(
+  await readFile(new URL("../../security/native-dependency-policy.json", import.meta.url), "utf8"),
+);
+assert.equal(sharpVersions.aom, nativeDependencyPolicy.aom.version);
+await assertSharpCommandAbsent("xmlcatalog");
 const [gif, jpeg, png] = await Promise.all([
   readHexFixture("fixtures/gif/animation.hex"),
   readHexFixture("fixtures/jpeg/color-metadata.hex"),
@@ -55,6 +60,10 @@ const report = {
   platform: process.platform,
   platformDirectory,
   results,
+  securityAssertions: {
+    aomVersion: nativeDependencyPolicy.aom.version,
+    xmlcatalogPresent: false,
+  },
   sharpVersions,
   version: releaseVersion,
 };
@@ -73,6 +82,18 @@ if (sbomPath !== undefined) {
   });
 }
 console.log(JSON.stringify(report, undefined, 2));
+
+async function assertSharpCommandAbsent(command) {
+  const pending = [resolve(installationRoot, "node_modules/@img")];
+  const commandPattern = new RegExp(`^${command}(?:\\.exe)?$`, "iu");
+  while (pending.length > 0) {
+    const directory = pending.pop();
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      assert(!commandPattern.test(entry.name), `${command} must not be present in ${directory}`);
+      if (entry.isDirectory()) pending.push(resolve(directory, entry.name));
+    }
+  }
+}
 
 async function readHexFixture(path) {
   const value = await readFile(new URL(path, workspaceRoot), "utf8");

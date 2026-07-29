@@ -96,8 +96,9 @@ pass-through。真实 `.node`、公开包语义 canonicalization 和 Phase 2 ben
 生产执行项目从固定 tag、submodule commit 与 Cargo lock 自建的 pngquant 3.0.3。
 GPL 进程边界覆盖全部公开 options、exit 99 quality floor、透明 palette 与差分矩阵；
 APNG 为防止静默丢帧而 no-op，输入/输出/尺寸/时间均有硬上限。8 个独立 GPL 平台包、
-provenance、许可证和发布 smoke 已接入，macOS ARM64 已实测。Quantette 因不支持 alpha、
-缺少 pngquant 质量语义且要求 Rust 1.90，本阶段不公开；详见 ADR 0004。
+provenance、许可证和发布 smoke 已接入，并由 `v0.1.0-rc.6` 完成 8 目标实测。
+Quantette 因不支持 alpha、缺少 pngquant 质量语义且要求 Rust 1.90，本阶段不公开；
+详见 ADR 0004。
 
 ## Phase 4：JPEG / mozjpeg 与 jpegtran
 
@@ -120,7 +121,8 @@ shape，`jpegtran()` 固定 `imagemin-jpegtran@8.0.0` 的语义；生产路径�
 源码自建的 MozJPEG 4.1.1 `cjpeg`/`jpegtran`，历史 npm 二进制仅作开发 oracle。完整
 options、默认 progressive、EXIF/ICC/comment、灰度、独立解码误差、arithmetic matrix
 与系数无损均有门禁，并修复上游 `quantBaseline` 参数 bug。8 目标构建、fingerprint、
-许可证、发布校验和真实安装 smoke 已接入，macOS ARM64 已实测；详见 ADR 0005。
+许可证、发布校验和真实安装 smoke 已接入，并由 `v0.1.0-rc.6` 完成 8 目标实测；
+详见 ADR 0005。
 
 ## Phase 5：WebP
 
@@ -164,18 +166,22 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
 
 1. **P0 基线修复（已完成）**：修复 Windows 版本脚本换行兼容、SVG fuzz finding 与
    独立 fuzz workspace 锁文件版本漂移，恢复本地完整门禁。
-2. **P1 cwebp sidecar 纵切面（实现完成）**：固定并校验 libwebp 源码，完成 8 目标构建、
-   manifest、平台 npm 包、运行时解析和真实转码 smoke；macOS ARM64 tarball 已实测，
-   其余 7 个目标等待 CI 首次实跑证据。
+2. **P1 cwebp sidecar 纵切面（已完成）**：固定并校验 libwebp 源码，完成 8 目标构建、
+   manifest、平台 npm 包、运行时解析和真实转码 smoke；`v0.1.0-rc.6` 已取得全部
+   8 个目标的 tarball 安装证据。
 3. **P2 其余 sidecar 与发布链（已完成）**：mozjpeg/jpegtran、pngquant 与 Gifsicle
    已完成，verify/pack/smoke/publish 覆盖全部 24 个 sidecar 平台包。
-4. **P3 RC 演练（进行中）**：2026-07-29 已完成 macOS ARM64 本地 rehearsal；
-   release pack 现会生成覆盖 npm tarball 与 9 个固定 sidecar 源码的确定性 CycloneDX
-   1.6 清单，以及覆盖 84 个 Rust、81 个生产 npm/Sharp 平台包组件的依赖清单。继续
-   完成的 8 平台 smoke 会各自上传 Sharp/libvips 内嵌库版本与原生文件摘要；macOS
-   ARM64 已实测。CI/release 已加入 RustSec 与 npm production advisory 门禁。继续
-   完成 GPL 法律确认、sidecar/Sharp 原生依赖的发布日漏洞审计、其余 7 平台 tarball
-   安装和每 codec smoke，再执行不发布到 registry 的完整 34 包 release rehearsal。
+4. **P3 RC 演练（已完成）**：`v0.1.0-rc.6` 已完成 8 平台 binding/sidecar 构建、
+   完整 34 包 bundle、逐平台全新安装与 11 个 codec smoke。每个平台均上传
+   Sharp/libvips 内嵌库版本和原生文件摘要；OIDC npm stage、公开 registry package
+   和 SLSA provenance 已验证。release pack 同时生成覆盖 npm tarball、9 个固定
+   sidecar 源码、Rust 和生产 npm/Sharp 依赖闭包的确定性 CycloneDX 1.6 清单。
+5. **P4 稳定版收口（进行中）**：固定 sidecar/Sharp 内嵌原生依赖的发布日漏洞审计
+   已完成，并以 MozJPEG/libxml2 OpenVEX、AOM tag 历史断言和 8 平台 smoke 固化。
+   tag workflow 也会附加经校验的 GPL 源码资产；剩余门槛是维护者/律师确认 GPL、
+   LGPL 与 AOM 专利文本的最终交付模型。AVIF 10/12-bit 在没有兼容契约前明确排除在
+   首个稳定版范围。中英文迁移、RC 安装、native/sidecar 排错和最低系统版本政策已经
+   补齐，package contract 锁定 macOS 11、glibc 2.28 与 Node 22/24/26 矩阵。
 
 sidecar 的 pin、许可证边界、包结构与运行时失败语义见 ADR 0009。只有各阶段对应的
 自动化验证与文档同步完成后，阶段才可标记完成。

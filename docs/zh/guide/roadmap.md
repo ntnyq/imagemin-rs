@@ -2,34 +2,39 @@
 
 实现顺序来自 npm 官方 downloads API 的同一滚动一年窗口，而不是主观排序。
 
-| 阶段              | 兼容目标                           | 核心验收                                         |
-| ----------------- | ---------------------------------- | ------------------------------------------------ |
-| Phase 0（已完成） | Core + Oxipng 原型                 | AsyncTask、API、统计、分层测试、文档/CI          |
-| Phase 1（已完成） | `imagemin-svgo`                    | 固定版本、SVG corpus、渲染一致性、差异表         |
-| Phase 2（已完成） | `imagemin-gifsicle` + OptiPNG 补充 | 动画/透明度/metadata、无损 PNG options           |
-| Phase 3（已完成） | `imagemin-pngquant`                | 质量区间、色差、透明边缘、sidecar 版本审计       |
-| Phase 4（已完成） | `imagemin-mozjpeg` + jpegtran      | progressive、质量、高级 options、EXIF/ICC        |
-| Phase 5（已完成） | `imagemin-webp`                    | 格式转换、透明度、扩展名、lossless/near-lossless |
-| Phase 6（已完成） | `imagemin-avif`                    | 8-bit/chroma、隔离进程、长任务并发与资源上限     |
+| 阶段 | 兼容目标                       | 状态   |
+| ---- | ------------------------------ | ------ |
+| 0    | Core pipeline 与 Oxipng 原型   | 已完成 |
+| 1    | `imagemin-svgo`                | 已完成 |
+| 2    | `imagemin-gifsicle` 与 OptiPNG | 已完成 |
+| 3    | `imagemin-pngquant`            | 已完成 |
+| 4    | `imagemin-mozjpeg` 与 jpegtran | 已完成 |
+| 5    | `imagemin-webp`                | 已完成 |
+| 6    | `imagemin-avif`                | 已完成 |
 
-每个 codec 阶段都必须完成 codec ADR、真实 corpus、Rust Adapter、N-API 测试、JS 兼容契约、平台 smoke、benchmark 和公开兼容表。
+每个 codec 阶段都包含 codec ADR、真实 corpus、Rust Adapter、N-API 测试、JavaScript
+兼容契约、平台 smoke、benchmark 和公开兼容表。
 
-## 当前：发布加固
+## 当前重点：稳定版加固
 
-兼容阶段完成后，发布加固按以下顺序推进：
+已经完成的发布工作包括：
 
-1. **已实现**：cwebp、MozJPEG cjpeg/jpegtran、pngquant 与 Gifsicle 自建 sidecar 的
-   源码校验、多平台构建、npm 分发与真实 smoke；
-2. **已实现**：全部 24 个 sidecar 平台包接入 verify、pack、smoke、publish 与
-   provenance；
-3. **已实现**：release bundle 自动生成覆盖 tarball 与固定 sidecar 源码的确定性
-   CycloneDX 1.6 清单，并生成 Rust、生产 npm 依赖闭包与逐平台 Sharp 内嵌库/原生
-   文件清单；
-4. **已实现**：RustSec/Cargo policy 与 npm production high/critical advisory 成为
-   CI/release 门禁；
-5. **进行中**：补齐其余 7 平台实跑证据、原生依赖漏洞审计与完整 RC 演练，再评估
-   首个公开版本。
+1. cwebp、MozJPEG、pngquant 与 Gifsicle sidecar 的可复现源码校验和多平台构建；
+2. 全部原生及 sidecar 平台包接入 verify、pack、smoke、publish 与 provenance；
+3. release bundle、Rust 包、生产 npm 依赖和内嵌原生库的确定性 CycloneDX 清单；
+4. 阻断发布的 RustSec、Cargo policy 和生产 npm 高危依赖审计；
+5. release tag 已通过完整跨平台打包与真实 codec smoke 矩阵。
 
-详细分发决策见 [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)。
+稳定版剩余工作已经从“补平台构建”转为“关闭证据缺口”：
 
-详细任务和门槛见 [实现计划](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/implementation-plan.md)。
+1. 完成维护者与律师对 GPL、LGPL 和 AOM 专利文本交付模型的复核；tagged release
+   已准备附加经校验的 GPL 源码输入；
+2. 通过 OpenVEX、显式构建配置、AOM 源码历史断言和 8 平台 smoke 持续复现已经
+   完成的原生依赖审计；
+3. AVIF 10/12-bit 在具备可测试兼容契约前不进入首个稳定版范围。
+
+随后继续扩大 corpus 与性能基线，并验证可替换当前 Canvas 预览引擎的浏览器原生
+codec runtime。
+
+详细分发决策见 [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)，
+具体门槛见[实现计划](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/implementation-plan.md)。
