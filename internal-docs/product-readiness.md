@@ -1,8 +1,14 @@
 # imagemin-rs 产品完成度审计
 
-更新日期：2026-07-29
+更新日期：2026-07-30
 
 本文件把“代码能运行”与“可替代 imagemin、可发布”分开。状态只依据当前仓库中可以复现的代码、测试、构建和发布产物，不依据计划或意图。
+
+本文件是长期产品能力台账，**不是 1.0 gate 清单**。首个稳定版是否可发布只由
+[`1.0-release-plan.md`](./1.0-release-plan.md) 的 G0–G5 判定；下表中的“部分”只有在
+该要求被明确映射到 G0–G5 时才阻断 1.0。取消抢占、扩大 corpus、OS-level RSS
+sandbox、跨平台 byte parity 等已明确进入 1.x 路线图，不得因本表仍为“部分”而
+重新提升为 1.0 硬门槛。
 
 ## 状态定义
 
@@ -12,15 +18,17 @@
 
 ## 发布证据基线
 
-`v0.1.0-rc.6` 的
-[Release workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30428078178)
-已在 8 个目标上完成 binding、cwebp、MozJPEG、pngquant 和 Gifsicle 构建，并从完整
-34 包 bundle 执行逐平台安装与 11 个 codec 的真实 smoke。8 个 smoke artifact、
-`release-packages`、依赖审计和 npm stage job 均成功。
+`v0.1.0-rc.9` 的
+[Release workflow](https://github.com/ntnyq/imagemin-rs/actions/runs/30487591906)
+已在 8 个目标上完成 binding、cwebp、MozJPEG、pngquant 和 Gifsicle 构建，从完整
+35 包 bundle 执行 WASM 浏览器 smoke 与逐平台 11 codec 真实 smoke，并生成
+[GitHub Release](https://github.com/ntnyq/imagemin-rs/releases/tag/v0.1.0-rc.9)、
+SBOM、OpenVEX、GPL source assets 和逐包摘要。所有构建、依赖审计、bundle 与 smoke
+job 均成功。
 
-npm registry 已提供 `imagemin-rs@0.1.0-rc.6`、binding 和各类平台包，并返回
-SLSA provenance attestation；预发布 dist-tag 为 `next`。以下状态已经纳入这组证据，
-不再把“其余 7 平台尚未实跑”列为缺口。
+该证据证明 release unit 的技术闭包；npm registry 的 35 包同版本发布、provenance
+回读和 fresh install 尚未完成，因此 G1/G3 仍未关闭，公开试用计时尚未开始。以下
+能力状态不再把“其余 7 平台尚未实跑”或“WASM 未进入 bundle”列为缺口。
 
 ## 兼容 Interface
 
@@ -38,35 +46,49 @@ SLSA provenance attestation；预发布 dist-tag 为 `next`。以下状态已经
 | 上游目标               | 状态   | 发布门槛                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `imagemin-svgo@12`     | 已证明 | 固定 SVGO 4.0.2、全 option passthrough、差分矩阵、真实设计工具 corpus 与渲染门禁。                                                                                                                                                                                                                                                                                                                                                                             |
-| `imagemin-gifsicle@7`  | 部分   | 全 options、动画 canonicalization、loop/delay/interlace/metadata 已测；自建 Gifsicle 1.96 已有固定源码摘要、provenance 和 8 目标 tarball smoke。剩余门槛是 GPL-2.0-only 分发边界的维护者/法律复核，不再是平台构建。                                                                                                                                                                                                                                            |
+| `imagemin-gifsicle@7`  | 已证明 | 全 options、动画 canonicalization、loop/delay/interlace/metadata 已测；自建 Gifsicle 1.96 已有固定源码摘要、8 目标 tarball smoke，以及维护者选择的 GPLv2 §3(a) 随包源码/构建材料交付模型。npm 公开回读由 G1 统一跟踪，不再属于 codec 兼容缺口。                                                                                                                                                                                                                |
 | `imagemin-optipng@8`   | 已证明 | 除 option shape、strip all、level 0、repair、output growth 与 APNG pass-through 外，已有覆盖全部 color type、位深 1..16、tRNS 三种表示、Adam7 与 metadata 的 corpus 差分：像素经独立 decoder 逐一无损、strip 策略一致、level 0 逐 chunk 一致（唯一分歧为 Oxipng 截断尾部不透明 tRNS）、interlace/reductions/errorRecovery 语义一致、level 7 尺寸不劣于 OptiPNG。oracle 为 `optipng-bin@7.0.1`（vendored 0.7.7 源码，macOS 预编译自报 0.7.6，属上游平台漂移）。 |
-| `imagemin-pngquant@10` | 部分   | 全 options、quality floor、alpha/背景合成误差与 APNG no-op 已测；自建 pngquant 3.0.3/libimagequant 已有固定源码摘要、Cargo lock、provenance 和 8 目标 tarball smoke。剩余门槛是 GPL 分发边界复核。                                                                                                                                                                                                                                                             |
+| `imagemin-pngquant@10` | 已证明 | 全 options、quality floor、alpha/背景合成误差与 APNG no-op 已测；自建 pngquant 3.0.3/libimagequant 已有固定源码摘要、Cargo lock、全部 45 个 registry source 归档、8 目标 tarball smoke，以及维护者选择的 GPLv3 随包 Corresponding Source 模型。npm 公开回读由 G1 统一跟踪。                                                                                                                                                                                    |
 | `imagemin-mozjpeg@10`  | 已证明 | 全 options、progressive、灰度、metadata 与独立解码误差已测；自建 MozJPEG 4.1.1 已有固定源码摘要、provenance 和 8 目标真实安装及 codec smoke。                                                                                                                                                                                                                                                                                                                  |
 | `imagemin-jpegtran@8`  | 已证明 | progressive/arithmetic、像素无损和 metadata strip 已测；与 cjpeg 同次构建的 MozJPEG 4.1.1 jpegtran 已接入 provenance，并通过 8 目标真实安装及 codec smoke。                                                                                                                                                                                                                                                                                                    |
 | `imagemin-webp@8`      | 已证明 | 全 options、PNG/JPEG/TIFF/WebP、alpha/metadata、动画 no-op 与扩展名已测；自建 cwebp/libwebp 1.6.0 已有固定源码摘要、provenance 和 8 目标真实安装及 codec smoke。                                                                                                                                                                                                                                                                                               |
-| `imagemin-avif@0.1`    | 部分   | 固定 Sharp 0.35.3、完整 options、alpha/chroma、动画 no-op、隔离进程与资源限制已测；8 目标 tarball smoke 均生成实际 Sharp/libvips 内嵌库版本与原生文件摘要。原生依赖发布日 CVE 审计、libxml2 VEX 与 AOM 修复断言已完成；10/12-bit 明确排除在首个稳定版范围，剩余门槛是 LGPL 与 AOM 专利文本的最终交付确认。                                                                                                                                                     |
+| `imagemin-avif@0.1`    | 已证明 | 首个稳定版采用 L2：精确 optional peer `sharp@0.35.3` 不进入默认闭包；无 Sharp 时返回稳定、可操作错误，显式安装后完整 options、alpha/chroma、动画 no-op、隔离进程与资源限制在 8 目标 tarball smoke 通过。根包携带 LGPL/AOM notice、许可与专利文本的固定摘要验证。10/12-bit 明确排除在 1.0 范围。                                                                                                                                                                |
 
 ## 质量与安全
 
-| 要求                       | 状态 | 缺口                                                                                                                                                                                                                                                                                                                                     |
-| -------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 分层自动化测试             | 部分 | 已有 Rust、真实 `.node`、公开包、类型和 package manifest 测试；codec corpus 尚小。                                                                                                                                                                                                                                                       |
-| 渲染/解码等价验证          | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 均有渲染、逐帧或独立 decoder 门禁；corpus 仍需扩展。                                                                                                                                                                                                                                                          |
-| 损坏与恶意输入             | 部分 | 所有当前 codec 都有尺寸/结构/帧/metadata 或进程限制，原生 PNG/GIF/SVG pipeline 另有 fuzz 覆盖；仍缺 OS-level RSS sandbox。                                                                                                                                                                                                               |
-| fuzz / corpus 回归         | 部分 | PNG/GIF/SVG 原生 pipeline 已有 `cargo-fuzz` target、hex fixture seed、CI 30s/每周 10min 长跑；5 个已修复 finding（含 vendored svgm-core 补丁与不完整 XML 引用）见 `fuzzing.md` findings log，均有回归测试。sidecar codec 面（gifsicle/pngquant/mozjpeg/cwebp/sharp 进程输入）不在 in-process fuzz 范围内，依赖各自的进程隔离与资源上限。 |
-| 性能与内存基线             | 部分 | Phase 1..6 有 median/p95/size artifacts，AVIF 含并发/事件循环；仍缺跨平台峰值 RSS hard gate。                                                                                                                                                                                                                                            |
-| 输出确定性与 metadata 政策 | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 已固定；跨平台 encoder byte parity 只对统一 artifact 承诺。                                                                                                                                                                                                                                                   |
+| 要求                       | 状态 | 缺口                                                                                                                                                                                                             |
+| -------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 分层自动化测试             | 部分 | 已有 Rust、真实 `.node`、公开包、类型和 package manifest 测试；扩大 codec corpus 是 1.x 持续工作，不是 1.0 gate。                                                                                                |
+| 渲染/解码等价验证          | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 均有渲染、逐帧或独立 decoder 门禁；扩大 corpus 是 1.x 持续工作，不是 1.0 gate。                                                                                                       |
+| 损坏与恶意输入             | 部分 | 所有当前 codec 都有尺寸/结构/帧/metadata 或进程限制，原生 PNG/GIF/SVG pipeline 另有 fuzz 覆盖；OS-level RSS sandbox 明确进入 1.x。发布日前发现的实际安全缺陷仍按 G4/G5 阻断。                                    |
+| fuzz / corpus 回归         | 部分 | PNG/GIF/SVG 原生 pipeline 已有 `cargo-fuzz` target、hex fixture seed、CI 30s/每周 10min 长跑；5 个已修复 finding 均有回归测试。sidecar codec 面依赖进程隔离与资源上限；扩大 in-process/sidecar fuzz 面进入 1.x。 |
+| 性能与内存基线             | 部分 | Phase 1..6 有 median/p95/size artifacts，AVIF 含并发/事件循环；跨平台峰值 RSS hard gate 明确进入 1.x。                                                                                                           |
+| 输出确定性与 metadata 政策 | 部分 | SVG/GIF/PNG/JPEG/WebP/AVIF 已固定；只对同一发布 artifact 承诺字节一致，跨平台 encoder byte parity 不属于 1.0 契约。                                                                                              |
 
 ## 发布与运维
 
-| 要求                          | 状态   | 缺口                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ----------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| root + 平台 optional packages | 已证明 | 8 个 binding、8 个 BSD sidecar、8 个 GPL pngquant 和 8 个 GPL Gifsicle 包均有精确 optional dependency、文件白名单与版本门禁；完整 34 包 bundle 已通过 8 平台全新安装与 codec smoke。                                                                                                                                                                                                                                                                           |
-| 多平台二进制 CI               | 已证明 | `v0.1.0-rc.6` release tag 已完成 8 target binding/cwebp/MozJPEG/pngquant/Gifsicle 构建、artifact 汇总，以及 GNU/musl、x64/arm64 的 8 平台 smoke。                                                                                                                                                                                                                                                                                                              |
-| 可重复 release                | 部分   | 版本一致性、SHA-512、34 包 bundle、两份确定性 CycloneDX 1.6 清单、8 平台安装 smoke、OIDC staged publish、npm SLSA provenance 和恢复手册均已由 `v0.1.0-rc.6` 证明。RustSec、Cargo policy、npm production advisory、MozJPEG/libxml2 VEX 与 AOM 修复历史是 release 门禁。macOS 11、Linux glibc 2.28/musl 1.1.19 和 Windows 10/Server 2016 基线已公开并由 package contract 锁定。`rc.7` workflow 会发布经校验的 GPL 源码资产；剩余缺口是许可证交付模型的人工复核。 |
-| 文档站                        | 已证明 | VitePress 构建和 Pages workflow 已有；中英文 codec 兼容说明、迁移指南、RC 安装说明和 native/sidecar 排错页均已纳入站点。                                                                                                                                                                                                                                                                                                                                       |
+| 要求                          | 状态   | 缺口                                                                                                                                                                                                                                                        |
+| ----------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ESM 包、声明和 exports        | 已证明 | `tsdown` 构建与 `pnpm pack --dry-run` 已验证。                                                                                                                                                                                                              |
+| root + 平台 optional packages | 已证明 | 8 个 binding、8 个 BSD sidecar、8 个 GPL pngquant、8 个 GPL Gifsicle、WASM、binding loader 与 root 包均有精确依赖、文件白名单与版本门禁；完整 35 包 `rc.9` bundle 已通过 WASM 和 8 平台 codec smoke。npm 同版本公开性由 G1/G3 单独跟踪。                    |
+| 多平台二进制 CI               | 已证明 | `v0.1.0-rc.9` release tag 已完成 8 target binding/cwebp/MozJPEG/pngquant/Gifsicle 构建、artifact 汇总，以及 GNU/musl、x64/arm64 的 8 平台 smoke；WASM 浏览器 smoke 同时通过。                                                                               |
+| 可重复 release                | 部分   | `rc.9` 已证明版本一致性、SHA-512、35 包 bundle、确定性 CycloneDX 清单、8 平台/WASM smoke、GPL 随包源码、Release 备份和恢复材料。剩余缺口仅是首次 WASM registry bootstrap、35 包 OIDC publish、provenance/registry 回读和 fresh install，统一由 G1/G3 跟踪。 |
+| 文档站                        | 已证明 | VitePress 构建和 Pages workflow 已有；中英文 codec 兼容说明、迁移指南、RC 安装说明和 native/sidecar 排错页均已纳入站点。                                                                                                                                    |
 
 ## 完成判定
 
-只有当以上所有产品要求达到 `已证明`，且支持平台上的真实安装、加载和每个 codec smoke test 均从发布 tarball 运行通过，才可把长期目标标记为完成。
+“长期产品完成度”只有当以上所有能力达到 `已证明` 时才完成；这是 1.x 持续改进目标，
+不等同于“首个稳定版可发布”。
+
+1.0 的完成判定只使用 [`1.0-release-plan.md`](./1.0-release-plan.md)：
+
+1. G0 分发模型选择与制品契约；
+2. G1 同版本 35 包发布单元；
+3. G2 八平台安装及默认无 Sharp/显式 Sharp 两条路径；
+4. G3 WASM bootstrap 与 trusted publisher；
+5. G4 14 天公开试用及最低真实消费者证据；
+6. G5 最终安全、完整性、文档、版本和发布负责人批准。
+
+本表中的错误覆盖扩展、底层 CPU 抢占式取消、更大 corpus、OS-level RSS sandbox、
+跨平台 byte parity 与更多 WASM codec 均为 1.x 路线图项。除非出现一个具体 P0/P1，
+或维护者显式修改 canonical gate 表，它们不阻断 1.0。
