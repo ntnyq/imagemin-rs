@@ -122,7 +122,8 @@ const result = await optimize(input, {
 ```
 
 浏览器包支持 `giflossless`、`oxipng`、`optipng` 与 `svgm`，不包含路径、glob、
-N-API 或外部可执行 sidecar。初始化、取消与部署细节见
+N-API 或外部可执行 sidecar。可运行应用、文件下载、强制取消与部署步骤见
+[浏览器与 Web Worker 指南](./browser-wasm.md)，完整 runtime 契约见
 [浏览器 WASM API](/zh/api/wasm)。
 
 从现有 imagemin 项目迁移时，请继续阅读[从 imagemin 迁移](./migration-from-imagemin.md)。

@@ -4,6 +4,10 @@
 Web Workers. It is asynchronous and memory-only: inputs and outputs are
 `Uint8Array` values, with no Node.js native binding or executable sidecar.
 
+For a complete file-input, module Worker, cancellation, download, and
+deployment walkthrough, start with the
+[Browser and Web Worker Guide](/guide/browser-wasm).
+
 ## Install and initialize
 
 ```sh

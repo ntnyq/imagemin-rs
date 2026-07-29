@@ -4,6 +4,9 @@
 pipeline。API 为异步、纯内存形式：输入输出都是 `Uint8Array`，不需要 Node.js native
 binding 或外部可执行 sidecar。
 
+需要完整的文件选择、module Worker、取消、下载与部署示例时，请先阅读
+[浏览器与 Web Worker 指南](/zh/guide/browser-wasm)。
+
 ## 安装与初始化
 
 ```sh

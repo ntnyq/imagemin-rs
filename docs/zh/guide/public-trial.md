@@ -3,8 +3,10 @@
 首个稳定版的目标发布日期是 **2026 年 8 月 17 日**。前提是一个完整的 35 包 RC
 连续公开 14 天，并且没有 release-blocking 缺陷。
 
-计划试用版本为 `0.1.0-rc.9`。只有该精确版本的根包、WASM 包、binding 和全部平台
-sidecar 都能通过 npm `next` tag 安装后，试用计时才开始。
+试用版本为 `0.1.0-rc.9`。全部 35 个包，包括 WASM、binding 与平台 sidecar，都已经
+可以通过 npm `next` 安装。registry 闭环与 fresh install 在
+**2026-07-30 06:29 +08:00** 完成，该时刻为 T0。若证据最低要求全部满足且没有 P0/P1
+重置计时，最早可进入稳定版的时刻是 **2026-08-13 06:29 +08:00**。
 
 ## 参与试用
 
@@ -29,7 +31,10 @@ pnpm add @imagemin-rs/wasm@next
 
 反馈请包含 package manager 及版本、Node/browser 版本、OS/架构、安装命令、测试过的
 codec，以及是否安装 Sharp。不要上传私有图片；请使用最小合成 fixture 或允许再分发的
-素材。
+素材。请通过[公开反馈台账](https://github.com/ntnyq/imagemin-rs/issues/4)提交结果。
+
+最低证据要求为至少 3 份独立消费者报告，并覆盖两个 OS 家族；这些报告合计必须覆盖
+默认无 Sharp、显式安装 `sharp@0.35.3` 后的 AVIF，以及浏览器或 Worker WASM。
 
 ## 哪些问题阻断 1.0
 

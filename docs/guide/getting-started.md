@@ -124,8 +124,9 @@ const result = await optimize(input, {
 
 The browser package supports `giflossless`, `oxipng`, `optipng`, and `svgm`.
 It does not include paths, globs, N-API, or executable sidecars. See the
-[Browser WASM API](/api/wasm) for initialization, cancellation, and deployment
-details.
+[Browser and Web Worker Guide](./browser-wasm.md) for a runnable application,
+file downloads, hard cancellation, and deployment. The
+[Browser WASM API](/api/wasm) is the complete runtime reference.
 
 Migrating an existing project? Continue with
 [Migrating from imagemin](./migration-from-imagemin.md). For native package,
