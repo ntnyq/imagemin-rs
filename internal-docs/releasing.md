@@ -2,10 +2,11 @@
 
 更新日期：2026-07-29
 
-当前 P2 发布单元仍由 18 个同版本 npm 包组成：`imagemin-rs`、`@imagemin-rs/binding`、
-8 个 `@imagemin-rs/binding-*` 平台包和 8 个同时携带 cwebp、cjpeg、jpegtran 的
-`@imagemin-rs/sidecars-*` 平台包。加入 GPL sidecar 家族后会扩展为 34 包。任何一个
-包都不能单独版本漂移。`0.0.0` 只表示未发布开发状态，发布脚本会拒绝它。
+当前 P2 发布单元由 26 个同版本 npm 包组成：`imagemin-rs`、`@imagemin-rs/binding`、
+8 个 `@imagemin-rs/binding-*` 平台包、8 个同时携带 cwebp、cjpeg、jpegtran 的
+`@imagemin-rs/sidecars-*` 平台包，以及 8 个 GPL `@imagemin-rs/sidecar-pngquant-*`
+平台包。加入 gifsicle sidecar 家族后会扩展为 34 包。任何一个包都不能单独版本漂移。
+`0.0.0` 只表示未发布开发状态，发布脚本会拒绝它。
 
 ## 安全模型
 
@@ -42,8 +43,8 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
 
 5. 提交并推送已验证 commit，再创建不可变 tag `v0.x.y`。tag 必须和所有 manifest 的
    `0.x.y` 一致。
-6. 等待 `Release` workflow 的 8 个 binding、8 个 cwebp、8 个 MozJPEG 构建，以及
-   18 包汇总和 8 平台全 codec tarball smoke 全部通过。下载并保存
+6. 等待 `Release` workflow 的 8 个 binding、8 个 BSD sidecar、8 个 MozJPEG、
+   8 个 pngquant 构建，以及 26 包汇总和 8 平台全 codec tarball smoke 全部通过。下载并保存
    `release-packages` artifact；其中的 `release-manifest.json` 含每个 tarball 的
    SHA-512 integrity。
 
@@ -53,7 +54,7 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
 ## 首次发布引导
 
 npm 不允许 brand-new package 使用 staged publishing，而且 package 尚不存在时也无法给它
-配置 trusted publisher。因此当前 18 个包的首次版本必须由 maintainer 在 tag workflow 全通过后
+配置 trusted publisher。因此当前 26 个包的首次版本必须由 maintainer 在 tag workflow 全通过后
 用交互式 npm 登录和 2FA 引导一次：
 
 ```sh
@@ -63,12 +64,12 @@ node tasks/release/publish-packages.mjs \
   --bundle=/absolute/path/to/release-packages
 ```
 
-脚本先验证 bundle integrity，再按“8 binding 平台包 → 8 sidecar 平台包 → binding →
-public package”的顺序发布。
+脚本先验证 bundle integrity，再按“8 binding 平台包 → 8 BSD sidecar 平台包 →
+8 pngquant sidecar 平台包 → binding → public package”的顺序发布。
 不要在 CI 中保存 bootstrap token。若中途失败，只继续补齐同一已验证 bundle 中缺失的包；
 不要重新打包或移动 tag。
 
-首次版本可见后，分别为全部 18 个包配置：
+首次版本可见后，分别为全部 26 个包配置：
 
 - GitHub owner：`ntnyq`
 - repository：`imagemin-rs`
@@ -82,7 +83,7 @@ tokens”，并撤销 bootstrap token。
 ## 后续 staged release
 
 在 GitHub Actions 手动运行 `Release`，ref 选择已通过的 tag，`action` 选择 `stage`。工作流
-会重新构建和 smoke，而不是信任旧 artifact，然后以 OIDC 把 18 个 tarball 分别送入 npm
+会重新构建和 smoke，而不是信任旧 artifact，然后以 OIDC 把 26 个 tarball 分别送入 npm
 staging area。
 
 批准前逐个核对：package name/version、SHA-512、文件列表、依赖版本、provenance、tag 和
@@ -99,5 +100,5 @@ workflow run。全部一致后在 npmjs.com 的 Staged Packages 页面以 2FA �
   版本；除非满足 npm unpublish policy 且确认没有消费者，否则不 unpublish。
 - 任何情况下都不重用 npm version，不移动已推送 release tag。
 
-发布完成的定义不是 workflow 变绿，而是 tag、GitHub artifact、18 个 npm package、dist-tag、
+发布完成的定义不是 workflow 变绿，而是 tag、GitHub artifact、26 个 npm package、dist-tag、
 provenance 和安装后全 codec smoke 对同一版本一致。

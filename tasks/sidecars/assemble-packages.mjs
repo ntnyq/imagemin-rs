@@ -25,13 +25,22 @@ const sidecarArtifacts = [
       "libwebp-PATENTS.txt",
       "zlib-LICENSE.txt",
     ],
+    packagePrefix: "sidecars",
     tool: "cwebp",
   },
   {
     artifact: "mozjpeg",
     binaries: ["cjpeg", "jpegtran"],
     licenses: ["mozjpeg-LICENSE.md", "mozjpeg-README.ijg"],
+    packagePrefix: "sidecars",
     tool: "mozjpeg",
+  },
+  {
+    artifact: "pngquant",
+    binaries: ["pngquant"],
+    licenses: ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"],
+    packagePrefix: "sidecar-pngquant",
+    tool: "pngquant",
   },
 ];
 const cliArguments = process.argv.slice(2);
@@ -39,6 +48,13 @@ const artifactsRoot = resolve(readFlag("--artifacts"));
 const npmRoot = resolve(readFlag("--npm-dir"));
 const targetArgument = readFlag("--targets");
 const requestedTargets = targetArgument === "all" ? platformDirectories : targetArgument.split(",");
+const requestedToolNames =
+  readOptionalFlag("--tools")?.split(",") ?? sidecarArtifacts.map(({ artifact }) => artifact);
+const requestedSidecars = requestedToolNames.map((toolName) => {
+  const sidecar = sidecarArtifacts.find(({ artifact }) => artifact === toolName);
+  if (sidecar === undefined) throw new TypeError(`Unsupported sidecar tool: ${toolName}`);
+  return sidecar;
+});
 
 for (const target of requestedTargets) {
   if (!platformDirectories.includes(target)) {
@@ -48,14 +64,13 @@ for (const target of requestedTargets) {
 
 const pendingCopies = [];
 for (const target of requestedTargets) {
-  const packageRoot = join(npmRoot, `sidecars-${target}`);
-  const packageManifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
-  assert(
-    packageManifest.name === `@imagemin-rs/sidecars-${target}`,
-    `Unexpected package manifest for ${target}`,
-  );
-
-  for (const sidecar of sidecarArtifacts) {
+  for (const sidecar of requestedSidecars) {
+    const packageRoot = join(npmRoot, `${sidecar.packagePrefix}-${target}`);
+    const packageManifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
+    assert(
+      packageManifest.name === `@imagemin-rs/${sidecar.packagePrefix}-${target}`,
+      `Unexpected package manifest for ${target} ${sidecar.artifact}`,
+    );
     const artifactRoot = join(artifactsRoot, `sidecar-${sidecar.artifact}-${target}`);
     const binaryCopies = [];
     const manifestCopies = [];
@@ -114,17 +129,24 @@ for (const item of pendingCopies) {
   for (const license of item.licenses) await copyFile(...license);
 }
 
-console.log(JSON.stringify({ assembled: requestedTargets }, undefined, 2));
+console.log(
+  JSON.stringify({ assembled: requestedTargets, tools: requestedToolNames }, undefined, 2),
+);
 
 function readFlag(flag) {
-  const index = cliArguments.indexOf(flag);
-  const value = index === -1 ? undefined : cliArguments[index + 1];
-  if (value === undefined || value.startsWith("--")) {
+  const value = readOptionalFlag(flag);
+  if (value === undefined) {
     throw new TypeError(
-      "Usage: node tasks/sidecars/assemble-packages.mjs --artifacts <dir> --npm-dir <dir> --targets <target,...>",
+      "Usage: node tasks/sidecars/assemble-packages.mjs --artifacts <dir> --npm-dir <dir> --targets <target,...> [--tools <tool,...>]",
     );
   }
   return value;
+}
+
+function readOptionalFlag(flag) {
+  const index = cliArguments.indexOf(flag);
+  const value = index === -1 ? undefined : cliArguments[index + 1];
+  return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
 function assert(condition, message) {

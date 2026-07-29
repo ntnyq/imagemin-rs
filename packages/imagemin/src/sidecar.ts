@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 
-type SidecarTool = "cjpeg" | "cwebp" | "jpegtran";
+type SidecarTool = "cjpeg" | "cwebp" | "jpegtran" | "pngquant";
 
 interface ResolveSidecarOptions {
   override?: string | undefined;
@@ -21,7 +21,7 @@ export function resolveSidecarBinary(
 ): string {
   if (options.override !== undefined) return resolve(options.override);
 
-  const packageName = sidecarPackageName();
+  const packageName = tool === "pngquant" ? pngquantSidecarPackageName() : sidecarPackageName();
   let manifestPath: string;
   try {
     manifestPath = require.resolve(`${packageName}/package.json`);
@@ -37,18 +37,26 @@ export function resolveSidecarBinary(
 }
 
 export function sidecarPackageName(platform: SidecarPlatform = currentPlatform()): string {
+  return platformPackageName("sidecars", platform);
+}
+
+export function pngquantSidecarPackageName(platform: SidecarPlatform = currentPlatform()): string {
+  return platformPackageName("sidecar-pngquant", platform);
+}
+
+function platformPackageName(prefix: string, platform: SidecarPlatform): string {
   if (!["arm64", "x64"].includes(platform.arch)) {
     throw new Error(`Unsupported sidecar architecture: ${platform.arch}`);
   }
   if (platform.platform === "darwin") {
-    return `@imagemin-rs/sidecars-darwin-${platform.arch}`;
+    return `@imagemin-rs/${prefix}-darwin-${platform.arch}`;
   }
   if (platform.platform === "win32") {
-    return `@imagemin-rs/sidecars-win32-${platform.arch}-msvc`;
+    return `@imagemin-rs/${prefix}-win32-${platform.arch}-msvc`;
   }
   if (platform.platform === "linux") {
     const libc = platform.libc ?? currentLinuxLibc();
-    return `@imagemin-rs/sidecars-linux-${platform.arch}-${libc === "glibc" ? "gnu" : "musl"}`;
+    return `@imagemin-rs/${prefix}-linux-${platform.arch}-${libc === "glibc" ? "gnu" : "musl"}`;
   }
   throw new Error(`Unsupported sidecar platform: ${platform.platform}`);
 }

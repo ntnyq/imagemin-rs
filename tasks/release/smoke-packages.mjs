@@ -16,6 +16,7 @@ const expectedPackages = [
   "imagemin-rs",
   "@imagemin-rs/binding",
   `@imagemin-rs/binding-${platformDirectory}`,
+  `@imagemin-rs/sidecar-pngquant-${platformDirectory}`,
   `@imagemin-rs/sidecars-${platformDirectory}`,
 ];
 const packageFiles = Object.fromEntries(

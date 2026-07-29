@@ -23,11 +23,15 @@ const platformDirectories = [
 const sidecarManifestPaths = platformDirectories.map(
   (directory) => `npm/sidecars-${directory}/package.json`,
 );
+const pngquantManifestPaths = platformDirectories.map(
+  (directory) => `npm/sidecar-pngquant-${directory}/package.json`,
+);
 const manifestPaths = [
   "package.json",
   "napi/imagemin/package.json",
   "packages/imagemin/package.json",
   ...platformDirectories.map((directory) => `npm/${directory}/package.json`),
+  ...pngquantManifestPaths,
   ...sidecarManifestPaths,
 ];
 const versionedPaths = [

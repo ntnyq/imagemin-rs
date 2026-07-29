@@ -1,7 +1,6 @@
-import pngquantBinary from "pngquant-bin";
-
 import { BinaryExitError, runBinary } from "./binary";
 import { ImageminError, rethrowIfAborted } from "./errors";
+import { resolveSidecarBinary } from "./sidecar";
 import type { ImageminPlugin, PngquantOptions } from "./types";
 
 const MAX_PNG_BYTES = 256 * 1024 * 1024;
@@ -44,7 +43,9 @@ export function pngquant(options: PngquantOptions = {}): ImageminPlugin {
     try {
       return await runBinary({
         arguments: arguments_,
-        binary: pngquantBinary,
+        binary: resolveSidecarBinary("pngquant", {
+          override: process.env["IMAGEMIN_RS_PNGQUANT_PATH"],
+        }),
         displayName: "pngquant",
         input,
         signal: context?.signal,

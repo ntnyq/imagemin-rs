@@ -5,10 +5,14 @@
 
 ## 决策
 
-`pngquant()` 固定 `imagemin-pngquant@10.0.0` 的公开 option shape，并执行
-`pngquant-bin@9.0.0` 提供的独立 pngquant executable。当前 macOS arm64 安装产物
-为 pngquant 3.0.3。GPL-3.0-or-later executable 与 MIT Rust/N-API addon 之间保持
-进程边界，不静态或动态链接进 `.node`。
+`pngquant()` 固定 `imagemin-pngquant@10.0.0` 的公开 option shape，并执行项目自建的
+pngquant 3.0.3 executable。pngquant tag archive 与其 libimagequant submodule commit
+均由 SHA-256 固定，Cargo 依赖由独立 lockfile 固定。GPL-3.0-or-later executable 与
+MIT Rust/N-API addon 之间保持进程边界，不静态或动态链接进 `.node`。
+
+8 个 `@imagemin-rs/sidecar-pngquant-*` optional packages 按 OS/CPU/libc 分发二进制、
+provenance manifest 与 pngquant/libimagequant 完整 `COPYRIGHT`。生产安装不使用
+runtime download 或 install-time compile；`pngquant-bin@9.0.0` 仅保留为开发 oracle。
 
 支持 `speed: 1..11`、`strip`、`quality: [min,max]`、`dithering: 0..1 | false`
 与 `posterize`。未提供的 option 不补 flag，由 pngquant 自身使用默认值。
@@ -44,9 +48,9 @@ GPL-3.0-or-later；直接链接会改变 MIT addon 的分发边界。商业 libi
   忽略未知字段更严格。
 - pngquant 可以输出比输入更大的文件；兼容入口不擅自 keep-smaller。quality floor
   失败才按 exit 99 返回原文件。
-- `pngquant-bin@9.0.0` 的预构建产物存在平台版本漂移。发布 gate 必须记录
-  `pngquant --version`；产品发布阶段应自建并校验统一的 3.0.3 sidecar，不能把
-  Windows 2.17、Linux x86 2.10 或 source fallback 2.16 当成跨平台 byte oracle。
-- npm tarball 保留 GPL notice 与对应 source availability；法律复核仍是发布门槛。
+- 8 目标构建、版本、provenance、许可证、verify/pack 与全 codec tarball smoke 已
+  接入 release workflow；macOS ARM64 已实测，其余 7 个目标等待首次 CI 证据。
+- npm tarball 保留 GPL notice 与对应 source availability；maintainer 法律复核仍是
+  首次发布门槛。
 
 完整证据见 [Phase 3 调研](../../docs/research/pngquant-codec-selection.md)。

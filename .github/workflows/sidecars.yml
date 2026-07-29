@@ -161,3 +161,88 @@ jobs:
           path: .release/sidecars/${{ matrix.directory }}
           if-no-files-found: error
           retention-days: 14
+
+  build-pngquant:
+    name: Build pngquant ${{ matrix.directory }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            directory: darwin-arm64
+            rust-target: aarch64-apple-darwin
+          - runner: macos-latest
+            directory: darwin-x64
+            rust-target: x86_64-apple-darwin
+          - runner: ubuntu-24.04-arm
+            directory: linux-arm64-gnu
+            rust-target: aarch64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            directory: linux-arm64-musl
+            rust-target: aarch64-unknown-linux-musl
+          - runner: ubuntu-latest
+            directory: linux-x64-gnu
+            rust-target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-latest
+            directory: linux-x64-musl
+            rust-target: x86_64-unknown-linux-musl
+          - runner: windows-11-arm
+            directory: win32-arm64-msvc
+            rust-target: aarch64-pc-windows-msvc
+          - runner: windows-latest
+            directory: win32-x64-msvc
+            rust-target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+          targets: ${{ matrix.rust-target }}
+      - uses: mlugg/setup-zig@v2
+        if: runner.os == 'Linux'
+        with:
+          version: 0.14.1
+      - uses: taiki-e/install-action@v2
+        if: runner.os == 'Linux'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tool: cargo-zigbuild
+      - uses: actions/cache@v5
+        with:
+          path: .release/sidecar-sources
+          key: sidecar-sources-${{ runner.os }}-${{ hashFiles('tasks/sidecars/pins.json') }}
+      - name: Fetch pinned sources
+        shell: bash
+        run: >-
+          node tasks/sidecars/fetch-sources.mjs
+          --tool pngquant
+          --output .release/sidecar-sources
+      - name: Build pngquant
+        shell: bash
+        env:
+          SIDECAR_TARGET: ${{ matrix.directory }}
+        run: >-
+          tasks/sidecars/build-pngquant.sh
+          .release/sidecar-sources
+          .release/sidecars/${{ matrix.directory }}
+      - name: Smoke pngquant
+        shell: bash
+        run: >-
+          node tasks/sidecars/smoke-pngquant.mjs
+          --binary .release/sidecars/${{ matrix.directory }}/pngquant${{
+          startsWith(matrix.directory, 'win32-') && '.exe' || '' }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sidecar-pngquant-${{ matrix.directory }}
+          path: .release/sidecars/${{ matrix.directory }}
+          if-no-files-found: error
+          retention-days: 14

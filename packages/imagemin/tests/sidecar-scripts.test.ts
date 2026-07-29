@@ -25,6 +25,10 @@ const pins = JSON.parse(
     sources: Record<string, { sha256: string; url: string; version: string }>;
     version: string;
   };
+  pngquant: {
+    sources: Record<string, { sha256: string; url: string; version: string }>;
+    version: string;
+  };
 };
 
 let sandboxRoot: string;
@@ -121,6 +125,36 @@ describe("sidecar scripts", () => {
       ]),
     ).rejects.toThrow(/Unsupported sidecar target/u);
     await expect(readFile(outputPath)).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  test("writes a deterministic pngquant provenance manifest", async () => {
+    const binary = Buffer.from("self-built-pngquant");
+    const binaryPath = join(sandboxRoot, "pngquant");
+    const outputPath = join(sandboxRoot, "pngquant.manifest.json");
+    await writeFile(binaryPath, binary);
+
+    await execFileAsync(process.execPath, [
+      manifestScript,
+      "--tool",
+      "pngquant",
+      "--target",
+      "darwin-arm64",
+      "--binary",
+      binaryPath,
+      "--output",
+      outputPath,
+    ]);
+
+    expect(JSON.parse(await readFile(outputPath, "utf8"))).toEqual({
+      binary: "pngquant",
+      bytes: binary.byteLength,
+      schema: 1,
+      sha256: createHash("sha256").update(binary).digest("hex"),
+      sources: pins.pngquant.sources,
+      target: "darwin-arm64",
+      tool: "pngquant",
+      version: pins.pngquant.version,
+    });
   });
 
   test("retries transient source download failures", async () => {
@@ -233,6 +267,8 @@ describe("sidecar scripts", () => {
       join(sandboxRoot, "npm"),
       "--targets",
       target,
+      "--tools",
+      "cwebp,mozjpeg",
     ]);
 
     await expect(readFile(join(packageDirectory, "cwebp"), "utf8")).resolves.toBe(
@@ -258,6 +294,58 @@ describe("sidecar scripts", () => {
       );
     }
   });
+
+  test("assembles pngquant into its GPL platform package", async () => {
+    const target = "darwin-arm64";
+    const artifactDirectory = join(sandboxRoot, "artifacts", `sidecar-pngquant-${target}`);
+    const packageDirectory = join(sandboxRoot, "npm", `sidecar-pngquant-${target}`);
+    const binaryPath = join(artifactDirectory, "pngquant");
+    await mkdir(join(artifactDirectory, "licenses"), { recursive: true });
+    await mkdir(packageDirectory, { recursive: true });
+    await writeFile(binaryPath, "self-built-pngquant", { mode: 0o755 });
+    await writeFile(
+      join(packageDirectory, "package.json"),
+      await readFile(join(workspaceRoot, `npm/sidecar-pngquant-${target}/package.json`)),
+    );
+    for (const licenseFile of pngquantLicenseFiles) {
+      await writeFile(join(artifactDirectory, "licenses", licenseFile), licenseFile);
+    }
+    await execFileAsync(process.execPath, [
+      manifestScript,
+      "--tool",
+      "pngquant",
+      "--target",
+      target,
+      "--binary",
+      binaryPath,
+      "--output",
+      join(artifactDirectory, "pngquant.manifest.json"),
+    ]);
+
+    await execFileAsync(process.execPath, [
+      assemblePackagesScript,
+      "--artifacts",
+      join(sandboxRoot, "artifacts"),
+      "--npm-dir",
+      join(sandboxRoot, "npm"),
+      "--targets",
+      target,
+      "--tools",
+      "pngquant",
+    ]);
+
+    await expect(readFile(join(packageDirectory, "pngquant"), "utf8")).resolves.toBe(
+      "self-built-pngquant",
+    );
+    await expect(
+      readFile(join(packageDirectory, "pngquant.manifest.json"), "utf8"),
+    ).resolves.toMatch(/"target": "darwin-arm64"/u);
+    for (const licenseFile of pngquantLicenseFiles) {
+      await expect(readFile(join(packageDirectory, "licenses", licenseFile), "utf8")).resolves.toBe(
+        licenseFile,
+      );
+    }
+  });
 });
 
 const sidecarLicenseFiles = [
@@ -271,3 +359,5 @@ const sidecarLicenseFiles = [
 ] as const;
 
 const mozjpegLicenseFiles = ["mozjpeg-LICENSE.md", "mozjpeg-README.ijg"] as const;
+
+const pngquantLicenseFiles = ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"] as const;

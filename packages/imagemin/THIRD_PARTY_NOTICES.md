@@ -13,20 +13,23 @@ Source and license information:
 - https://github.com/imagemin/gifsicle-bin
 - https://github.com/kohler/gifsicle
 
-The `pngquant()` compatibility adapter executes the separately installed
-`pngquant-bin@9.0.0` package as a child process. pngquant 3.0.3 and libimagequant
-are distributed under the GNU General Public License version 3 or later. The
-executable is not linked into the imagemin-rs native addon. The npm dependency
-contains GPL license material under `vendor/source`, but its source archive is
-pngquant 2.16.0 and does not correspond to every downloaded prebuilt binary.
-Release artifacts using pngquant 3.0.3 must separately publish the exact
-pngquant/libimagequant source revision, GPL text and binary/source SHA-256
-manifest. The bundled archive must not be represented as corresponding source.
+The `pngquant()` compatibility adapter executes pngquant 3.0.3 from the current
+`@imagemin-rs/sidecar-pngquant-*` optional package. pngquant and its pinned
+libimagequant source are distributed under the GNU General Public License
+version 3 or later. The executable is not linked into the imagemin-rs native
+addon. Each platform package includes the complete pngquant and libimagequant
+`COPYRIGHT` files, exact source URLs and SHA-256 values, and a binary provenance
+manifest.
+
+`pngquant-bin@9.0.0` remains a development-only compatibility oracle.
+Production installation does not use its runtime download or install-time
+compilation path.
 
 Source and license information:
 
 - https://github.com/imagemin/pngquant-bin
 - https://github.com/kornelski/pngquant
+- https://github.com/ImageOptim/libimagequant
 
 The Rust GIF implementation was adapted from the MIT-licensed delta planning
 algorithm in `losslessly@0.1.1`, Copyright (c) 2026 Krystian Doroszewicz.

@@ -36,9 +36,9 @@ pngquant 以 code 99 退出，插件返回原输入对象。
 
 ## 安全与兼容边界
 
-`pngquant-bin@9.0.0` / pngquant 是 GPL-3.0-or-later executable，只通过 child
-process 执行，不链接进 MIT native addon。输入、输出、stderr、执行时间和解码尺寸
-都有硬上限。
+pngquant 3.0.3 与固定 libimagequant source 是 GPL-3.0-or-later executable，只通过
+child process 执行，不链接进 MIT native addon。输入、输出、stderr、执行时间和解码
+尺寸都有硬上限。
 
 普通 PNG 在 option matrix 中与 `imagemin-pngquant@10.0.0` 逐字节比较。项目额外
 做两项更严格的处理：未知 option 在工厂调用时同步报错；APNG 原样返回，因为
@@ -49,6 +49,7 @@ pngquant 会把动画静默降级为单帧。
 
 ## 确定性与平台版本
 
-同一 pngquant/libimagequant build 对固定输入和参数是稳定的，但
-`pngquant-bin@9.0.0` 历史预构建产物存在平台版本漂移。当前开发基线是 3.0.3；
-跨平台发布在统一 sidecar build 与版本 fingerprint 门禁完成前不承诺 byte parity。
+生产路径使用项目从固定源码和 Cargo lock 构建的 pngquant 3.0.3。8 个
+`@imagemin-rs/sidecar-pngquant-*` 平台包携带 SHA-256 provenance、对应 source
+references 与完整 GPL 文本，不使用运行时下载或安装期编译。
+`pngquant-bin@9.0.0` 仅保留为开发差分 oracle；跨平台只在同一自建版本与配置间比较。

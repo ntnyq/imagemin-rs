@@ -1,6 +1,6 @@
 # Phase 3：PNG 有损量化 codec 选型与兼容契约
 
-> 调研日期：2026-07-17。结论只针对本文固定的版本与提交；升级必须重新跑本文的
+> 更新日期：2026-07-29。结论只针对本文固定的版本与提交；升级必须重新跑本文的
 > corpus、许可和平台门禁。
 
 ## 决策摘要
@@ -424,11 +424,11 @@ OS 下要求 byte deterministic。TSAN/ASAN 或 Miri 覆盖 callback ownership�
 
 ### Phase 3A：兼容 sidecar
 
-- 固定 `imagemin-pngquant 10.0.0` 和完整 npm lock；
-- 固定、自建 pngquant 3.0.3 + libimagequant `6e98057…` 的每平台 artifact；
-- 实现 signature/IHDR/chunk/APNG preflight、per-asset/global limits；
-- option、non-PNG identity、exit 99、alpha 与 metadata conformance 全绿；
-- 修正 corresponding-source notice，并由发布/法律负责人签核 GPL 交付物。
+- 已固定 `imagemin-pngquant 10.0.0` 兼容语义和完整 npm lock；
+- 已固定、自建 pngquant 3.0.3 + libimagequant `6e98057…`，并覆盖 8 个发布 target；
+- 已实现 signature/IHDR/chunk/APNG preflight、per-asset/global limits；
+- option、non-PNG identity、exit 99、alpha 与 metadata conformance 已全绿；
+- 已修正 corresponding-source notice；8 平台 CI 验证和发布/法律负责人签核仍是发布门禁。
 
 ### Phase 3B：扩大平台与 corpus
 

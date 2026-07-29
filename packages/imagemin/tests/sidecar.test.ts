@@ -2,7 +2,11 @@ import { join, resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
 
-import { resolveSidecarBinary, sidecarPackageName } from "../src/sidecar";
+import {
+  pngquantSidecarPackageName,
+  resolveSidecarBinary,
+  sidecarPackageName,
+} from "../src/sidecar";
 
 describe("sidecar resolution", () => {
   test("maps every supported platform tuple to its package", () => {
@@ -23,11 +27,34 @@ describe("sidecar resolution", () => {
     );
   });
 
+  test("maps every supported platform tuple to its pngquant package", () => {
+    expect(pngquantSidecarPackageName({ arch: "arm64", platform: "darwin" })).toBe(
+      "@imagemin-rs/sidecar-pngquant-darwin-arm64",
+    );
+    expect(pngquantSidecarPackageName({ arch: "x64", platform: "win32" })).toBe(
+      "@imagemin-rs/sidecar-pngquant-win32-x64-msvc",
+    );
+    expect(pngquantSidecarPackageName({ arch: "arm64", libc: "glibc", platform: "linux" })).toBe(
+      "@imagemin-rs/sidecar-pngquant-linux-arm64-gnu",
+    );
+  });
+
   test("uses an explicit binary path when supplied", () => {
-    for (const tool of ["cjpeg", "cwebp", "jpegtran"] as const) {
+    for (const tool of ["cjpeg", "cwebp", "jpegtran", "pngquant"] as const) {
       const path = resolve(`fixtures/${tool}`);
       expect(resolveSidecarBinary(tool, { override: path })).toBe(path);
     }
+  });
+
+  test("resolves pngquant from its GPL platform package", () => {
+    expect(resolveSidecarBinary("pngquant")).toBe(
+      join(
+        workspaceRoot,
+        "npm",
+        `sidecar-pngquant-${currentPlatformDirectory()}`,
+        process.platform === "win32" ? "pngquant.exe" : "pngquant",
+      ),
+    );
   });
 
   test("resolves BSD sidecars from the current platform package", () => {

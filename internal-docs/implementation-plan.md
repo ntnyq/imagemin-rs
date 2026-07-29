@@ -91,13 +91,12 @@ pass-through。真实 `.node`、公开包语义 canonicalization 和 Phase 2 ben
 
 完成标准：options 全部验证；质量/体积回归有阈值；Linux GNU/musl、macOS、Windows 原生构建通过。
 
-已落实的决策（2026-07-17）：`pngquant()` 固定
-`imagemin-pngquant@10.0.0` 与 `pngquant-bin@9.0.0`，通过 GPL 进程边界覆盖全部
-公开 options、exit 99 quality floor、透明 palette 与差分矩阵。APNG 为防止静默
-丢帧而 no-op；输入/输出/尺寸/时间均有硬上限。Quantette 因不支持 alpha、缺少
-pngquant 质量语义且要求 Rust 1.90，本阶段不公开。当前平台侧 `pngquant-bin`
-版本漂移移入最终发布 gate，自建统一 3.0.3 sidecar 后才承诺跨平台 byte parity；
-详见 ADR 0004。
+已落实的决策（2026-07-29）：`pngquant()` 固定 `imagemin-pngquant@10.0.0` 的语义，
+生产执行项目从固定 tag、submodule commit 与 Cargo lock 自建的 pngquant 3.0.3。
+GPL 进程边界覆盖全部公开 options、exit 99 quality floor、透明 palette 与差分矩阵；
+APNG 为防止静默丢帧而 no-op，输入/输出/尺寸/时间均有硬上限。8 个独立 GPL 平台包、
+provenance、许可证和发布 smoke 已接入，macOS ARM64 已实测。Quantette 因不支持 alpha、
+缺少 pngquant 质量语义且要求 Rust 1.90，本阶段不公开；详见 ADR 0004。
 
 ## Phase 4：JPEG / mozjpeg 与 jpegtran
 
@@ -167,8 +166,8 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
 2. **P1 cwebp sidecar 纵切面（实现完成）**：固定并校验 libwebp 源码，完成 8 目标构建、
    manifest、平台 npm 包、运行时解析和真实转码 smoke；macOS ARM64 tarball 已实测，
    其余 7 个目标等待 CI 首次实跑证据。
-3. **P2 其余 sidecar 与发布链（进行中）**：mozjpeg/jpegtran 已完成；继续扩展
-   pngquant、gifsicle，按许可证拆包，并让 verify/pack/smoke/publish 覆盖 24 个
+3. **P2 其余 sidecar 与发布链（进行中）**：mozjpeg/jpegtran 与 pngquant 已完成；
+   继续扩展 gifsicle GPL 平台包，并让 verify/pack/smoke/publish 覆盖全部 24 个
    sidecar 平台包。
 4. **P3 RC 演练**：完成 GPL 法律确认、SBOM/provenance、8 平台 tarball 安装与每 codec
    smoke，执行不发布到 registry 的完整 release rehearsal。

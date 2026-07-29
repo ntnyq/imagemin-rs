@@ -130,6 +130,22 @@ importers:
 
   npm/linux-x64-musl: {}
 
+  npm/sidecar-pngquant-darwin-arm64: {}
+
+  npm/sidecar-pngquant-darwin-x64: {}
+
+  npm/sidecar-pngquant-linux-arm64-gnu: {}
+
+  npm/sidecar-pngquant-linux-arm64-musl: {}
+
+  npm/sidecar-pngquant-linux-x64-gnu: {}
+
+  npm/sidecar-pngquant-linux-x64-musl: {}
+
+  npm/sidecar-pngquant-win32-arm64-msvc: {}
+
+  npm/sidecar-pngquant-win32-x64-msvc: {}
+
   npm/sidecars-darwin-arm64: {}
 
   npm/sidecars-darwin-x64: {}
@@ -167,9 +183,6 @@ importers:
       junk:
         specifier: 'catalog:'
         version: 4.0.1
-      pngquant-bin:
-        specifier: 9.0.0
-        version: 9.0.0
       sharp:
         specifier: 0.35.3
         version: 0.35.3(@types/node@24.13.3)
@@ -222,6 +235,9 @@ importers:
       mozjpeg:
         specifier: 8.0.0
         version: 8.0.0
+      pngquant-bin:
+        specifier: 9.0.0
+        version: 9.0.0
       tsdown:
         specifier: 'catalog:'
         version: 0.22.8(typescript@7.0.2)
@@ -235,6 +251,30 @@ importers:
       '@imagemin-rs/binding':
         specifier: workspace:*
         version: link:../../napi/imagemin
+      '@imagemin-rs/sidecar-pngquant-darwin-arm64':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-darwin-arm64
+      '@imagemin-rs/sidecar-pngquant-darwin-x64':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-darwin-x64
+      '@imagemin-rs/sidecar-pngquant-linux-arm64-gnu':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-linux-arm64-gnu
+      '@imagemin-rs/sidecar-pngquant-linux-arm64-musl':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-linux-arm64-musl
+      '@imagemin-rs/sidecar-pngquant-linux-x64-gnu':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-linux-x64-gnu
+      '@imagemin-rs/sidecar-pngquant-linux-x64-musl':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-linux-x64-musl
+      '@imagemin-rs/sidecar-pngquant-win32-arm64-msvc':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-win32-arm64-msvc
+      '@imagemin-rs/sidecar-pngquant-win32-x64-msvc':
+        specifier: workspace:*
+        version: link:../../npm/sidecar-pngquant-win32-x64-msvc
       '@imagemin-rs/sidecars-darwin-arm64':
         specifier: workspace:*
         version: link:../../npm/sidecars-darwin-arm64

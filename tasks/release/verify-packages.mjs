@@ -28,6 +28,7 @@ const sidecarTools = [
   { binary: "cwebp", provenance: "cwebp" },
   { binary: "jpegtran", provenance: "mozjpeg" },
 ];
+const pngquantLicenseFiles = ["libimagequant-COPYRIGHT", "pngquant-COPYRIGHT"];
 
 const artifactMode = readArgument("--artifacts") ?? "current";
 if (!["all", "current", "none"].includes(artifactMode)) {
@@ -63,6 +64,9 @@ assert(rootManifest.version === version, "Root package version does not match th
 assert(bindingManifest.engines?.node === publicManifest.engines?.node, "Node engine ranges differ");
 const expectedPublicOptionalDependencies = {
   "@imagemin-rs/binding": "workspace:*",
+  ...Object.fromEntries(
+    platforms.map(({ directory }) => [`@imagemin-rs/sidecar-pngquant-${directory}`, "workspace:*"]),
+  ),
   ...Object.fromEntries(
     platforms.map(({ directory }) => [`@imagemin-rs/sidecars-${directory}`, "workspace:*"]),
   ),
@@ -258,6 +262,105 @@ for (const platform of platforms) {
       );
     }
   }
+
+  const pngquantPackageName = `@imagemin-rs/sidecar-pngquant-${platform.directory}`;
+  const pngquantBinaryName = platform.os === "win32" ? "pngquant.exe" : "pngquant";
+  const pngquantRoot = `npm/sidecar-pngquant-${platform.directory}`;
+  const pngquantManifest = await readJson(`${pngquantRoot}/package.json`);
+  assert(
+    pngquantManifest.name === pngquantPackageName,
+    `Unexpected pngquant package name for ${platform.directory}`,
+  );
+  assert(
+    pngquantManifest.version === version,
+    `${pngquantPackageName} version does not match ${version}`,
+  );
+  assert(
+    pngquantManifest.license === "GPL-3.0-or-later",
+    `${pngquantPackageName} license is invalid`,
+  );
+  assert(
+    pngquantManifest.publishConfig?.access === "public",
+    `${pngquantPackageName} is not publicly publishable`,
+  );
+  assertDeepEqual(
+    pngquantManifest.cpu,
+    [platform.cpu],
+    `${pngquantPackageName} CPU constraint is invalid`,
+  );
+  assertDeepEqual(
+    pngquantManifest.os,
+    [platform.os],
+    `${pngquantPackageName} OS constraint is invalid`,
+  );
+  assertDeepEqual(
+    pngquantManifest.libc,
+    platform.libc === undefined ? undefined : [platform.libc],
+    `${pngquantPackageName} libc constraint is invalid`,
+  );
+  assertDeepEqual(
+    pngquantManifest.files,
+    ["README.md", pngquantBinaryName, "pngquant.manifest.json", "licenses"],
+    `${pngquantPackageName} files allowlist is invalid`,
+  );
+  assertDeepEqual(
+    pngquantManifest.bin,
+    { pngquant: pngquantBinaryName },
+    `${pngquantPackageName} bin mapping is invalid`,
+  );
+  assert(
+    pngquantManifest.engines?.node === publicManifest.engines.node,
+    `${pngquantPackageName} Node engine differs`,
+  );
+  assert(
+    (await readText(`${pngquantRoot}/README.md`)).includes(pngquantPackageName),
+    `${pngquantPackageName} has no package README`,
+  );
+
+  if (requiredDirectories.has(platform.directory)) {
+    const binaryUrl = new URL(`${pngquantRoot}/${pngquantBinaryName}`, workspaceRoot);
+    const binary = await readFile(binaryUrl);
+    const metadata = await stat(binaryUrl);
+    assert(metadata.isFile() && binary.byteLength > 0, `${pngquantPackageName} is empty`);
+    if (platform.os !== "win32") {
+      assert((metadata.mode & 0o111) !== 0, `${pngquantPackageName} is not marked executable`);
+    }
+    assertBinaryMagic(binary, platform.os, pngquantPackageName);
+
+    const provenance = await readJson(`${pngquantRoot}/pngquant.manifest.json`);
+    const expectedSources = Object.fromEntries(
+      Object.entries(sidecarPins.pngquant.sources).sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+    );
+    assertDeepEqual(
+      provenance,
+      {
+        binary: pngquantBinaryName,
+        bytes: binary.byteLength,
+        schema: 1,
+        sha256: createHash("sha256").update(binary).digest("hex"),
+        sources: expectedSources,
+        target: platform.directory,
+        tool: "pngquant",
+        version: sidecarPins.pngquant.version,
+      },
+      `${pngquantPackageName} provenance manifest is invalid`,
+    );
+    for (const licenseFile of pngquantLicenseFiles) {
+      const license = await stat(new URL(`${pngquantRoot}/licenses/${licenseFile}`, workspaceRoot));
+      assert(
+        license.isFile() && license.size > 0,
+        `${pngquantPackageName} is missing ${licenseFile}`,
+      );
+    }
+    artifacts.push({
+      bytes: binary.byteLength,
+      package: pngquantPackageName,
+      sha256: provenance.sha256,
+      tool: "pngquant",
+    });
+  }
 }
 
 for (const path of [
@@ -280,7 +383,7 @@ console.log(
     {
       artifactMode,
       artifacts,
-      packages: 2 + platforms.length * 2,
+      packages: 2 + platforms.length * 3,
       version,
     },
     undefined,

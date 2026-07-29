@@ -1,0 +1,34 @@
+{
+  "name": "@imagemin-rs/sidecar-pngquant-linux-x64-musl",
+  "version": "0.1.0-rc.0",
+  "description": "Prebuilt pngquant sidecar for imagemin-rs on Linux x64 with musl.",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "bin": {
+    "pngquant": "pngquant"
+  },
+  "files": [
+    "README.md",
+    "pngquant",
+    "pngquant.manifest.json",
+    "licenses"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "musl"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

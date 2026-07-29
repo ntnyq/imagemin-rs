@@ -55,6 +55,12 @@ describe("package contract", () => {
     expect(manifest.optionalDependencies).toEqual({
       "@imagemin-rs/binding": "workspace:*",
       ...Object.fromEntries(
+        platforms.map(({ directory }) => [
+          `@imagemin-rs/sidecar-pngquant-${directory}`,
+          "workspace:*",
+        ]),
+      ),
+      ...Object.fromEntries(
         platforms.map(({ directory }) => [`@imagemin-rs/sidecars-${directory}`, "workspace:*"]),
       ),
     });
@@ -63,7 +69,7 @@ describe("package contract", () => {
   test("keeps upstream binary download wrappers out of production dependencies", async () => {
     const manifest = await readManifest();
 
-    for (const packageName of ["cwebp-bin", "jpegtran-bin", "mozjpeg"]) {
+    for (const packageName of ["cwebp-bin", "jpegtran-bin", "mozjpeg", "pngquant-bin"]) {
       expect(manifest.dependencies).not.toHaveProperty(packageName);
       expect(manifest.devDependencies).toHaveProperty(packageName);
     }
@@ -139,6 +145,23 @@ describe("package contract", () => {
       });
       if ("libc" in platform) expect(sidecarManifest.libc).toEqual([platform.libc]);
       else expect(sidecarManifest.libc).toBeUndefined();
+
+      const pngquantManifest = await readJson(
+        new URL(`npm/sidecar-pngquant-${platform.directory}/package.json`, workspaceRootUrl),
+      );
+      const pngquantBinary = platform.os === "win32" ? "pngquant.exe" : "pngquant";
+      expect(pngquantManifest).toMatchObject({
+        bin: { pngquant: pngquantBinary },
+        cpu: [platform.cpu],
+        engines: publicManifest.engines,
+        files: ["README.md", pngquantBinary, "pngquant.manifest.json", "licenses"],
+        license: "GPL-3.0-or-later",
+        name: `@imagemin-rs/sidecar-pngquant-${platform.directory}`,
+        os: [platform.os],
+        version: publicManifest.version,
+      });
+      if ("libc" in platform) expect(pngquantManifest.libc).toEqual([platform.libc]);
+      else expect(pngquantManifest.libc).toBeUndefined();
     }
   });
 
@@ -167,6 +190,8 @@ describe("package contract", () => {
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-cwebp.mjs");
     expect(sidecarWorkflow).toContain("tasks/sidecars/build-mozjpeg.sh");
     expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-mozjpeg.mjs");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/build-pngquant.sh");
+    expect(sidecarWorkflow).toContain("tasks/sidecars/smoke-pngquant.mjs");
   });
 });
 
