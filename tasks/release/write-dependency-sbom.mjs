@@ -89,15 +89,24 @@ async function cargoMetadataFor(rootPath) {
 }
 
 async function npmDependencyTree(rootPath) {
-  const executable = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-  const { stdout } = await execFileAsync(
-    executable,
-    ["--filter", "imagemin-rs", "list", "--prod", "--depth", "Infinity", "--json"],
-    {
-      cwd: rootPath,
-      maxBuffer: 30_000_000,
-    },
-  );
+  const arguments_ = ["--filter", "imagemin-rs", "list", "--prod", "--depth", "Infinity", "--json"];
+  const npmExecPath = process.env.npm_execpath;
+  const usePnpmCli = npmExecPath !== undefined && /(?:^|[/\\])pnpm(?:\.c?js)?$/iu.test(npmExecPath);
+  const useWindowsShell = !usePnpmCli && process.platform === "win32";
+  const executable = usePnpmCli
+    ? process.execPath
+    : useWindowsShell
+      ? (process.env.ComSpec ?? "cmd.exe")
+      : "pnpm";
+  const commandArguments = usePnpmCli
+    ? [npmExecPath, ...arguments_]
+    : useWindowsShell
+      ? ["/d", "/s", "/c", "pnpm", ...arguments_]
+      : arguments_;
+  const { stdout } = await execFileAsync(executable, commandArguments, {
+    cwd: rootPath,
+    maxBuffer: 30_000_000,
+  });
   const roots = JSON.parse(stdout);
   assert(
     Array.isArray(roots) && roots.length === 1,
