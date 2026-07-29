@@ -2,7 +2,8 @@
 
 更新日期：2026-07-29
 
-当前 P2 发布单元由 34 个同版本 npm 包组成：`imagemin-rs`、`@imagemin-rs/binding`、
+当前 P2 发布单元由 35 个同版本 npm 包组成：`imagemin-rs`、`@imagemin-rs/binding`、
+`@imagemin-rs/wasm`、
 8 个 `@imagemin-rs/binding-*` 平台包、8 个同时携带 cwebp、cjpeg、jpegtran 的
 `@imagemin-rs/sidecars-*` 平台包，以及 8 个 GPL `@imagemin-rs/sidecar-pngquant-*`
 和 8 个 GPL `@imagemin-rs/sidecar-gifsicle-*` 平台包。任何一个包都不能单独版本
@@ -14,7 +15,7 @@
 - 后续版本通过 GitHub Actions 的 npm trusted publishing/OIDC 直接发布；
 - `npm` GitHub environment 应启用 maintainer 审批，作为发布前唯一一次人工门禁；
 - trusted publisher 只允许 `npm publish`，不允许 `npm stage publish`；
-- environment 获批后，34 个包按依赖顺序直接公开，不再逐包执行 npm 2FA 审批；
+- environment 获批后，35 个包按依赖顺序直接公开，不再逐包执行 npm 2FA 审批；
 - release runner 不使用依赖缓存，发布 tarball 带 npm 自动 provenance；
 - release tag 不移动。失败后修复代码并发布新 patch/pre-release，不能覆写已有版本。
 
@@ -44,7 +45,7 @@ npm 的当前要求是 Node.js 22.14+、npm 11.5.1+ 才能使用 trusted publish
 5. 提交并推送已验证 commit，再创建不可变 tag `v0.x.y`。tag 必须和所有 manifest 的
    `0.x.y` 一致。
 6. 等待 `Release` workflow 的 RustSec/npm dependency audit、8 个 binding、
-   8 个 BSD sidecar、8 个 MozJPEG、8 个 pngquant、8 个 Gifsicle 构建，以及 34 包
+   8 个 BSD sidecar、8 个 MozJPEG、8 个 pngquant、8 个 Gifsicle 构建，以及 35 包
    汇总和 8 平台全 codec tarball smoke 全部通过。下载并保存
    `release-packages` artifact；其中的
    `release-manifest.json` 含每个 tarball 的 SHA-512 integrity，
@@ -63,17 +64,17 @@ npm 的当前要求是 Node.js 22.14+、npm 11.5.1+ 才能使用 trusted publish
 
 `pack-packages.mjs` 每次打包都会生成确定性的 `release-sbom.cdx.json`：
 
-- `current` bundle 记录当前平台 6 个 tarball；完整 release bundle 记录全部 34 个；
+- `current` bundle 记录当前平台 7 个 tarball；完整 release bundle 记录全部 35 个；
 - npm tarball 使用 SHA-512，固定 sidecar 源码使用 SHA-256，并记录版本与下载地址；
 - 相同 manifest 和 pins 生成相同内容及 serial number；输入摘要格式异常会终止打包。
 
 同时生成的 `release-dependencies.cdx.json` 记录：
 
-- 从 `imagemin_napi` 可达的非 dev Cargo graph，含 workspace crate、registry checksum、
-  license expression 与依赖边；
+- 从 `imagemin_napi` 与 `imagemin_wasm_core` 可达的非 dev Cargo graph，含 workspace
+  crate、registry checksum、license expression 与依赖边；
 - `imagemin-rs` 的生产 npm graph，含 Sharp 的平台 optional packages、版本、下载地址，
   以及已安装 package manifest 提供的许可证和仓库；
-- 当前锁文件下共 84 个 Rust 与 81 个 npm 组件；依赖变化时数量随锁文件更新。
+- Rust 与 npm 组件数量由当前锁文件计算；依赖变化时随锁文件更新。
 
 两份文件均为确定性 CycloneDX 1.6 JSON，本地已通过官方 1.6 JSON Schema 和引用闭合
 校验。8 个平台 smoke 会从全新安装中读取 `sharp.versions`，记录实际 `@img/sharp-*`
@@ -92,18 +93,18 @@ AOM 的指定修复由官方 tag 历史和运行时版本双重断言。数据�
 
 - frozen install、format、lint、typecheck、Rust/binding/public package 测试、文档构建、
   release build、RustSec/Cargo policy 与 npm production audit 均通过；
-- metadata 校验覆盖 34 个 package manifest，当前平台校验覆盖 binding、3 个 BSD
-  executable、pngquant 与 Gifsicle 共 6 个 artifact；
-- 6 个当前平台 tarball 通过文件白名单、SHA-512 bundle、全新 npm 安装和 11 个 codec
-  的真实输入 smoke；
-- bundle 同时生成 CycloneDX 1.6 清单，覆盖 6 个 tarball 与 9 个固定 sidecar 源码；
-- 依赖清单覆盖 84 个非 dev Rust 与 81 个生产 npm/Sharp 平台包组件；
+- metadata 校验覆盖 35 个 package manifest；当前平台校验覆盖 binding、3 个 BSD
+  executable、pngquant 与 Gifsicle 共 6 个 binary artifact，并单独校验 WASM bundle；
+- 7 个当前平台 tarball 通过文件白名单与 SHA-512 bundle；Node 包通过全新 npm 安装和
+  11 个 codec 的真实输入 smoke，WASM 包通过三浏览器 PNG/GIF/SVG smoke；
+- bundle 同时生成 CycloneDX 1.6 清单，覆盖 7 个 tarball 与 9 个固定 sidecar 源码；
+- 依赖清单覆盖 N-API 与 WASM 的非 dev Rust closure，以及生产 npm/Sharp 平台包组件；
 - 当前平台 smoke 另生成 32 组件的 Sharp runtime SBOM，2 个原生文件均有 SHA-256；
 - 首轮并行 public package 测试出现一次 Vitest fork worker 启动超时；失败文件隔离重跑
   和随后完整 207 项测试均通过；在这次本地演练结束时，完整 8 平台 CI 仍需提供
   无抖动证据。
 
-这次本地演练当时不覆盖其余 7 平台的 Sharp/libvips 清单、完整 34 包 bundle、
+这次本地演练当时不覆盖其余 7 平台的 Sharp/libvips 清单、完整 35 包 bundle、
 sidecar/Sharp 原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法律确认。
 
 ## 跨平台 RC 记录
@@ -125,11 +126,15 @@ sidecar/Sharp 原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法�
 版本已固定为 macOS 11、Linux glibc 2.28/musl 1.1.19 与 Windows 10/Server 2016，
 并由公开平台政策和 package contract 覆盖。
 
-## 首次发布引导（已完成）
+## 首次发布引导
 
 npm 不允许 brand-new package 使用 staged publishing，而且 package 尚不存在时也无法给它
-配置 trusted publisher。34 个包的首次引导已经完成。发布脚本现已统一为 direct publish；
-`--bootstrap` 不再需要，日常发布必须从受保护的 GitHub environment 运行：
+配置 trusted publisher。原有 34 个包的首次引导已经完成；新增的
+`@imagemin-rs/wasm` 必须先由 maintainer 对校验后的 tarball 完成一次带 2FA 的公开发布，
+再为它配置与其余包相同的 trusted publisher。完成这个一次性步骤前，不得启动 35 包
+direct release，以免形成部分发布。
+
+引导完成后，日常发布必须从受保护的 GitHub environment 运行：
 
 ```sh
 node tasks/release/publish-packages.mjs \
@@ -138,11 +143,11 @@ node tasks/release/publish-packages.mjs \
 ```
 
 脚本先验证 bundle integrity，再按“8 binding 平台包 → 8 BSD sidecar 平台包 →
-8 pngquant sidecar 平台包 → 8 Gifsicle sidecar 平台包 → binding → public
+8 pngquant sidecar 平台包 → 8 Gifsicle sidecar 平台包 → WASM → binding → public
 package”的顺序发布。不要在 CI 中保存长期 npm token。若中途失败，不要重新打包、
 重用版本或移动 tag；核对 registry 后发布新的 patch/pre-release。
 
-首次版本可见后，已为全部 34 个包配置：
+WASM 首次版本可见后，为全部 35 个包确认：
 
 - GitHub owner：`ntnyq`
 - repository：`imagemin-rs`
@@ -151,14 +156,14 @@ package”的顺序发布。不要在 CI 中保存长期 npm token。若中途�
 - allowed action：仅 `npm publish`
 
 `v0.1.0-rc.6` 已验证一次 staged release 和真实 npm provenance。切换 direct publish
-后，全部 34 个包的 trusted publisher 都必须同步允许 `npm publish`；仓库配置不能替代
+后，全部 35 个包的 trusted publisher 都必须同步允许 `npm publish`；仓库配置不能替代
 该账户侧检查。
 
 ## 后续 direct release
 
 在 GitHub Actions 手动运行 `Release`，ref 选择已通过的 tag，`action` 选择 `publish`。
 工作流会重新构建和 smoke，而不是信任旧 artifact；进入 `publish-npm` job 后先等待
-`npm` environment 的 maintainer 审批，再以 OIDC 直接公开 34 个 tarball。
+`npm` environment 的 maintainer 审批，再以 OIDC 直接公开 35 个 tarball。
 
 预发布版本固定使用 `next` dist-tag，稳定版本使用 `latest`。发布候选期的安装文档必须
 显式写成 `pnpm add imagemin-rs@next`，避免无 tag 安装落到旧的 `latest`。
@@ -180,5 +185,5 @@ workflow run。发布脚本先发 binding/sidecar 平台包，再发 binding，�
   版本；除非满足 npm unpublish policy 且确认没有消费者，否则不 unpublish。
 - 任何情况下都不重用 npm version，不移动已推送 release tag。
 
-发布完成的定义不是 workflow 变绿，而是 tag、GitHub artifact、34 个 npm package、dist-tag、
+发布完成的定义不是 workflow 变绿，而是 tag、GitHub artifact、35 个 npm package、dist-tag、
 provenance 和安装后全 codec smoke 对同一版本一致。

@@ -15,6 +15,7 @@ An imagemin-compatible image optimization pipeline powered by Rust and napi-rs.
 - Native Rust codecs executed outside the JavaScript event loop with napi-rs.
 - SVG, GIF, PNG, JPEG, WebP, and AVIF optimization and conversion.
 - Observable `optimize()` results with per-step byte statistics.
+- Browser and Web Worker support through the memory-only `@imagemin-rs/wasm` package.
 - Reproducible native and sidecar packages for macOS, Linux, and Windows.
 
 See the [documentation](https://imagemin-rs.ntnyq.dev/) for codec behavior,
@@ -43,6 +44,22 @@ const output = await imagemin.buffer(input, {
 
 Continue with the [Getting Started guide](https://imagemin-rs.ntnyq.dev/guide/getting-started)
 or optimize local images in the [browser playground](https://imagemin-rs.ntnyq.dev/playground).
+
+For a browser or Web Worker, install `@imagemin-rs/wasm@next` and initialize
+its WebAssembly runtime before optimizing in-memory `Uint8Array` values:
+
+```ts
+import { initWasm, optimize, oxipng } from "@imagemin-rs/wasm";
+
+await initWasm();
+
+const result = await optimize(input, {
+  plugins: [oxipng({ optimizationLevel: 3 })],
+});
+```
+
+See the [Browser WASM API](https://imagemin-rs.ntnyq.dev/api/wasm) for the
+supported codec and runtime boundaries.
 
 ## License
 

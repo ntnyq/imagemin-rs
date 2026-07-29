@@ -86,10 +86,14 @@ all-or-nothing behavior is required.
 
 ## Browser Playground output differs
 
-The Playground currently uses the browser decoder, Canvas renderer, and
-encoder. It is a local preview tool, not the Node.js imagemin-rs runtime.
-Browser output can vary and does not provide the same codec options, metadata
-policy, or animation support.
+Direct, unscaled PNG output uses `@imagemin-rs/wasm` and the shared Rust
+Oxipng codec. Resized PNG, JPEG, and WebP output passes through the browser
+Canvas path, so those bytes can vary across browsers and do not provide the
+same codec options, metadata policy, or animation support as the Node API.
+
+If the WASM asset fails to load, confirm it is deployed next to the generated
+JavaScript chunks and served with `application/wasm`. See the
+[Browser WASM API](/api/wasm) for explicit initialization options.
 
 If a clean supported-platform installation still fails, open a GitHub issue
 with the error code, runtime report, package manager and version, lockfile

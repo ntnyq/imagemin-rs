@@ -27,7 +27,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy,rustfmt
+          targets: wasm32-unknown-unknown
           toolchain: 1.88.0
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack@0.15.0
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.14.1
@@ -141,3 +145,34 @@ jobs:
       - run: pnpm run build:native
       - run: pnpm --filter @imagemin-rs/binding test
       - run: pnpm --filter imagemin-rs test
+
+  wasm-browser:
+    name: WASM ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          toolchain: 1.88.0
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack@0.15.0
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @imagemin-rs/wasm exec playwright install --with-deps ${{ matrix.browser }}
+      - run: pnpm --filter @imagemin-rs/wasm test:browser
+        env:
+          BROWSER: ${{ matrix.browser }}

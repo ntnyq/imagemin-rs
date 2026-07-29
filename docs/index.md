@@ -18,6 +18,8 @@ features:
     details: Keep imagemin(), imagemin.buffer(), and function plugins while gaining a typed optimize() result with per-step statistics.
   - title: CPU-safe native work
     details: Native codecs run in napi-rs AsyncTask workers instead of blocking the JavaScript event loop behind an async wrapper.
+  - title: Browser WASM
+    details: The separate memory-only package runs shared GIF, PNG, and SVG Rust codecs in browsers and Web Workers.
   - title: Explicit compatibility
     details: Every adapter documents its upstream target, intentional differences, safety limits, and release evidence.
 ---

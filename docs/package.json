@@ -10,6 +10,7 @@
     "test": "vitest --run"
   },
   "dependencies": {
+    "@imagemin-rs/wasm": "workspace:*",
     "@vueuse/core": "^14.3.0",
     "fflate": "^0.8.3"
   },

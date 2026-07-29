@@ -32,9 +32,10 @@ Completed release work includes:
 5. tagged release candidates validated through the full cross-platform
    packaging and smoke matrix.
 
-Next milestones are stable-release readiness, more corpus coverage and
-performance baselines, and a browser-native codec runtime that can replace the
-Playground's current Canvas-based preview engine.
+Next milestones are stable-release readiness and more corpus coverage and
+performance baselines. The first browser-native codec runtime is complete:
+`@imagemin-rs/wasm` exposes the shared GIF, PNG, and SVG Rust paths, and the
+Playground uses its Oxipng path for PNG output.
 
 Stable-release readiness now focuses on the remaining evidence rather than
 platform enablement:

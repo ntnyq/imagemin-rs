@@ -41,7 +41,7 @@ export async function writeDependencySbom({ outputPath, rootPath }) {
     ...cargo.dependencies,
     ...npm.dependencies,
     {
-      dependsOn: [cargo.rootReference, ...npm.rootDependencies],
+      dependsOn: [...cargo.rootReferences, ...npm.rootDependencies],
       ref: rootReference,
     },
   ]);
@@ -62,7 +62,10 @@ export async function writeDependencySbom({ outputPath, rootPath }) {
         version: publicManifest.version,
       },
       properties: [
-        { name: "imagemin-rs:cargo-profile", value: "non-dev locked closure" },
+        {
+          name: "imagemin-rs:cargo-profile",
+          value: "N-API and WASM non-dev locked closures",
+        },
         { name: "imagemin-rs:npm-profile", value: "production dependency closure" },
       ],
     },
@@ -118,12 +121,15 @@ async function npmDependencyTree(rootPath) {
 function cargoInventory(metadata, cargoLock) {
   const packages = new Map(metadata.packages.map((package_) => [package_.id, package_]));
   const nodes = new Map(metadata.resolve.nodes.map((node) => [node.id, node]));
-  const rootPackage = metadata.packages.find(
-    (package_) => package_.name === "imagemin_napi" && package_.source === null,
-  );
-  assert(rootPackage !== undefined, "Could not find the imagemin_napi Cargo package");
+  const rootPackages = ["imagemin_napi", "imagemin_wasm_core"].map((name) => {
+    const package_ = metadata.packages.find(
+      (candidate) => candidate.name === name && candidate.source === null,
+    );
+    assert(package_ !== undefined, `Could not find the ${name} Cargo package`);
+    return package_;
+  });
   const reachable = new Set();
-  const pending = [rootPackage.id];
+  const pending = rootPackages.map((package_) => package_.id);
 
   while (pending.length > 0) {
     const id = pending.pop();
@@ -166,7 +172,7 @@ function cargoInventory(metadata, cargoLock) {
   return {
     components: [...componentById.values()],
     dependencies,
-    rootReference: componentById.get(rootPackage.id)["bom-ref"],
+    rootReferences: rootPackages.map((package_) => componentById.get(package_.id)["bom-ref"]),
   };
 }
 

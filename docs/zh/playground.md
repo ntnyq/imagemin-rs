@@ -17,13 +17,16 @@ outline: false
 
 ## 工作方式
 
-Playground 使用浏览器自身的图片解码器、Canvas 渲染器和编码器。文件选择与拖放分别由
-VueUse 的 `useFileDialog` 和 `useDropZone` 处理，`useObjectUrl` 管理本地预览。图片不会
-上传到服务器；Canvas 重新编码时会剥离原始 metadata。
+Playground 在 Web Worker 中运行 `@imagemin-rs/wasm`。不需要缩放的 PNG 会直接交给
+共享 Rust Oxipng codec，避免经过浏览器解码与重新编码；缩放后的 PNG 先经 Canvas
+渲染，再由 WASM 优化。JPEG 与 WebP 输出仍使用浏览器 Canvas encoder。
 
-这个浏览器引擎用于快速预览，不等同于 Node.js `imagemin-rs` runtime。输出可能因浏览器
-而异，也不会调用项目固定版本的 SVGO、Gifsicle、Oxipng、pngquant、MozJPEG、cwebp 或
-AVIF sidecar。需要可复现结果和文档所述 codec 兼容性时，请使用 [Node API](/zh/api/)。
+文件选择与拖放分别由 VueUse 的 `useFileDialog` 和 `useDropZone` 处理，`useObjectUrl`
+管理本地预览；图片不会上传到服务器。结果卡片会标明每张输出实际使用的引擎。
+
+WASM 包与 Node.js runtime 共享 Rust codec 行为，但不包含 N-API、文件 API 或外部可执行
+sidecar。Canvas 输出仍可能因浏览器而异。完整 codec 和文件管线请使用
+[Node API](/zh/api/)，浏览器 runtime 契约见[浏览器 WASM API](/zh/api/wasm)。
 
 ## 支持的输入
 
@@ -31,5 +34,5 @@ AVIF sidecar。需要可复现结果和文档所述 codec 兼容性时，请使�
 - 单个队列最多 30 张图片
 - 单张图片不超过 50 MB
 
-动画图片会被明确排除，因为 Canvas 只能保留其中一帧。未来接入浏览器 codec runtime 后，
-可以在不改变上传和结果操作方式的前提下扩展这一边界。
+动画图片会被 Playground 明确排除，因为缩放或转换经过 Canvas 时只能保留一帧。底层
+WASM 包已支持 `giflossless()`，直接处理 GIF 字节的应用可以保留所有帧。

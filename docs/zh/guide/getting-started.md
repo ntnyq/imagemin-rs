@@ -93,5 +93,27 @@ no-op。详见 [AVIF 转码](./avif.md)。
 也可以在[浏览器 Playground](/zh/playground) 中直接处理浏览器支持的常见格式。上传的
 图片只在本地浏览器中处理，不会发送到服务器。
 
+## 在浏览器或 Web Worker 中运行
+
+无法使用 Node.js native binding 与文件 API 时，安装独立的纯内存 WASM 包：
+
+```sh
+pnpm add @imagemin-rs/wasm@next
+```
+
+```ts
+import { initWasm, optimize, oxipng } from "@imagemin-rs/wasm";
+
+await initWasm();
+
+const result = await optimize(input, {
+  plugins: [oxipng({ optimizationLevel: 3 })],
+});
+```
+
+浏览器包支持 `giflossless`、`oxipng`、`optipng` 与 `svgm`，不包含路径、glob、
+N-API 或外部可执行 sidecar。初始化、取消与部署细节见
+[浏览器 WASM API](/zh/api/wasm)。
+
 从现有 imagemin 项目迁移时，请继续阅读[从 imagemin 迁移](./migration-from-imagemin.md)。
 原生包、sidecar 或部署失败见[安装与运行排错](./troubleshooting.md)。

@@ -1,0 +1,60 @@
+{
+  "name": "@imagemin-rs/wasm",
+  "version": "0.1.0-rc.7",
+  "description": "Browser WebAssembly runtime for imagemin-rs.",
+  "keywords": [
+    "browser",
+    "image",
+    "imagemin",
+    "optimization",
+    "rust",
+    "wasm"
+  ],
+  "homepage": "https://github.com/ntnyq/imagemin-rs#readme",
+  "bugs": {
+    "url": "https://github.com/ntnyq/imagemin-rs/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "ntnyq"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/imagemin-rs.git"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "pnpm run build:wasm && pnpm run build:js",
+    "build:js": "tsdown && node scripts/copy-wasm.mjs",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "test": "vitest --run",
+    "test:browser": "pnpm run build && node tests/browser-runtime.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@ntnyq/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "playwright": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

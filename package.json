@@ -13,8 +13,9 @@
     "bench:phase5": "node tasks/benchmark-phase5.mjs",
     "bench:phase6": "node tasks/benchmark-phase6.mjs",
     "bench:svg": "node tasks/benchmark-svg.mjs",
-    "build": "pnpm run build:native && pnpm --filter imagemin-rs build",
+    "build": "pnpm run build:native && pnpm run build:wasm && pnpm --filter imagemin-rs build",
     "build:native": "pnpm --filter @imagemin-rs/binding build:debug",
+    "build:wasm": "pnpm --filter @imagemin-rs/wasm build",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run docs:test && pnpm run docs:build",
     "docs:build": "pnpm -C docs run build",
     "docs:dev": "pnpm -C docs run dev",
@@ -28,9 +29,9 @@
     "release:smoke": "node tasks/release/smoke-packages.mjs",
     "release:publish:dry-run": "node tasks/release/publish-packages.mjs --mode=dry-run",
     "release:version": "node tasks/release/set-version.mjs",
-    "test": "cargo test --locked --workspace && pnpm run test:tasks && pnpm run build:native && pnpm --filter @imagemin-rs/binding test && pnpm --filter imagemin-rs test",
+    "test": "cargo test --locked --workspace && pnpm run test:tasks && pnpm run build:native && pnpm run build:wasm && pnpm --filter @imagemin-rs/binding test && pnpm --filter @imagemin-rs/wasm test && pnpm --filter imagemin-rs test",
     "test:tasks": "node --test tasks/sidecars/run-binary.test.mjs tasks/sidecars/read-pin.test.mjs tasks/release/prepare-gpl-sources.test.mjs tasks/release/security-policy.test.mjs tasks/release/smoke-worker-command.test.mjs tasks/release/spawn-command.test.mjs tasks/release/verify-aom-security.test.mjs",
-    "typecheck": "pnpm run build:native && pnpm --filter imagemin-rs typecheck"
+    "typecheck": "pnpm run build:native && pnpm run build:wasm && pnpm --filter @imagemin-rs/wasm typecheck && pnpm --filter imagemin-rs typecheck"
   },
   "devDependencies": {
     "@napi-rs/cli": "catalog:",

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/*", "napi/*"]
+members = ["crates/*", "napi/*", "wasm/imagemin-core"]
 # Vendored dependency patches are consumed through [patch.crates-io] below and
 # must not become workspace members (their upstream code is not held to this
 # workspace's lint and test gates).
@@ -37,14 +37,17 @@ imagemin-core = { path = "crates/imagemin-core" }
 napi = { version = "3.10.5", default-features = false, features = ["napi8"] }
 napi-build = "2.3.2"
 napi-derive = "3.5.10"
-oxipng = { version = "10.1.1", default-features = false, features = ["parallel"] }
+oxipng = { version = "10.1.1", default-features = false }
 png = "0.18.1"
 resvg = { version = "0.47.0", default-features = false }
 rgb = "=0.8.53"
 serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
 serde_json = "1"
+serde-wasm-bindgen = "0.6"
 svgm-core = "=0.3.8"
 thiserror = "2"
+wasm-bindgen = "0.2"
 xmlparser = "0.13"
 
 # svgm-core 0.3.8 hangs on unconsumable path-data characters (DoS); the vendored

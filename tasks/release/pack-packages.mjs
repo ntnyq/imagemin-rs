@@ -49,6 +49,7 @@ const packageDirectories = [
   ...selectedPlatforms.map((directory) => `npm/sidecars-${directory}`),
   "napi/imagemin",
   "packages/imagemin",
+  "wasm/imagemin",
 ];
 
 await prepareEmptyOutputDirectory();
@@ -65,7 +66,7 @@ const version = JSON.parse(
 const tarballNames = (await readdir(outputDirectory))
   .filter((name) => name.endsWith(".tgz"))
   .sort();
-const expectedTarballCount = selectedPlatforms.length * 4 + 2;
+const expectedTarballCount = selectedPlatforms.length * 4 + 3;
 assert(
   tarballNames.length === expectedTarballCount,
   `Expected ${expectedTarballCount} tarballs, found ${tarballNames.length}`,
@@ -104,6 +105,10 @@ assert(
 assert(
   packages.some(({ name }) => name === "@imagemin-rs/binding"),
   "The binding package tarball is missing",
+);
+assert(
+  packages.some(({ name }) => name === "@imagemin-rs/wasm"),
+  "The WASM package tarball is missing",
 );
 for (const directory of selectedPlatforms) {
   assert(
@@ -259,6 +264,29 @@ function assertTarballContract(manifest, entries) {
     assert(
       !entries.some(({ name }) => name.endsWith(".node")),
       "The binding tarball must not contain a native binary",
+    );
+    return;
+  }
+
+  if (manifest.name === "@imagemin-rs/wasm") {
+    for (const path of [
+      "package/dist/index.js",
+      "package/dist/index.d.ts",
+      "package/dist/imagemin_wasm_core_bg.wasm",
+    ]) {
+      assert(entryNames.has(path), `The WASM package is missing ${path}`);
+    }
+    const bridgeEntries = entries.filter(
+      ({ name }) => name.startsWith("package/dist/imagemin_wasm_core-") && name.endsWith(".js"),
+    );
+    assert(
+      bridgeEntries.length === 1 && bridgeEntries[0].data.byteLength > 0,
+      "The WASM package must contain one generated JavaScript bridge",
+    );
+    assert(
+      entries.find(({ name }) => name === "package/dist/imagemin_wasm_core_bg.wasm")?.data
+        .byteLength > 0,
+      "The WASM binary is empty",
     );
     return;
   }

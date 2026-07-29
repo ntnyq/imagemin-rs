@@ -162,7 +162,15 @@ jobs:
         with:
           node-version: 24.16.0
           package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          toolchain: 1.88.0
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack@0.15.0
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @imagemin-rs/wasm build
       - run: pnpm --filter imagemin-rs build
       - uses: actions/download-artifact@v8
         with:
@@ -191,6 +199,32 @@ jobs:
           path: .release/npm
           if-no-files-found: error
           retention-days: 30
+
+  smoke-wasm:
+    needs: bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @imagemin-rs/wasm exec playwright install --with-deps chromium
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-packages
+          path: .release/npm
+      - name: Load every WASM codec from the packed release
+        run: |
+          wasm_tarball="$(find .release/npm -maxdepth 1 -name 'imagemin-rs-wasm-*.tgz' -print -quit)"
+          test -n "$wasm_tarball"
+          IMAGEMIN_WASM_TARBALL="$wasm_tarball" \
+            pnpm --filter @imagemin-rs/wasm exec node tests/browser-runtime.mjs
 
   smoke-desktop:
     name: Smoke ${{ matrix.directory }}
@@ -295,6 +329,7 @@ jobs:
     needs:
       - smoke-desktop
       - smoke-linux
+      - smoke-wasm
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: npm
@@ -324,6 +359,7 @@ jobs:
     needs:
       - smoke-desktop
       - smoke-linux
+      - smoke-wasm
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

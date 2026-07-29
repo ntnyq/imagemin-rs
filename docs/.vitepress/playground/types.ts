@@ -2,6 +2,8 @@ export type OutputFormat = "auto" | "image/jpeg" | "image/png" | "image/webp";
 
 export type ItemStatus = "queued" | "processing" | "done" | "error";
 
+export type ProcessingEngine = "canvas" | "canvas-wasm" | "original" | "wasm";
+
 export interface PlaygroundOptions {
   format: OutputFormat;
   keepSmaller: boolean;
@@ -12,6 +14,7 @@ export interface PlaygroundOptions {
 
 export interface OptimizedImage {
   blob: Blob;
+  engine: ProcessingEngine;
   height: number;
   inputHeight: number;
   inputWidth: number;
@@ -39,6 +42,11 @@ export interface PlaygroundCopy {
   dropHint: string;
   dropLabel: string;
   empty: string;
+  engine: string;
+  engineCanvas: string;
+  engineCanvasWasm: string;
+  engineOriginal: string;
+  engineWasm: string;
   failed: string;
   format: string;
   input: string;

@@ -7,6 +7,7 @@ node_modules
 target
 dist
 coverage
+wasm/imagemin/src/generated
 
 **/.vitepress/cache
 **/.vitepress/dist

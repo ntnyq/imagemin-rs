@@ -3,6 +3,7 @@ packages:
   - napi/*
   - npm/*
   - packages/*
+  - wasm/*
 
 catalog:
   "@napi-rs/cli": ^3.7.3
@@ -14,6 +15,7 @@ catalog:
   junk: 4.0.1
   oxfmt: ^0.59.0
   oxlint: ^1.74.0
+  playwright: ^1.61.1
   svgo: 4.0.2
   tsdown: 0.22.8
   typescript: ^7.0.2

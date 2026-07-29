@@ -92,6 +92,30 @@ magic.
 You can also try common browser-supported formats locally in the
 [Playground](/playground). Uploaded files never leave the browser.
 
+## Run in a browser or Web Worker
+
+Use the separate memory-only WASM package when Node.js native bindings and file
+APIs are unavailable:
+
+```sh
+pnpm add @imagemin-rs/wasm@next
+```
+
+```ts
+import { initWasm, optimize, oxipng } from "@imagemin-rs/wasm";
+
+await initWasm();
+
+const result = await optimize(input, {
+  plugins: [oxipng({ optimizationLevel: 3 })],
+});
+```
+
+The browser package supports `giflossless`, `oxipng`, `optipng`, and `svgm`.
+It does not include paths, globs, N-API, or executable sidecars. See the
+[Browser WASM API](/api/wasm) for initialization, cancellation, and deployment
+details.
+
 Migrating an existing project? Continue with
 [Migrating from imagemin](./migration-from-imagemin.md). For native package,
 sidecar, or deployment failures, see [Troubleshooting](./troubleshooting.md).

@@ -76,9 +76,13 @@ all-or-nothing 时必须由调用方清理。
 
 ## 浏览器 Playground 输出不同
 
-Playground 当前使用浏览器 decoder、Canvas renderer 和 encoder。它是本地预览工具，
-不是 Node.js imagemin-rs runtime。不同浏览器的输出可能不同，codec option、metadata
-策略和动画支持也不等同于 Node API。
+不缩放的 PNG 输出使用 `@imagemin-rs/wasm` 与共享 Rust Oxipng codec。缩放后的 PNG、
+JPEG 与 WebP 输出会经过浏览器 Canvas，因此不同浏览器的字节可能不同，codec option、
+metadata 策略与动画支持也不等同于 Node API。
+
+WASM 资源加载失败时，请确认它与 generated JavaScript chunk 一起部署，并以
+`application/wasm` MIME 提供。显式初始化选项见
+[浏览器 WASM API](/zh/api/wasm)。
 
 如果受支持平台的全新安装仍失败，请提交 GitHub issue，并附上错误码、runtime report、
 package manager 及版本、lockfile 格式和最小复现。

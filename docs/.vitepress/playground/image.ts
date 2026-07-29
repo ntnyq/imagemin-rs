@@ -1,4 +1,5 @@
 import type { OptimizedImage, OutputFormat, PlaygroundOptions } from "./types";
+import { optimizePngWithWasm } from "./wasm";
 
 const supportedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -80,6 +81,26 @@ export async function optimizeImage(
       options.maxHeight,
     );
     const mimeType = resolveOutputMimeType(options.format, inputMimeType);
+    const wasResized = target.width !== decoded.width || target.height !== decoded.height;
+
+    if (inputMimeType === "image/png" && mimeType === "image/png" && !wasResized) {
+      const bytes = await optimizePngWithWasm(new Uint8Array(await file.arrayBuffer()));
+      const blob = new Blob([toArrayBuffer(bytes)], { type: mimeType });
+      const useOriginal =
+        options.format === "auto" && options.keepSmaller && blob.size >= file.size;
+
+      return {
+        blob: useOriginal ? file : blob,
+        engine: useOriginal ? "original" : "wasm",
+        height: decoded.height,
+        inputHeight: decoded.height,
+        inputWidth: decoded.width,
+        mimeType,
+        name: createOutputName(file.name, mimeType),
+        width: decoded.width,
+      };
+    }
+
     const canvas = document.createElement("canvas");
     canvas.width = target.width;
     canvas.height = target.height;
@@ -95,14 +116,20 @@ export async function optimizeImage(
     }
     context.drawImage(decoded.source, 0, 0, target.width, target.height);
 
-    const blob = await canvasToBlob(canvas, mimeType, options.quality / 100);
+    let blob = await canvasToBlob(canvas, mimeType, options.quality / 100);
     if (blob.type !== mimeType) {
       throw new Error(
         `This browser cannot encode ${mimeType.replace("image/", "").toUpperCase()}.`,
       );
     }
 
-    const wasResized = target.width !== decoded.width || target.height !== decoded.height;
+    let engine: OptimizedImage["engine"] = "canvas";
+    if (mimeType === "image/png") {
+      const bytes = await optimizePngWithWasm(new Uint8Array(await blob.arrayBuffer()));
+      blob = new Blob([toArrayBuffer(bytes)], { type: mimeType });
+      engine = "canvas-wasm";
+    }
+
     const useOriginal =
       options.format === "auto" && options.keepSmaller && !wasResized && blob.size >= file.size;
     const outputBlob = useOriginal ? file : blob;
@@ -110,6 +137,7 @@ export async function optimizeImage(
 
     return {
       blob: outputBlob,
+      engine: useOriginal ? "original" : engine,
       height: useOriginal ? decoded.height : target.height,
       inputHeight: decoded.height,
       inputWidth: decoded.width,
@@ -180,4 +208,8 @@ function extensionForMimeType(mimeType: string) {
 
 function resolveOutputMimeType(format: OutputFormat, inputMimeType: string) {
   return format === "auto" ? inputMimeType : format;
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }

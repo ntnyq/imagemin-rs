@@ -34,6 +34,7 @@ const packagePaths = [
   "package.json",
   "napi/imagemin/package.json",
   "packages/imagemin/package.json",
+  "wasm/imagemin/package.json",
   ...platformDirectories.map((directory) => `npm/${directory}/package.json`),
   ...platformDirectories.map((directory) => `npm/sidecar-gifsicle-${directory}/package.json`),
   ...platformDirectories.map((directory) => `npm/sidecar-pngquant-${directory}/package.json`),
@@ -80,10 +81,16 @@ const rustPackageNames = [
   "imagemin-codec-svg",
   "imagemin-core",
   "imagemin_napi",
+  "imagemin_wasm_core",
 ];
 for (const [path, packageNames] of [
   ["Cargo.lock", rustPackageNames],
-  ["fuzz/Cargo.lock", rustPackageNames.filter((packageName) => packageName !== "imagemin_napi")],
+  [
+    "fuzz/Cargo.lock",
+    rustPackageNames.filter(
+      (packageName) => !["imagemin_napi", "imagemin_wasm_core"].includes(packageName),
+    ),
+  ],
 ]) {
   const lockfile = await readText(path);
   const newline = lockfile.includes("\r\n") ? "\r\n" : "\n";

@@ -22,6 +22,13 @@ const outputRatio = computed(() => {
   if (!props.item.output || props.item.file.size === 0) return 100;
   return Math.min(100, Math.max(4, (props.item.output.blob.size / props.item.file.size) * 100));
 });
+const engineLabel = computed(() => {
+  const engine = props.item.output?.engine;
+  if (engine === "wasm") return props.copy.engineWasm;
+  if (engine === "canvas-wasm") return props.copy.engineCanvasWasm;
+  if (engine === "original") return props.copy.engineOriginal;
+  return props.copy.engineCanvas;
+});
 </script>
 
 <template>
@@ -81,6 +88,7 @@ const outputRatio = computed(() => {
           <span>{{ copy.output }}</span>
           <strong>{{ item.output ? formatBytes(item.output.blob.size) : "—" }}</strong>
           <small v-if="item.output">{{ item.output.width }} × {{ item.output.height }}</small>
+          <small v-if="item.output">{{ copy.engine }}: {{ engineLabel }}</small>
         </figcaption>
       </figure>
     </div>

@@ -17,16 +17,21 @@ then compare byte sizes and download individual results or one ZIP archive.
 
 ## How it works
 
-The Playground uses your browser's image decoder, Canvas renderer, and encoder.
-`useFileDialog` and `useDropZone` from VueUse handle local file selection, while
-`useObjectUrl` manages previews without uploading files. Processing is local and
-strips source metadata as part of Canvas re-encoding.
+The Playground runs `@imagemin-rs/wasm` inside a Web Worker. PNG files that do
+not need resizing are passed directly to the shared Rust Oxipng codec, avoiding
+a browser decode/re-encode round trip. Resized PNG files are rendered through
+Canvas first and then optimized by WASM. JPEG and WebP output continues to use
+the browser's Canvas encoder.
 
-This browser engine is a convenient preview tool, not the Node.js
-`imagemin-rs` runtime. Its output can vary by browser and it does not expose
-the pinned SVGO, Gifsicle, Oxipng, pngquant, MozJPEG, cwebp, or AVIF sidecars.
-Use the [Node API](/api/) when reproducibility and documented codec
-compatibility are required.
+`useFileDialog` and `useDropZone` from VueUse handle local file selection, while
+`useObjectUrl` manages previews without uploading files. Result cards identify
+the engine used for each output.
+
+The WASM package shares Rust codec behavior with the Node.js runtime, but it
+does not expose N-API, file APIs, or executable sidecars. Canvas output can
+still vary by browser. Use the [Node API](/api/) when you need the full codec
+set or file pipeline, and the [Browser WASM API](/api/wasm) for the browser
+runtime contract.
 
 ## Supported input
 
@@ -35,5 +40,6 @@ compatibility are required.
 - Up to 50 MB per file
 
 Animated images are intentionally excluded because Canvas would preserve only
-one frame. A future browser codec runtime can expand this boundary without
-changing the upload and result workflow.
+one frame when resizing or converting. The underlying WASM package supports
+frame-preserving `giflossless()` for applications that process GIF bytes
+directly.

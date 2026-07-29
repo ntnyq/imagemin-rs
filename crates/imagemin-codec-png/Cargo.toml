@@ -10,13 +10,17 @@ publish = false
 
 [dependencies]
 imagemin-core = { workspace = true }
-oxipng = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+oxipng = { workspace = true, features = ["parallel"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+oxipng = { workspace = true, features = ["freestanding"] }
 
 [dev-dependencies]
 png = { workspace = true }
 
 [lints]
 workspace = true
-

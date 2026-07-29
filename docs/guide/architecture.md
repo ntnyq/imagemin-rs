@@ -24,6 +24,22 @@ Rust modules do not know about globs, paths, or Node.js. JavaScript modules do
 not know about codec FFI or thread details. The N-API adapter remains a thin
 language seam.
 
+## Node.js and browser adapters
+
+The codec crates have two thin runtime adapters:
+
+```text
+packages/imagemin ── napi/imagemin ──┐
+                                     ├─ crates/imagemin and codec crates
+@imagemin-rs/wasm ─ wasm/imagemin-core┘
+```
+
+The N-API adapter schedules CPU work with `AsyncTask`. The WASM adapter exposes
+the same serializable plugin descriptors through `wasm-bindgen`, while the
+TypeScript package handles initialization, custom browser plugins, and
+`Uint8Array` conversion. Codecs that require executable sidecars remain
+Node-only.
+
 ## Why AsyncTask
 
 Image compression is CPU-intensive. JavaScript `async` changes the return

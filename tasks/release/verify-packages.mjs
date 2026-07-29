@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 
 const workspaceRoot = new URL("../../", import.meta.url);
 const platforms = [
@@ -38,6 +38,7 @@ if (!["all", "current", "none"].includes(artifactMode)) {
 
 const publicManifest = await readJson("packages/imagemin/package.json");
 const bindingManifest = await readJson("napi/imagemin/package.json");
+const wasmManifest = await readJson("wasm/imagemin/package.json");
 const sidecarPins = await readJson("tasks/sidecars/pins.json");
 const rootManifest = await readJson("package.json");
 const cargoManifest = await readText("Cargo.toml");
@@ -61,6 +62,7 @@ assert(
   bindingManifest.version === version,
   "Binding package version does not match the public package",
 );
+assert(wasmManifest.version === version, "WASM package version does not match the public package");
 assert(rootManifest.version === version, "Root package version does not match the public package");
 assert(bindingManifest.engines?.node === publicManifest.engines?.node, "Node engine ranges differ");
 const expectedPublicOptionalDependencies = {
@@ -473,6 +475,11 @@ for (const path of [
   "packages/imagemin/LICENSE",
   "packages/imagemin/README.md",
   "packages/imagemin/THIRD_PARTY_NOTICES.md",
+  "wasm/imagemin/dist/index.js",
+  "wasm/imagemin/dist/index.d.ts",
+  "wasm/imagemin/dist/imagemin_wasm_core_bg.wasm",
+  "wasm/imagemin/LICENSE",
+  "wasm/imagemin/README.md",
   "napi/imagemin/src-js/index.js",
   "napi/imagemin/src-js/index.d.ts",
   "napi/imagemin/LICENSE",
@@ -481,13 +488,19 @@ for (const path of [
   const metadata = await stat(new URL(path, workspaceRoot));
   assert(metadata.isFile() && metadata.size > 0, `Required release file is missing: ${path}`);
 }
+const wasmDistEntries = await readdir(new URL("wasm/imagemin/dist", workspaceRoot));
+assert(
+  wasmDistEntries.filter((name) => name.startsWith("imagemin_wasm_core-") && name.endsWith(".js"))
+    .length === 1,
+  "WASM package must contain exactly one generated JavaScript bridge",
+);
 
 console.log(
   JSON.stringify(
     {
       artifactMode,
       artifacts,
-      packages: 2 + platforms.length * 4,
+      packages: 3 + platforms.length * 4,
       version,
     },
     undefined,

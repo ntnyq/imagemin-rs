@@ -22,6 +22,20 @@ crates/imagemin (facade)
 
 Rust Module 不知道 glob、路径和 Node.js。JS Module 不知道 codec FFI 和线程细节。N-API Adapter 保持薄，只负责语言 seam。
 
+## Node.js 与浏览器 Adapter
+
+codec crate 现在有两个薄 runtime adapter：
+
+```text
+packages/imagemin ── napi/imagemin ──┐
+                                     ├─ crates/imagemin 与 codec crates
+@imagemin-rs/wasm ─ wasm/imagemin-core┘
+```
+
+N-API Adapter 使用 `AsyncTask` 调度 CPU 工作；WASM Adapter 通过 `wasm-bindgen` 暴露
+相同的可序列化 plugin descriptor，TypeScript 包负责初始化、浏览器自定义插件与
+`Uint8Array` 转换。依赖外部可执行 sidecar 的 codec 仍只支持 Node.js。
+
 ## 为什么使用 AsyncTask
 
 图片压缩是 CPU 密集任务。JavaScript `async` 只能改变返回形式，不能防止同步 native 函数阻塞事件循环。原生插件因此在 `AsyncTask::compute` 中执行，并在 `resolve` 阶段创建 JavaScript 结果。

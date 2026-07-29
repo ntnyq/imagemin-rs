@@ -44,7 +44,10 @@ export default defineConfig({
             text: "Guide",
           },
           {
-            items: [{ link: "/api/", text: "Node API" }],
+            items: [
+              { link: "/api/", text: "Node API" },
+              { link: "/api/wasm", text: "Browser WASM API" },
+            ],
             text: "Reference",
           },
         ],
@@ -89,7 +92,10 @@ export default defineConfig({
             text: "指南",
           },
           {
-            items: [{ link: "/zh/api/", text: "Node API" }],
+            items: [
+              { link: "/zh/api/", text: "Node API" },
+              { link: "/zh/api/wasm", text: "浏览器 WASM API" },
+            ],
             text: "参考",
           },
         ],
@@ -139,4 +145,9 @@ export default defineConfig({
     socialLinks: [{ icon: "github", link: "https://github.com/ntnyq/imagemin-rs" }],
   },
   title: "imagemin-rs",
+  vite: {
+    worker: {
+      format: "es",
+    },
+  },
 });

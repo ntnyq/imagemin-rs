@@ -33,8 +33,9 @@
    完成的原生依赖审计；
 3. AVIF 10/12-bit 在具备可测试兼容契约前不进入首个稳定版范围。
 
-随后继续扩大 corpus 与性能基线，并验证可替换当前 Canvas 预览引擎的浏览器原生
-codec runtime。
+随后继续扩大 corpus 与性能基线。首个浏览器原生 codec runtime 已完成：
+`@imagemin-rs/wasm` 暴露共享 GIF、PNG 与 SVG Rust path，Playground 的 PNG 输出
+已使用其中的 Oxipng path。
 
 详细分发决策见 [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)，
 具体门槛见[实现计划](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/implementation-plan.md)。

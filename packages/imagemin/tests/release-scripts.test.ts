@@ -37,6 +37,7 @@ const manifestPaths = [
   "package.json",
   "napi/imagemin/package.json",
   "packages/imagemin/package.json",
+  "wasm/imagemin/package.json",
   ...platformDirectories.map((directory) => `npm/${directory}/package.json`),
   ...gifsicleManifestPaths,
   ...pngquantManifestPaths,
@@ -119,7 +120,9 @@ describe("set-version", () => {
     await runSetVersion("7.7.7");
 
     const cargoLock = await readSandboxFile("fuzz/Cargo.lock");
-    for (const packageName of rustPackageNames.filter((name) => name !== "imagemin_napi")) {
+    for (const packageName of rustPackageNames.filter(
+      (name) => !["imagemin_napi", "imagemin_wasm_core"].includes(name),
+    )) {
       expect(cargoLock).toContain(`name = "${packageName}"\nversion = "7.7.7"`);
     }
   });
@@ -319,8 +322,10 @@ describe("write-dependency-sbom", () => {
     expect(sbom.components).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "imagemin_napi", version: releaseVersion }),
+        expect.objectContaining({ name: "imagemin_wasm_core", version: releaseVersion }),
         expect.objectContaining({ name: "oxipng" }),
         expect.objectContaining({ name: "sharp", version: "0.35.3" }),
+        expect.objectContaining({ name: "wasm-bindgen" }),
         expect.objectContaining({
           name: "@img/sharp-libvips-darwin-arm64",
         }),
@@ -476,7 +481,10 @@ async function expectSandboxVersion(version: string): Promise<void> {
 
   for (const [path, packageNames] of [
     ["Cargo.lock", rustPackageNames],
-    ["fuzz/Cargo.lock", rustPackageNames.filter((name) => name !== "imagemin_napi")],
+    [
+      "fuzz/Cargo.lock",
+      rustPackageNames.filter((name) => !["imagemin_napi", "imagemin_wasm_core"].includes(name)),
+    ],
   ] as const) {
     const cargoLock = await readSandboxFile(path);
     for (const packageName of packageNames) {
@@ -509,4 +517,5 @@ const rustPackageNames = [
   "imagemin-codec-svg",
   "imagemin-core",
   "imagemin_napi",
+  "imagemin_wasm_core",
 ] as const;

@@ -17,12 +17,13 @@ const bundle = JSON.parse(
 if (bundle.version === "0.0.0" && mode !== "dry-run") {
   throw new Error("The 0.0.0 development version cannot be published");
 }
-if (bundle.packages.length !== 34) {
-  throw new Error(`Expected 34 release packages, found ${bundle.packages.length}`);
+if (bundle.packages.length !== 35) {
+  throw new Error(`Expected 35 release packages, found ${bundle.packages.length}`);
 }
 
 const publicPackage = takePackage("imagemin-rs");
 const bindingPackage = takePackage("@imagemin-rs/binding");
+const wasmPackage = takePackage("@imagemin-rs/wasm");
 const platformPackages = bundle.packages
   .filter(({ name }) => name.startsWith("@imagemin-rs/binding-"))
   .sort((left, right) => left.name.localeCompare(right.name));
@@ -54,6 +55,7 @@ const orderedPackages = [
   ...sidecarPackages,
   ...pngquantPackages,
   ...gifsiclePackages,
+  wasmPackage,
   bindingPackage,
   publicPackage,
 ];
