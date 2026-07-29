@@ -1,6 +1,6 @@
 {
   "name": "@imagemin-rs/sidecar-gifsicle-darwin-x64",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "description": "Prebuilt Gifsicle sidecar for imagemin-rs on macOS x64.",
   "license": "GPL-2.0-only",
   "repository": {

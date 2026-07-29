@@ -1,13 +1,12 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { resolveSmokeWorkerCommand } from "./smoke-worker-command.mjs";
 import { resolveSpawnCommand } from "./spawn-command.mjs";
-import { writePlatformSbom } from "./write-platform-sbom.mjs";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const bundleDirectory = resolve(workspaceRoot, readArgument("--bundle") ?? ".release/npm");
@@ -64,121 +63,38 @@ try {
       },
     },
   );
-
-  const requireFromInstallation = createRequire(resolve(temporaryRoot, "package.json"));
-  const entry = requireFromInstallation.resolve("imagemin-rs");
-  const api = await import(pathToFileURL(entry).href);
-  const sharpVersions = requireFromInstallation("sharp").versions;
-  const [gif, jpeg, png] = await Promise.all([
-    readHexFixture("fixtures/gif/animation.hex"),
-    readHexFixture("fixtures/jpeg/color-metadata.hex"),
-    readHexFixture("fixtures/png/pngquant-rgba.hex"),
-  ]);
-  const svg = Buffer.from(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#f00"/></svg>',
-  );
-
-  const checks = [
-    ["svgo", svg, api.svgo(), isSvg],
-    ["svgm", svg, api.svgm(), isSvg],
-    ["oxipng", png, api.oxipng(), isPng],
-    ["optipng", png, api.optipng(), isPng],
-    ["pngquant", png, api.pngquant({ speed: 11 }), isPng],
-    ["gifsicle", gif, api.gifsicle({ optimizationLevel: 1 }), isGif],
-    ["giflossless", gif, api.giflossless(), isGif],
-    ["mozjpeg", jpeg, api.mozjpeg({ quality: 80 }), isJpeg],
-    ["jpegtran", jpeg, api.jpegtran({ progressive: true }), isJpeg],
-    ["webp", png, api.webp({ method: 0, quality: 80 }), isWebp],
-    ["avif", png, api.avif({ effort: 0, quality: 80 }), isAvif],
-  ];
-  const results = [];
-
-  for (const [name, input, plugin, validate] of checks) {
-    const output = await api.default.buffer(input, { plugins: [plugin] });
-    assert(output instanceof Uint8Array, `${name} returned a non-byte result`);
-    assert(output.byteLength > 0, `${name} returned an empty result`);
-    assert(validate(output), `${name} returned an unexpected format`);
-    results.push({ inputBytes: input.byteLength, name, outputBytes: output.byteLength });
-  }
-
-  const report = {
-    architecture: process.arch,
-    node: process.version,
-    platform: process.platform,
-    platformDirectory,
-    results,
-    sharpVersions,
-    version: bundle.version,
-  };
   const reportPath = readArgument("--report");
-  if (reportPath !== undefined) {
-    await writeJson(resolve(workspaceRoot, reportPath), report);
-  }
   const sbomPath = readArgument("--sbom");
-  if (sbomPath !== undefined) {
-    await writePlatformSbom({
-      installationRoot: temporaryRoot,
-      outputPath: resolve(workspaceRoot, sbomPath),
-      platformDirectory,
-      releaseVersion: bundle.version,
-      sharpVersions,
-    });
-  }
-  console.log(JSON.stringify(report, undefined, 2));
+  const worker = resolveSmokeWorkerCommand({
+    installationRoot: temporaryRoot,
+    platformDirectory,
+    releaseVersion: bundle.version,
+    reportPath: reportPath === undefined ? undefined : resolve(workspaceRoot, reportPath),
+    sbomPath: sbomPath === undefined ? undefined : resolve(workspaceRoot, sbomPath),
+  });
+  await runExecutable(worker.command, worker.arguments, {
+    cwd: workspaceRoot,
+    env: {
+      ...process.env,
+      NAPI_RS_ENFORCE_VERSION_CHECK: "1",
+    },
+  });
 } finally {
-  await rm(temporaryRoot, { force: true, recursive: true });
-}
-
-async function readHexFixture(path) {
-  const value = await readFile(resolve(workspaceRoot, path), "utf8");
-  return Buffer.from(value.replaceAll(/\s+/gu, ""), "hex");
-}
-
-async function writeJson(path, value) {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(value, undefined, 2)}\n`);
-}
-
-function isSvg(value) {
-  return Buffer.from(value).toString("utf8").includes("<svg");
-}
-
-function isPng(value) {
-  return Buffer.from(value).subarray(0, 8).toString("hex") === "89504e470d0a1a0a";
-}
-
-function isGif(value) {
-  return Buffer.from(value).subarray(0, 3).toString("ascii") === "GIF";
-}
-
-function isJpeg(value) {
-  return Buffer.from(value).subarray(0, 2).toString("hex") === "ffd8";
-}
-
-function isWebp(value) {
-  const buffer = Buffer.from(value);
-  return (
-    buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
-    buffer.subarray(8, 12).toString("ascii") === "WEBP"
-  );
-}
-
-function isAvif(value) {
-  const buffer = Buffer.from(value);
-  return (
-    buffer.subarray(4, 8).toString("ascii") === "ftyp" &&
-    buffer.subarray(8, Math.min(buffer.byteLength, 32)).includes(Buffer.from("avif"))
-  );
+  await rm(temporaryRoot, { force: true, maxRetries: 5, recursive: true, retryDelay: 200 });
 }
 
 function run(command, arguments_, options) {
   const resolved = resolveSpawnCommand(command, arguments_);
+  return runExecutable(resolved.command, resolved.arguments, options, command);
+}
+
+function runExecutable(command, arguments_, options, label = command) {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(resolved.command, resolved.arguments, { ...options, stdio: "inherit" });
+    const child = spawn(command, arguments_, { ...options, stdio: "inherit" });
     child.once("error", reject);
     child.once("exit", (code, signal) => {
       if (code === 0) resolvePromise();
-      else reject(new Error(`${command} failed with ${signal ?? `exit code ${code}`}`));
+      else reject(new Error(`${label} failed with ${signal ?? `exit code ${code}`}`));
     });
   });
 }
