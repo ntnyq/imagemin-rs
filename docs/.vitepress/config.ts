@@ -29,6 +29,7 @@ export default defineConfig({
           {
             items: [
               { link: "/guide/getting-started", text: "Quick Start" },
+              { link: "/guide/browser-wasm", text: "Browser & Web Worker" },
               { link: "/guide/migration-from-imagemin", text: "Migration" },
               { link: "/guide/troubleshooting", text: "Troubleshooting" },
               { link: "/guide/platform-support", text: "Platform Support" },
@@ -78,6 +79,7 @@ export default defineConfig({
           {
             items: [
               { link: "/zh/guide/getting-started", text: "快速开始" },
+              { link: "/zh/guide/browser-wasm", text: "浏览器与 Web Worker" },
               { link: "/zh/guide/migration-from-imagemin", text: "迁移指南" },
               { link: "/zh/guide/troubleshooting", text: "安装与运行排错" },
               { link: "/zh/guide/platform-support", text: "平台支持政策" },

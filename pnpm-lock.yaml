@@ -45,6 +45,9 @@ catalogs:
     typescript:
       specifier: ^7.0.2
       version: 7.0.2
+    vite:
+      specifier: ^8.1.4
+      version: 8.1.4
     vitepress:
       specifier: ^1.6.4
       version: 1.6.4
@@ -108,6 +111,22 @@ importers:
       vue:
         specifier: ^3.5.40
         version: 3.5.40(typescript@7.0.2)
+
+  examples/browser-wasm:
+    dependencies:
+      '@imagemin-rs/wasm':
+        specifier: workspace:*
+        version: link:../../wasm/imagemin
+    devDependencies:
+      '@ntnyq/tsconfig':
+        specifier: 'catalog:'
+        version: 3.1.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.4(@types/node@24.13.3)
 
   napi/imagemin:
     devDependencies:

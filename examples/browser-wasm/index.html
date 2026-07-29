@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Runnable browser and Web Worker example for @imagemin-rs/wasm."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>imagemin-rs Browser WASM Example</title>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">IMAGEMIN-RS / BROWSER WASM</p>
+      <h1>Optimize an image without uploading it</h1>
+      <p class="lede">
+        Select a PNG, animated GIF, or SVG. The file is transferred to a module Web Worker and
+        optimized by the shared Rust/WASM pipeline.
+      </p>
+
+      <form id="optimizer">
+        <label for="image">Image</label>
+        <input id="image" accept=".gif,.png,.svg,image/gif,image/png,image/svg+xml" type="file" />
+
+        <div class="actions">
+          <button id="optimize" type="submit">Optimize in Worker</button>
+          <button id="cancel" disabled type="button">Cancel</button>
+        </div>
+      </form>
+
+      <p id="status" aria-live="polite">Choose an image to begin.</p>
+      <dl id="metrics" hidden>
+        <div>
+          <dt>Input</dt>
+          <dd id="input-bytes"></dd>
+        </div>
+        <div>
+          <dt>Output</dt>
+          <dd id="output-bytes"></dd>
+        </div>
+        <div>
+          <dt>Codec</dt>
+          <dd id="codec"></dd>
+        </div>
+      </dl>
+      <a id="download" hidden>Download optimized image</a>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
