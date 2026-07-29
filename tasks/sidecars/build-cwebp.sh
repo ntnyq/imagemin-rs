@@ -84,18 +84,20 @@ build zlib "zlib-$zlib_version.tar.gz" "." \
   -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_MINIZIP=OFF
 build libpng "libpng-$libpng_version.tar.gz" "." \
   -DPNG_FRAMEWORK=OFF -DPNG_SHARED=OFF -DPNG_STATIC=ON -DPNG_TESTS=OFF \
-  -DPNG_TOOLS=OFF -DZLIB_ROOT="$prefix"
+  -DPNG_TOOLS=OFF -DZLIB_ROOT="$prefix" -DZLIB_USE_STATIC_LIBS=ON
 build libjpeg-turbo "libjpeg-turbo-$libjpeg_version.tar.gz" "." \
   -DENABLE_SHARED=OFF -DENABLE_STATIC=ON -DWITH_TURBOJPEG=OFF
 build libtiff "libtiff-$libtiff_version.tar.gz" "." \
   -Dtiff-tools=OFF -Dtiff-tests=OFF -Dtiff-contrib=OFF -Dtiff-docs=OFF \
   -Dlzma=OFF -Dzstd=OFF -Dwebp=OFF -Djbig=OFF -Dlerc=OFF -Dlibdeflate=OFF \
-  -Dcxx=OFF -Dmdi=OFF -Dopengl=OFF -Dpixarlog=OFF -DZLIB_ROOT="$prefix"
+  -Dcxx=OFF -Dmdi=OFF -Dopengl=OFF -Dpixarlog=OFF -DZLIB_ROOT="$prefix" \
+  -DZLIB_USE_STATIC_LIBS=ON
 build libwebp "libwebp-$libwebp_version.tar.gz" "." \
   -DWEBP_BUILD_CWEBP=ON -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF \
   -DWEBP_BUILD_IMG2WEBP=OFF -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF \
   -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_EXTRAS=OFF \
-  -DWEBP_LINK_STATIC=OFF -DCMAKE_DISABLE_FIND_PACKAGE_GIF=ON -DZLIB_ROOT="$prefix"
+  -DWEBP_LINK_STATIC=OFF -DCMAKE_DISABLE_FIND_PACKAGE_GIF=ON -DZLIB_ROOT="$prefix" \
+  -DZLIB_USE_STATIC_LIBS=ON
 
 binary="$prefix/bin/cwebp$exe_suffix"
 if [[ ! -f "$binary" ]]; then

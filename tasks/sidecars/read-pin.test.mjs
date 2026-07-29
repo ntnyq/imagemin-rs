@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { test } from "node:test";
@@ -26,4 +27,10 @@ test("rejects an unknown source", async () => {
     execFileAsync(process.execPath, [script, "--tool", "cwebp", "--source", "unknown"]),
     /Unknown pinned source: cwebp\.sources\.unknown/u,
   );
+});
+
+test("requests the static zlib archive in every downstream cwebp dependency", async () => {
+  const buildScript = await readFile(new URL("./build-cwebp.sh", import.meta.url), "utf8");
+
+  assert.equal(buildScript.match(/-DZLIB_USE_STATIC_LIBS=ON/gu)?.length, 3);
 });
