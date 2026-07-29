@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "audit:rust": "cargo deny check bans licenses sources",
+    "audit": "pnpm run audit:rust && pnpm run audit:npm",
+    "audit:npm": "pnpm audit --prod --audit-level high",
+    "audit:rust": "cargo deny check advisories bans licenses sources",
     "bench:phase2": "node tasks/benchmark-phase2.mjs",
     "bench:phase3": "node tasks/benchmark-phase3.mjs",
     "bench:phase4": "node tasks/benchmark-phase4.mjs",

@@ -119,4 +119,5 @@ smoke、恶意 marker/segment corpus 与 worker-pool/并发压力测试。
 6. 平台包附带 MozJPEG 与 IJG 完整许可证文本。
 
 macOS ARM64 已完成实际构建、动态依赖检查与 tarball 安装 smoke。其余 7 个目标仍需
-取得首次 CI 实跑证据；SBOM 和完整 release rehearsal 仍属于 P3。
+取得首次 CI 实跑证据；bundle/source、Rust/npm 依赖和逐平台 Sharp runtime SBOM
+生成已接入，完整 release rehearsal 与发布日漏洞审计仍属于 P3。

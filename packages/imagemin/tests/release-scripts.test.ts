@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -10,6 +11,9 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 const execFileAsync = promisify(execFile);
 const workspaceRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const setVersionScript = join(workspaceRoot, "tasks/release/set-version.mjs");
+const writeBundleSbomScript = join(workspaceRoot, "tasks/release/write-bundle-sbom.mjs");
+const writeDependencySbomScript = join(workspaceRoot, "tasks/release/write-dependency-sbom.mjs");
+const writePlatformSbomScript = join(workspaceRoot, "tasks/release/write-platform-sbom.mjs");
 const platformDirectories = [
   "darwin-arm64",
   "darwin-x64",
@@ -123,6 +127,296 @@ describe("set-version", () => {
     await expect(runSetVersion("0.0.0")).rejects.toThrow(/reserved/u);
     await expect(runSetVersion("1.2")).rejects.toThrow(/Invalid release version/u);
     await expect(runSetVersion("v1.2.3")).rejects.toThrow(/Invalid release version/u);
+  });
+});
+
+describe("write-bundle-sbom", () => {
+  test("writes a deterministic CycloneDX inventory for tarballs and pinned sources", async () => {
+    const root = await mkdtemp(join(tmpdir(), "imagemin-rs-bundle-sbom-"));
+    const manifestPath = join(root, "release-manifest.json");
+    const pinsPath = join(root, "pins.json");
+    const outputPath = join(root, "release-sbom.cdx.json");
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify({
+        artifactMode: "current",
+        packages: [
+          {
+            bytes: 42,
+            integrity: `sha512-${Buffer.alloc(64, 7).toString("base64")}`,
+            name: "imagemin-rs",
+            tarball: "imagemin-rs-1.2.3.tgz",
+            version: "1.2.3",
+          },
+        ],
+        version: "1.2.3",
+      })}\n`,
+    );
+    await writeFile(
+      pinsPath,
+      `${JSON.stringify({
+        gifsicle: {
+          sources: {
+            gifsicle: {
+              sha256: "a".repeat(64),
+              url: "https://example.com/gifsicle.tar.gz",
+              version: "1.96",
+            },
+          },
+          version: "1.96",
+        },
+      })}\n`,
+    );
+
+    await execFileAsync(process.execPath, [
+      writeBundleSbomScript,
+      "--manifest",
+      manifestPath,
+      "--pins",
+      pinsPath,
+      "--output",
+      outputPath,
+    ]);
+    const first = await readFile(outputPath, "utf8");
+    const sbom = JSON.parse(first) as {
+      bomFormat: string;
+      components: Array<{
+        hashes: Array<{ alg: string; content: string }>;
+        name: string;
+        version: string;
+      }>;
+      metadata: { properties: Array<{ name: string; value: string }> };
+      serialNumber: string;
+      specVersion: string;
+    };
+
+    expect(sbom).toMatchObject({
+      bomFormat: "CycloneDX",
+      specVersion: "1.6",
+    });
+    expect(sbom.serialNumber).toMatch(/^urn:uuid:[\da-f-]{36}$/u);
+    expect(sbom.metadata.properties).toContainEqual({
+      name: "imagemin-rs:artifact-mode",
+      value: "current",
+    });
+    expect(sbom.components).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          hashes: [
+            {
+              alg: "SHA-512",
+              content: Buffer.alloc(64, 7).toString("hex"),
+            },
+          ],
+          name: "imagemin-rs",
+          version: "1.2.3",
+        }),
+        expect.objectContaining({
+          hashes: [{ alg: "SHA-256", content: "a".repeat(64) }],
+          name: "gifsicle",
+          version: "1.96",
+        }),
+      ]),
+    );
+
+    await execFileAsync(process.execPath, [
+      writeBundleSbomScript,
+      "--manifest",
+      manifestPath,
+      "--pins",
+      pinsPath,
+      "--output",
+      outputPath,
+    ]);
+    await expect(readFile(outputPath, "utf8")).resolves.toBe(first);
+  });
+
+  test("rejects malformed package integrity", async () => {
+    const root = await mkdtemp(join(tmpdir(), "imagemin-rs-bundle-sbom-invalid-"));
+    const manifestPath = join(root, "release-manifest.json");
+    const pinsPath = join(root, "pins.json");
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify({
+        artifactMode: "current",
+        packages: [
+          {
+            bytes: 42,
+            integrity: "sha512-invalid",
+            name: "imagemin-rs",
+            tarball: "imagemin-rs-1.2.3.tgz",
+            version: "1.2.3",
+          },
+        ],
+        version: "1.2.3",
+      })}\n`,
+    );
+    await writeFile(pinsPath, "{}\n");
+
+    await expect(
+      execFileAsync(process.execPath, [
+        writeBundleSbomScript,
+        "--manifest",
+        manifestPath,
+        "--pins",
+        pinsPath,
+        "--output",
+        join(root, "release-sbom.cdx.json"),
+      ]),
+    ).rejects.toThrow(/integrity/u);
+  });
+});
+
+describe("write-dependency-sbom", () => {
+  test("records the locked Rust and production npm dependency closures deterministically", async () => {
+    const root = await mkdtemp(join(tmpdir(), "imagemin-rs-dependency-sbom-"));
+    const outputPath = join(root, "release-dependencies.cdx.json");
+    const releaseVersion = (
+      JSON.parse(await readFile(join(workspaceRoot, "packages/imagemin/package.json"), "utf8")) as {
+        version: string;
+      }
+    ).version;
+
+    await execFileAsync(process.execPath, [
+      writeDependencySbomScript,
+      "--root",
+      workspaceRoot,
+      "--output",
+      outputPath,
+    ]);
+    const first = await readFile(outputPath, "utf8");
+    const sbom = JSON.parse(first) as {
+      bomFormat: string;
+      components: Array<{ name: string; version: string }>;
+      dependencies: Array<{ dependsOn: string[]; ref: string }>;
+      metadata: { component: { name: string; version: string } };
+      specVersion: string;
+    };
+
+    expect(sbom).toMatchObject({
+      bomFormat: "CycloneDX",
+      metadata: {
+        component: {
+          name: "imagemin-rs dependency closure",
+          version: releaseVersion,
+        },
+      },
+      specVersion: "1.6",
+    });
+    expect(sbom.components.length).toBeGreaterThan(150);
+    expect(sbom.components).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "imagemin_napi", version: releaseVersion }),
+        expect.objectContaining({ name: "oxipng" }),
+        expect.objectContaining({ name: "sharp", version: "0.35.3" }),
+        expect.objectContaining({
+          name: "@img/sharp-libvips-darwin-arm64",
+        }),
+      ]),
+    );
+    expect(sbom.dependencies.some(({ dependsOn }) => dependsOn.length > 10)).toBe(true);
+    expect(first).not.toContain(workspaceRoot);
+
+    await execFileAsync(process.execPath, [
+      writeDependencySbomScript,
+      "--root",
+      workspaceRoot,
+      "--output",
+      outputPath,
+    ]);
+    await expect(readFile(outputPath, "utf8")).resolves.toBe(first);
+  });
+});
+
+describe("write-platform-sbom", () => {
+  test("records installed Sharp packages, embedded libraries, and native file hashes", async () => {
+    const root = await mkdtemp(join(tmpdir(), "imagemin-rs-platform-sbom-"));
+    const packageRoot = join(root, "node_modules/@img/sharp-test-platform");
+    const nativePath = join(packageRoot, "lib/sharp-test.node");
+    const versionsPath = join(root, "sharp-versions.json");
+    const outputPath = join(root, "test-platform.cdx.json");
+    await mkdir(dirname(nativePath), { recursive: true });
+    await writeFile(
+      join(packageRoot, "package.json"),
+      `${JSON.stringify({
+        license: "Apache-2.0",
+        name: "@img/sharp-test-platform",
+        version: "1.2.3",
+      })}\n`,
+    );
+    await writeFile(nativePath, Buffer.from("native-fixture"));
+    await writeFile(
+      versionsPath,
+      `${JSON.stringify({ sharp: "0.35.3", vips: "8.18.3", webp: "1.6.0" })}\n`,
+    );
+
+    await execFileAsync(process.execPath, [
+      writePlatformSbomScript,
+      "--root",
+      root,
+      "--platform",
+      "test-platform",
+      "--version",
+      "1.2.3",
+      "--versions",
+      versionsPath,
+      "--output",
+      outputPath,
+    ]);
+    const first = await readFile(outputPath, "utf8");
+    const sbom = JSON.parse(first) as {
+      components: Array<{
+        hashes?: Array<{ alg: string; content: string }>;
+        name: string;
+        type: string;
+        version?: string;
+      }>;
+      metadata: { properties: Array<{ name: string; value: string }> };
+    };
+
+    expect(sbom.metadata.properties).toContainEqual({
+      name: "imagemin-rs:platform",
+      value: "test-platform",
+    });
+    expect(sbom.components).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "@img/sharp-test-platform",
+          type: "library",
+          version: "1.2.3",
+        }),
+        expect.objectContaining({
+          name: "vips",
+          type: "library",
+          version: "8.18.3",
+        }),
+        expect.objectContaining({
+          hashes: [
+            {
+              alg: "SHA-256",
+              content: createHash("sha256").update("native-fixture").digest("hex"),
+            },
+          ],
+          name: "node_modules/@img/sharp-test-platform/lib/sharp-test.node",
+          type: "file",
+        }),
+      ]),
+    );
+
+    await execFileAsync(process.execPath, [
+      writePlatformSbomScript,
+      "--root",
+      root,
+      "--platform",
+      "test-platform",
+      "--version",
+      "1.2.3",
+      "--versions",
+      versionsPath,
+      "--output",
+      outputPath,
+    ]);
+    await expect(readFile(outputPath, "utf8")).resolves.toBe(first);
   });
 });
 

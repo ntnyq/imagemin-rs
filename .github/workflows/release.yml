@@ -40,6 +40,25 @@ jobs:
           package-manager-cache: false
       - run: node tasks/release/verify-release-ref.mjs
 
+  dependency-audit:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          package-manager-cache: false
+      - run: pnpm audit --prod --audit-level high
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          command-arguments: advisories bans licenses sources
+
   build-sidecars:
     needs: preflight
     uses: ./.github/workflows/sidecars.yml
@@ -126,6 +145,7 @@ jobs:
     needs:
       - build-native
       - build-sidecars
+      - dependency-audit
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -201,7 +221,18 @@ jobs:
         with:
           name: release-packages
           path: .release/npm
-      - run: node tasks/release/smoke-packages.mjs --bundle=.release/npm
+      - run: >-
+          node tasks/release/smoke-packages.mjs
+          --bundle=.release/npm
+          --expected-platform=${{ matrix.directory }}
+          --report=.release/smoke/${{ matrix.directory }}.json
+          --sbom=.release/smoke/${{ matrix.directory }}.cdx.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: smoke-${{ matrix.directory }}
+          path: .release/smoke
+          if-no-files-found: error
+          retention-days: 30
 
   smoke-linux:
     name: Smoke ${{ matrix.directory }}
@@ -242,7 +273,17 @@ jobs:
           --volume "${{ github.workspace }}:${{ github.workspace }}"
           --workdir "${{ github.workspace }}"
           ${{ matrix.image }}
-          node tasks/release/smoke-packages.mjs --bundle=.release/npm
+          node tasks/release/smoke-packages.mjs
+          --bundle=.release/npm
+          --expected-platform=${{ matrix.directory }}
+          --report=.release/smoke/${{ matrix.directory }}.json
+          --sbom=.release/smoke/${{ matrix.directory }}.cdx.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: smoke-${{ matrix.directory }}
+          path: .release/smoke
+          if-no-files-found: error
+          retention-days: 30
 
   stage-npm:
     if: github.event_name == 'workflow_dispatch' && inputs.action == 'stage'

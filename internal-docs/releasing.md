@@ -36,6 +36,7 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
    pnpm install --frozen-lockfile
    pnpm run check
    pnpm run build
+   pnpm run audit
    pnpm run release:verify
    pnpm run release:bundle:current
    pnpm run release:smoke
@@ -43,28 +44,61 @@ publishing 要求 npm 11.15+。工作流固定 Node 24.16.0，并在 stage job �
 
 5. 提交并推送已验证 commit，再创建不可变 tag `v0.x.y`。tag 必须和所有 manifest 的
    `0.x.y` 一致。
-6. 等待 `Release` workflow 的 8 个 binding、8 个 BSD sidecar、8 个 MozJPEG、
-   8 个 pngquant、8 个 Gifsicle 构建，以及 34 包汇总和 8 平台全 codec tarball
-   smoke 全部通过。下载并保存 `release-packages` artifact；其中的
-   `release-manifest.json` 含每个 tarball 的 SHA-512 integrity。
+6. 等待 `Release` workflow 的 RustSec/npm dependency audit、8 个 binding、
+   8 个 BSD sidecar、8 个 MozJPEG、8 个 pngquant、8 个 Gifsicle 构建，以及 34 包
+   汇总和 8 平台全 codec tarball smoke 全部通过。下载并保存
+   `release-packages` artifact；其中的
+   `release-manifest.json` 含每个 tarball 的 SHA-512 integrity，
+   `release-sbom.cdx.json` 含发布 tarball 和固定 sidecar 源码，
+   `release-dependencies.cdx.json` 含 Rust 与生产 npm 依赖闭包。每个 smoke job 另上传
+   `smoke-<platform>` artifact，内含 codec 报告和该平台实际安装后的 Sharp SBOM。
 
 本地 `release:bundle:current` 只证明当前 OS/CPU。不能用它替代 GitHub workflow 的 8
 平台门禁。
+
+## 发布清单范围
+
+`pack-packages.mjs` 每次打包都会生成确定性的 `release-sbom.cdx.json`：
+
+- `current` bundle 记录当前平台 6 个 tarball；完整 release bundle 记录全部 34 个；
+- npm tarball 使用 SHA-512，固定 sidecar 源码使用 SHA-256，并记录版本与下载地址；
+- 相同 manifest 和 pins 生成相同内容及 serial number；输入摘要格式异常会终止打包。
+
+同时生成的 `release-dependencies.cdx.json` 记录：
+
+- 从 `imagemin_napi` 可达的非 dev Cargo graph，含 workspace crate、registry checksum、
+  license expression 与依赖边；
+- `imagemin-rs` 的生产 npm graph，含 Sharp 的平台 optional packages、版本、下载地址，
+  以及已安装 package manifest 提供的许可证和仓库；
+- 当前锁文件下共 84 个 Rust 与 81 个 npm 组件；依赖变化时数量随锁文件更新。
+
+两份文件均为确定性 CycloneDX 1.6 JSON，本地已通过官方 1.6 JSON Schema 和引用闭合
+校验。8 个平台 smoke 还会从全新安装中读取 `sharp.versions`，记录实际 `@img/sharp-*`
+平台包、内嵌原生库版本，以及 `.node`/共享库文件的 SHA-256 和大小。macOS ARM64
+实测为 2 个平台包、28 个内嵌库组件和 2 个原生文件；其余平台等待 release workflow
+证据。CI 和 release 均会拒绝 RustSec advisory、Cargo 许可证/来源违规和 npm production
+high/critical advisory。该门禁不覆盖固定 sidecar 源码及 Sharp 内嵌 C 库，发布当日仍需
+对最终 SBOM 执行原生依赖漏洞审计。第三方许可证正文仍以各 tarball 和
+`THIRD_PARTY_NOTICES.md` 为准。
 
 ## 本地演练记录
 
 2026-07-29 在 macOS ARM64 上完成一次不触及 registry 的 RC rehearsal：
 
 - frozen install、format、lint、typecheck、Rust/binding/public package 测试、文档构建、
-  release build 与 `cargo deny` 均通过；
+  release build、RustSec/Cargo policy 与 npm production audit 均通过；
 - metadata 校验覆盖 34 个 package manifest，当前平台校验覆盖 binding、3 个 BSD
   executable、pngquant 与 Gifsicle 共 6 个 artifact；
 - 6 个当前平台 tarball 通过文件白名单、SHA-512 bundle、全新 npm 安装和 11 个 codec
   的真实输入 smoke；
+- bundle 同时生成 CycloneDX 1.6 清单，覆盖 6 个 tarball 与 9 个固定 sidecar 源码；
+- 依赖清单覆盖 84 个非 dev Rust 与 81 个生产 npm/Sharp 平台包组件；
+- 当前平台 smoke 另生成 32 组件的 Sharp runtime SBOM，2 个原生文件均有 SHA-256；
 - 首轮并行 public package 测试出现一次 Vitest fork worker 启动超时；失败文件隔离重跑
   和随后完整 207 项测试均通过。完整 8 平台 CI 仍需提供无抖动证据。
 
-这次演练不覆盖其余 7 平台、完整 34 包 bundle、npm provenance、SBOM 或 GPL 法律确认。
+这次演练不覆盖其余 7 平台的 Sharp/libvips 清单、完整 34 包 bundle、sidecar/Sharp
+原生依赖的发布日 CVE 审计、npm provenance 或 GPL 法律确认。
 
 ## 首次发布引导
 

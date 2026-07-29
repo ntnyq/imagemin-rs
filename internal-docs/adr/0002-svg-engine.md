@@ -33,7 +33,7 @@
 
 ### 供应链门禁
 
-`deny.toml` 明确禁止重新引入 `oxvg_ast` 和 `oxvg_optimiser`，并使用许可证白名单。CI 运行 cargo-deny 的 bans、licenses 和 sources 检查。静态工具不能替代逐文件许可证审查，但可阻止已知风险依赖被无意恢复。
+`deny.toml` 明确禁止重新引入 `oxvg_ast` 和 `oxvg_optimiser`，并使用许可证白名单。CI 运行 cargo-deny 的 advisories、bans、licenses 和 sources 检查。静态工具不能替代逐文件许可证审查，但可阻止已知风险依赖被无意恢复。
 
 ## 结果
 

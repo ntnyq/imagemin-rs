@@ -170,8 +170,12 @@ Phase 0..6 已完成兼容纵切面，当前工作转为把已验证实现收敛
 3. **P2 其余 sidecar 与发布链（已完成）**：mozjpeg/jpegtran、pngquant 与 Gifsicle
    已完成，verify/pack/smoke/publish 覆盖全部 24 个 sidecar 平台包。
 4. **P3 RC 演练（进行中）**：2026-07-29 已完成 macOS ARM64 本地 rehearsal；
-   继续完成 GPL 法律确认、SBOM、其余 7 平台 tarball 安装与每 codec smoke，再执行
-   不发布到 registry 的完整 34 包 release rehearsal。
+   release pack 现会生成覆盖 npm tarball 与 9 个固定 sidecar 源码的确定性 CycloneDX
+   1.6 清单，以及覆盖 84 个 Rust、81 个生产 npm/Sharp 平台包组件的依赖清单。继续
+   完成的 8 平台 smoke 会各自上传 Sharp/libvips 内嵌库版本与原生文件摘要；macOS
+   ARM64 已实测。CI/release 已加入 RustSec 与 npm production advisory 门禁。继续
+   完成 GPL 法律确认、sidecar/Sharp 原生依赖的发布日漏洞审计、其余 7 平台 tarball
+   安装和每 codec smoke，再执行不发布到 registry 的完整 34 包 release rehearsal。
 
 sidecar 的 pin、许可证边界、包结构与运行时失败语义见 ADR 0009。只有各阶段对应的
 自动化验证与文档同步完成后，阶段才可标记完成。

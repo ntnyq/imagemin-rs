@@ -5,6 +5,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 
+import { writeBundleSbom } from "./write-bundle-sbom.mjs";
+import { writeDependencySbom } from "./write-dependency-sbom.mjs";
+
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const outputDirectory = resolve(workspaceRoot, readArgument("--output") ?? ".release/npm");
 const artifactMode = readArgument("--artifacts") ?? "all";
@@ -126,10 +129,17 @@ const bundle = {
   packages: packages.sort((left, right) => left.name.localeCompare(right.name)),
   version,
 };
-await writeFile(
-  resolve(outputDirectory, "release-manifest.json"),
-  `${JSON.stringify(bundle, undefined, 2)}\n`,
-);
+const manifestPath = resolve(outputDirectory, "release-manifest.json");
+await writeFile(manifestPath, `${JSON.stringify(bundle, undefined, 2)}\n`);
+await writeBundleSbom({
+  manifestPath,
+  outputPath: resolve(outputDirectory, "release-sbom.cdx.json"),
+  pinsPath: resolve(workspaceRoot, "tasks/sidecars/pins.json"),
+});
+await writeDependencySbom({
+  outputPath: resolve(outputDirectory, "release-dependencies.cdx.json"),
+  rootPath: workspaceRoot,
+});
 console.log(JSON.stringify(bundle, undefined, 2));
 
 function assertTarballContract(manifest, entries) {

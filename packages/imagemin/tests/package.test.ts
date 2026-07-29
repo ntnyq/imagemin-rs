@@ -203,6 +203,10 @@ describe("package contract", () => {
       new URL(".github/workflows/sidecars.yml", workspaceRootUrl),
       "utf8",
     );
+    const ciWorkflow = await readFile(
+      new URL(".github/workflows/ci.yml", workspaceRootUrl),
+      "utf8",
+    );
 
     for (const platform of platforms) {
       expect(workflow).toContain(`directory: ${platform.directory}`);
@@ -211,7 +215,14 @@ describe("package contract", () => {
     expect(workflow).toContain("uses: ./.github/workflows/sidecars.yml");
     expect(workflow).toContain("node tasks/sidecars/assemble-packages.mjs");
     expect(workflow).toContain("node tasks/release/verify-packages.mjs --artifacts=all --release");
-    expect(workflow).toContain("node tasks/release/smoke-packages.mjs --bundle=.release/npm");
+    expect(workflow).toContain("node tasks/release/smoke-packages.mjs");
+    expect(workflow).toContain("--bundle=.release/npm");
+    expect(workflow).toContain("--expected-platform=${{ matrix.directory }}");
+    expect(workflow).toContain("--sbom=.release/smoke/${{ matrix.directory }}.cdx.json");
+    for (const value of [ciWorkflow, workflow]) {
+      expect(value).toContain("pnpm audit --prod --audit-level high");
+      expect(value).toContain("command-arguments: advisories bans licenses sources");
+    }
     expect(workflow).toContain("environment: npm");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("publish-packages.mjs --mode=stage");

@@ -22,7 +22,13 @@
    源码校验、多平台构建、npm 分发与真实 smoke；
 2. **已实现**：全部 24 个 sidecar 平台包接入 verify、pack、smoke、publish 与
    provenance；
-3. **进行中**：完成 8 平台 RC 演练，再评估首个公开版本。
+3. **已实现**：release bundle 自动生成覆盖 tarball 与固定 sidecar 源码的确定性
+   CycloneDX 1.6 清单，并生成 Rust、生产 npm 依赖闭包与逐平台 Sharp 内嵌库/原生
+   文件清单；
+4. **已实现**：RustSec/Cargo policy 与 npm production high/critical advisory 成为
+   CI/release 门禁；
+5. **进行中**：补齐其余 7 平台实跑证据、原生依赖漏洞审计与完整 RC 演练，再评估
+   首个公开版本。
 
 详细分发决策见 [ADR 0009](https://github.com/ntnyq/imagemin-rs/blob/main/internal-docs/adr/0009-sidecar-distribution.md)。
 

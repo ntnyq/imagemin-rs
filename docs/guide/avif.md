@@ -88,5 +88,6 @@ Sharp 0.35.3 的预构建 AVIF runtime 只接受 8-bit output；`bitdepth:10` �
 后另行增加。
 
 现代 Sharp 通过平台 optional packages 提供预构建 libvips stack，不要求最终用户
-本机编译。v1 发布仍需在每个支持平台从 tarball 做 frozen install、AVIF smoke、SBOM、
-许可证与漏洞审计；完整选择依据见 Phase 6 codec ADR 和调研文档。
+本机编译。release smoke 已接入逐平台 AVIF 实跑、`sharp.versions` 内嵌库清单及原生
+文件 SHA-256；macOS ARM64 已验证，其余平台等待 CI 证据。v1 发布仍需完成许可证和
+发布日漏洞审计；完整选择依据见 Phase 6 codec ADR 和调研文档。

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { writePlatformSbom } from "./write-platform-sbom.mjs";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const bundleDirectory = resolve(workspaceRoot, readArgument("--bundle") ?? ".release/npm");
@@ -12,6 +14,11 @@ const bundle = JSON.parse(
   await readFile(resolve(bundleDirectory, "release-manifest.json"), "utf8"),
 );
 const platformDirectory = currentPlatformDirectory();
+const expectedPlatformDirectory = readArgument("--expected-platform");
+assert(
+  expectedPlatformDirectory === undefined || expectedPlatformDirectory === platformDirectory,
+  `Expected ${expectedPlatformDirectory}, running on ${platformDirectory}`,
+);
 const expectedPackages = [
   "imagemin-rs",
   "@imagemin-rs/binding",
@@ -60,6 +67,7 @@ try {
   const requireFromInstallation = createRequire(resolve(temporaryRoot, "package.json"));
   const entry = requireFromInstallation.resolve("imagemin-rs");
   const api = await import(pathToFileURL(entry).href);
+  const sharpVersions = requireFromInstallation("sharp").versions;
   const [gif, jpeg, png] = await Promise.all([
     readHexFixture("fixtures/gif/animation.hex"),
     readHexFixture("fixtures/jpeg/color-metadata.hex"),
@@ -92,20 +100,30 @@ try {
     results.push({ inputBytes: input.byteLength, name, outputBytes: output.byteLength });
   }
 
-  console.log(
-    JSON.stringify(
-      {
-        architecture: process.arch,
-        node: process.version,
-        platform: process.platform,
-        platformDirectory,
-        results,
-        version: bundle.version,
-      },
-      undefined,
-      2,
-    ),
-  );
+  const report = {
+    architecture: process.arch,
+    node: process.version,
+    platform: process.platform,
+    platformDirectory,
+    results,
+    sharpVersions,
+    version: bundle.version,
+  };
+  const reportPath = readArgument("--report");
+  if (reportPath !== undefined) {
+    await writeJson(resolve(workspaceRoot, reportPath), report);
+  }
+  const sbomPath = readArgument("--sbom");
+  if (sbomPath !== undefined) {
+    await writePlatformSbom({
+      installationRoot: temporaryRoot,
+      outputPath: resolve(workspaceRoot, sbomPath),
+      platformDirectory,
+      releaseVersion: bundle.version,
+      sharpVersions,
+    });
+  }
+  console.log(JSON.stringify(report, undefined, 2));
 } finally {
   await rm(temporaryRoot, { force: true, recursive: true });
 }
@@ -113,6 +131,11 @@ try {
 async function readHexFixture(path) {
   const value = await readFile(resolve(workspaceRoot, path), "utf8");
   return Buffer.from(value.replaceAll(/\s+/gu, ""), "hex");
+}
+
+async function writeJson(path, value) {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, `${JSON.stringify(value, undefined, 2)}\n`);
 }
 
 function isSvg(value) {
