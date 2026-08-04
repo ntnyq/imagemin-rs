@@ -3,7 +3,7 @@ use std::{io::Cursor, num::NonZeroU64};
 use gif::DecodeOptions;
 use imagemin_core::{ImageminError, Result};
 
-const MAX_CANVAS_BYTES: u64 = 512 * 1024 * 1024;
+const MAX_CANVAS_BYTES: u64 = 128 * 1024 * 1024;
 
 pub(super) fn decoder(data: &[u8]) -> Result<gif::Decoder<Cursor<&[u8]>>> {
     let mut options = DecodeOptions::new();
